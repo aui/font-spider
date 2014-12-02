@@ -1,0 +1,23 @@
+@charset "utf-8";
+body, input, button, select, input, textarea {
+	font-family: tahoma, arial, sans-sarif;
+	font-size: 12px;
+}
+a {
+	color: #3794E3;
+	text-decoration: none;
+}
+a:hover {
+	text-decoration: underline;
+}
+/*@media screen and (max-width: 1024px) {
+	body {
+		font-size: 12px;
+	}
+}*/
+
+
+h3, .title, p {
+	font-family: 'art';
+	font-size: 26px\0;
+}

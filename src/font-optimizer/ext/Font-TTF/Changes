@@ -1,0 +1,6 @@
+0.45
+
+* Introduce changelog
+* tidy up 0.44 package, fix README to be more accurate
+* tests failing on perl 5.8.2 and before due to no use Exporter qw(import);
+  Fix OTTags accordingly.

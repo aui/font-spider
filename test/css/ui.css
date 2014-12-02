@@ -1,0 +1,77 @@
+@charset "utf-8";
+
+/** Reset */
+@import url("./g.css");
+@font-face {
+  font-family: 'art';
+  /*IE*/
+  src: url('../font/FZLTCXHJW--GB1-0.eot');
+  /*现代浏览器*/
+  src:
+    url('../font/FZLTCXHJW--GB1-0.eot?#font-spider') format('embedded-opentype'),
+    url('../font/FZLTCXHJW--GB1-0.woff') format('woff'),
+    url('../font/FZLTCXHJW--GB1-0.ttf') format('truetype'),
+    url('../font/FZLTCXHJW--GB1-0.svg') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'FZJT';
+  src: url('../font/FZJT.eot');
+  src:
+    url('../font/FZJT.eot?#font-spider') format('embedded-opentype'),
+    url('../font/FZJT.woff') format('woff'),
+    url('../font/FZJT.ttf') format('truetype'),
+    url('../font/FZJT.svg') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+h1 strong {
+  font-family: 'FZJT', arial, sans-serif;
+  font-size: 64px;
+}
+
+h1 span {
+  font-family: 'art', arial, sans-serif;
+  font-size: 24px;
+  color: #888;
+}
+@font-face {
+  font-family: 'FZXiaoZhuanTi-S13T';
+  src: url('../font/FZXiaoZhuanTi-S13T.eot');
+  src:
+  url('../font/FZXiaoZhuanTi-S13T?#font-spider') format('embedded-opentype'),
+    url('../font/FZXiaoZhuanTi-S13T.woff') format('woff'),
+    url('../font/FZXiaoZhuanTi-S13T.ttf') format('truetype'),
+    url('../font/FZXiaoZhuanTi-S13T.svg') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+.zhuanti {
+  font-family: 'FZXiaoZhuanTi-S13T';
+  font-size: 32px;
+  color: #888;
+  -webkit-writing-mode: vertical-rl;
+  -ms-writing-mode: tb-rl;
+  writing-mode: vertical-rl;
+  *writing-mode: tb-rl;/* IE 写法 */
+  unicode-bidi : bidi-override;
+}
+
+.test {
+  font-family: 'LT';
+  font-size: 36px;
+  color: #666;
+}
+
+
+
+
+@media screen and (min-width: 48em) and (max-width: 64em) {
+  strong       { font-family: 'art'; }
+  .sans-serif-m   { font-family: avenir, 'avenir next', helvetica, arial, sans-serif; }
+  .font-fantasy-m { font-family: fantasy; }
+  .font-cursive-m { font-family: cursive; }
+  .font-mono-m    { font-family: monospace; }
+}

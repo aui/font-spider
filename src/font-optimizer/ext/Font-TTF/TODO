@@ -1,0 +1,5 @@
+
+* update() is a mess. What is needed is a mark sweep clean algorithm where the
+  dirty is used only for tables that have changed. Thus if a table is updated
+  it could well become dirty! Also need to be able to pass a force parameter
+  to force a table to update and all the tables in its dependency tree.
