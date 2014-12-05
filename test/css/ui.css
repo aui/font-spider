@@ -17,7 +17,7 @@
 }
 
 @font-face {
-  font-family: 'FZJT';
+  font-family: 'ft';
   src: url('../font/FZJT.eot');
   src:
     url('../font/FZJT.eot?#font-spider') format('embedded-opentype'),
@@ -28,20 +28,21 @@
   font-style: normal;
 }
 h1 strong {
-  font-family: 'FZJT', arial, sans-serif;
+  font-family: 'ft', arial, sans-serif;
   font-size: 64px;
 }
-
+ul li:first {
+  font-family: 'ft', arial, sans-serif;
+}
 h1 span {
   font-family: 'art', arial, sans-serif;
   font-size: 24px;
-  color: #888;
 }
 @font-face {
-  font-family: 'FZXiaoZhuanTi-S13T';
+  font-family: 'S13T';
   src: url('../font/FZXiaoZhuanTi-S13T.eot');
   src:
-  url('../font/FZXiaoZhuanTi-S13T?#font-spider') format('embedded-opentype'),
+  url('../font/FZXiaoZhuanTi-S13T.eot?#font-spider') format('embedded-opentype'),
     url('../font/FZXiaoZhuanTi-S13T.woff') format('woff'),
     url('../font/FZXiaoZhuanTi-S13T.ttf') format('truetype'),
     url('../font/FZXiaoZhuanTi-S13T.svg') format('svg');
@@ -49,9 +50,8 @@ h1 span {
   font-style: normal;
 }
 .zhuanti {
-  font-family: 'FZXiaoZhuanTi-S13T';
+  font-family: 'S13T';
   font-size: 32px;
-  color: #888;
   -webkit-writing-mode: vertical-rl;
   -ms-writing-mode: tb-rl;
   writing-mode: vertical-rl;
@@ -62,7 +62,6 @@ h1 span {
 .test {
   font-family: 'LT';
   font-size: 36px;
-  color: #666;
 }
 
 
