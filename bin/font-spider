@@ -50,7 +50,6 @@ var fontspider = new FontSpider(files, {
 
 fontspider.onoutput = function (data) {
 	console.log('Font name: ' + (data.fontName).cyan);
-	console.log('CSS Selectors: ' + data.selectors);
 	console.log('Include chars: ' + data.includeChars);
 	console.log('Original size: ' + (data.originalSize / 1000 + ' KB').green);
 	data.output.forEach(function (item) {

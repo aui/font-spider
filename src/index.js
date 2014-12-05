@@ -21,7 +21,6 @@ var copyFile = function (srcpath, destpath) {
 
 var FontSpider = function (src, options) {
 
-
 	if (typeof src === 'string') {
 		src = glob.sync(src);
 	} else {
@@ -62,10 +61,13 @@ FontSpider.prototype = {
 		var BACKUP_EXTNAME = '.backup';
 
 
-		new Spider(src, function (data) {
+		new Spider(src, function (error, data) {
+
+			if (error) {
+				throw error;
+			}
 
 			var result = [];
-			var error = null;
 
 			data.forEach(function (item) {
 
@@ -93,10 +95,20 @@ FontSpider.prototype = {
 		        });
 
 
+		        // 如果没有使用任何字符，则不处理字体
+		        if (!chars) {
+		        	return;
+		        }
+
+
 		        // 找到 .ttf 的字体文件
 		        var src, dest;
 		        item.files.forEach(function (file) {
 		            var extname = path.extname(file).toLocaleLowerCase();
+		            
+			        if (error) {
+			        	return;
+			        }
 
 		            if (extname !== '.ttf') {
 		            	return;
@@ -104,7 +116,7 @@ FontSpider.prototype = {
 
 	            	if (fs.existsSync(file)) { 
 		            	
-		            	if (fs.existsSync(file + BACKUP_EXTNAME)) {
+		            	if (backup && fs.existsSync(file + BACKUP_EXTNAME)) {
 		            		// 使用备份的字体
 		            		src = file + BACKUP_EXTNAME;
 		            	} else {
@@ -177,7 +189,6 @@ FontSpider.prototype = {
 
 	            var info = {
 	            	fontName: item.name,
-	            	selectors: item.selectors,
 	            	includeChars: chars.replace(/[\n\r\t]/g, ''),
 	            	originalSize: stat.size,
 	            	output: [{

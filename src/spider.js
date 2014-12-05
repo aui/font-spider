@@ -6,7 +6,7 @@ var async = require('async');
 var css = require('css');
 var jsdom = require('./jsdom');
 
-var RE_SERVER = /^(http\:|https\:)/;
+var RE_SERVER = /^(\/|http\:|https\:)/;
 
 var Spider = function (htmlFiles, callback, debug) {
 
@@ -18,7 +18,6 @@ var Spider = function (htmlFiles, callback, debug) {
 	this._debug = !!debug;
 	this._files = {};
 	this._chars = {};
-	this._selectors = {};
 	this._cssFiles = {};
 
 	this._load(callback);
@@ -38,7 +37,7 @@ Spider.prototype = {
 			htmlFiles = [htmlFiles];
 		}
 
-		async.each(htmlFiles, function (htmlFile, callback) {
+		async.each(htmlFiles, function (htmlFile, cb) {
 
 			htmlFile = path.resolve(htmlFile);
 
@@ -53,20 +52,16 @@ Spider.prototype = {
 					that._htmlParser(htmlFile, window);
 					window.close();
 
-					callback();
+					cb();
 				}
 			});
 			
 		}, function (errors) {
 
-			if (errors) {
-				throw errors;
-			}
-
-			var result = that._getResult();
+			var result = errors ? null : that._getResult();
 			that._log('result', result);
 
-			callback(result);
+			callback(errors, result);
 		});
 	},
 
@@ -79,7 +74,6 @@ Spider.prototype = {
 		var hashmap;
 		var files = this._files;
 		var chars = this._chars;
-		var selectors = this._selectors;
 		var fn = function (val) {
 			if (hashmap[val]) {
 				return false;
@@ -102,12 +96,10 @@ Spider.prototype = {
 				list.push({
 					name: familyName,
 					chars: chars[familyName],
-					selectors: selectors[familyName].join(', '),
 					files: files[familyName]
 				});
 			}
 		}
-
 		
 		return list;
 	},
@@ -130,15 +122,23 @@ Spider.prototype = {
 			var cssSelectors = data.selectors.join(', ');
 			data.familys.forEach(function (family) {
 
+				if (!that._files[family]) {
+					return;
+				}
+
 				that._chars[family] = that._chars[family] || '';
-				that._selectors[family] = that._selectors[family] || [];
 
 				// 剔除状态伪类
 				var selectors = cssSelectors.replace(RE_SPURIOUS, '');
 
-				var elements = document.querySelectorAll(selectors);
-
-				that._selectors[family].push(selectors);
+				try {
+					var elements = document.querySelectorAll(selectors);
+				} catch (e) {
+					// 1. 包含 :before 等不支持的伪类
+					// 2. 非法语句
+					return;
+				}
+				
 
 				elements = Array.prototype.slice.call(elements);
 				elements.forEach(function (element) {
@@ -163,6 +163,7 @@ Spider.prototype = {
 			var cssContent;
 			var cssDir = htmlDir;
 			var cssFile;
+			var href = elem.getAttribute('href');
 
 			// 忽略含有有 disabled 属性的
 			if (elem.disabled) {
@@ -170,17 +171,18 @@ Spider.prototype = {
 			}
 
 			// link 标签
-			if (elem.href) {
+			if (href) {
 				
-				if (!RE_SERVER.test(elem.href)) {
-					cssFile = path.resolve(htmlDir, elem.href);
+				if (!RE_SERVER.test(href)) {
+
+					cssFile = path.resolve(htmlDir, href);
 					cssDir = path.dirname(cssFile);
 
-					if (!that._cssFiles[cssFile]) {
+					if (!that._cssFiles[cssFile] && fs.existsSync(cssFile)) {
 						cssContent = fs.readFileSync(cssFile, 'utf-8');
 					}
 				} else {
-					that._log('[CSS] ignore', elem.href);
+					that._log('[CSS] ignore', href);
 				}
 
 
@@ -197,10 +199,9 @@ Spider.prototype = {
 				// 根据 css 选择器查询使用了自定义字体的节点
 				cssInfo = that._cssParser(cssContent, cssDir);
 				cssInfo.files.forEach(function (data, cssFile) {
+
 					that._files[data.name] = data.files;
-					data.files.forEach(function (value, index) {
-						data.files[index] = path.resolve(cssDir, value);
-					});
+
 				});
 
 				// 记录已处理过的样式文件
@@ -224,9 +225,16 @@ Spider.prototype = {
 		var files = [];
 		var selectors = [];
 
+		// url(../font/font.ttf)
 		var RE_URL = /url\(['"]?(.*?)['"]?\)/ig;
+
+		// ../font/font.eot?#font-spider
 		var RE_SPLIT = /[#?].*$/g;
+
+		// "../font/font.ttf"
 		var RE_QUOTATION = /^['"]|['"]$/g;
+
+		// art, lanting, heiti
 		var RE_SPLIT_COMMA = /\s*,\s*/;
 
 		var ast = css.parse(string, {});
@@ -242,11 +250,15 @@ Spider.prototype = {
 
 					if (!RE_SERVER.test(url)) {
 						var target = path.resolve(base, url);
-						var cssContent = fs.readFileSync(target, 'utf-8');
-						var cssInfo = that._cssParser(cssContent, path.dirname(target));
 
-						files = files.concat(cssInfo.files);
-						selectors = selectors.concat(cssInfo.selectors);
+						if (fs.existsSync(target)) {
+							var cssContent = fs.readFileSync(target, 'utf-8');
+							var cssInfo = that._cssParser(cssContent, path.dirname(target));
+
+							files = files.concat(cssInfo.files);
+							selectors = selectors.concat(cssInfo.selectors);
+						}
+
 					}
 
 					break;
@@ -279,7 +291,13 @@ Spider.prototype = {
 								while ((url = RE_URL.exec(value)) !== null) {
 									url = url[1].replace(RE_SPLIT, '');
 									if (!RE_SERVER.test(url)) {
-										family.files.push(url);
+
+										url = path.resolve(base, url);
+
+										if (family.files.indexOf(url) === -1) {
+											family.files.push(url);
+										}
+
 									}
 								}
 
@@ -331,6 +349,7 @@ Spider.prototype = {
 					if (selector.familys.length) {
 						selectors.push(selector);
 					}
+
 					break;
 			}
 
@@ -355,4 +374,8 @@ Spider.prototype = {
 
 module.exports = Spider;
 
-// TODO: 测试大写 css 规则
+// TODO:
+// 异步优化
+// 测试大写 css 规则
+// html base 标签处理
+// 支持远程资源
