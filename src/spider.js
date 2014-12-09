@@ -6,7 +6,8 @@ var async = require('async');
 var css = require('css');
 var jsdom = require('./jsdom');
 
-var RE_SERVER = /^(\/|http\:|https\:)/;
+var RE_SERVER = /^(\/|http\:|https\:)/i;
+
 
 var Spider = function (htmlFiles, callback, debug) {
 
@@ -232,7 +233,10 @@ Spider.prototype = {
 		var RE_SPLIT = /[#?].*$/g;
 
 		// "../font/font.ttf"
-		var RE_QUOTATION = /^['"]|['"]$/g;
+		var RE_QUOTATION = /^['"]|['"]/g;
+
+		// !important
+		var RE_IMPORTANT = /!important[\s\t]*$/i;
 
 		// art, lanting, heiti
 		var RE_SPLIT_COMMA = /\s*,\s*/;
@@ -278,7 +282,10 @@ Spider.prototype = {
 						switch (property) {
 							case 'font-family':
 
-								value = value.trim().replace(RE_QUOTATION, '');
+								value = value
+								.replace(RE_IMPORTANT, '')
+								.replace(RE_QUOTATION, '')
+								.trim();
 
 								family.name = value;
 								
@@ -333,7 +340,12 @@ Spider.prototype = {
 
 								value.split(RE_SPLIT_COMMA).forEach(function (val) {
 									// 去掉空格与前后引号
-									val = val.trim().replace(RE_QUOTATION, '');
+									val = val
+									.replace(RE_IMPORTANT, '')
+									.replace(RE_QUOTATION, '')
+									.trim();
+
+
 									selector.familys.push(val);
 								});
 								
@@ -375,6 +387,7 @@ Spider.prototype = {
 module.exports = Spider;
 
 // TODO:
+// !important 语句
 // 异步优化
 // 测试大写 css 规则
 // html base 标签处理
