@@ -1,7 +1,7 @@
 @charset "utf-8";
 
 /** Reset */
-@import url("./g.css");
+@import url("./g.css?t=2009");
 @font-face {
   font-family: 'art';
   /*IE*/
@@ -16,6 +16,8 @@
   font-style: normal;
 }
 
+
+
 @font-face {
   font-family: 'ft';
   src: url('../font/FZJT.eot');
@@ -26,6 +28,7 @@
     url('../font/FZJT.svg') format('svg');
   font-weight: normal;
   font-style: normal;
+
 }
 h1 strong {
   font-family: 'ft', arial, sans-serif;

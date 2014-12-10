@@ -6,7 +6,11 @@ var async = require('async');
 var css = require('css');
 var jsdom = require('./jsdom');
 
+// http://font-spider.org/css/style.css
 var RE_SERVER = /^(\/|http\:|https\:)/i;
+
+// ../font/font.eot?#font-spider
+var RE_QUERY = /[#?].*$/g;
 
 
 var Spider = function (htmlFiles, callback, debug) {
@@ -173,6 +177,8 @@ Spider.prototype = {
 
 			// link 标签
 			if (href) {
+
+				href = href.replace(RE_QUERY, '');
 				
 				if (!RE_SERVER.test(href)) {
 
@@ -190,6 +196,7 @@ Spider.prototype = {
 			// style 标签
 			} else {
 				cssContent = elem.textContent;
+
 			}
 
 
@@ -198,7 +205,7 @@ Spider.prototype = {
 			} else {
 
 				// 根据 css 选择器查询使用了自定义字体的节点
-				cssInfo = that._cssParser(cssContent, cssDir);
+				cssInfo = that._cssParser(cssContent, cssFile || htmlFile);
 				cssInfo.files.forEach(function (data, cssFile) {
 
 					that._files[data.name] = data.files;
@@ -220,17 +227,10 @@ Spider.prototype = {
 
 
 	// 提取 css 中要用到的信息
-	_cssParser: function (string, base) {
-
-		var that = this;
-		var files = [];
-		var selectors = [];
+	_cssParser: function (string, filename) {
 
 		// url(../font/font.ttf)
 		var RE_URL = /url\(['"]?(.*?)['"]?\)/ig;
-
-		// ../font/font.eot?#font-spider
-		var RE_SPLIT = /[#?].*$/g;
 
 		// "../font/font.ttf"
 		var RE_QUOTATION = /^['"]|['"]/g;
@@ -241,7 +241,26 @@ Spider.prototype = {
 		// art, lanting, heiti
 		var RE_SPLIT_COMMA = /\s*,\s*/;
 
-		var ast = css.parse(string, {});
+		filename = filename.replace(RE_QUERY, '');
+
+		var that = this;
+		var base = path.dirname(filename);
+		var files = [];
+		var selectors = [];
+
+		try {
+			var ast = css.parse(string, {
+				silent: true
+			});	
+		} catch (e) {
+			console.error(filename);
+			console.error(e.toString());
+			return {
+				files: [],
+				selectors: []
+			};
+		}
+
 
 		var parser = function (rule) {
 
@@ -251,13 +270,14 @@ Spider.prototype = {
 					
 					RE_URL.lastIndex = 0;
 					var url = RE_URL.exec(rule['import'])[1];
+					url = url.replace(RE_QUERY, '');
 
 					if (!RE_SERVER.test(url)) {
 						var target = path.resolve(base, url);
 
 						if (fs.existsSync(target)) {
 							var cssContent = fs.readFileSync(target, 'utf-8');
-							var cssInfo = that._cssParser(cssContent, path.dirname(target));
+							var cssInfo = that._cssParser(cssContent, target);
 
 							files = files.concat(cssInfo.files);
 							selectors = selectors.concat(cssInfo.selectors);
@@ -296,7 +316,7 @@ Spider.prototype = {
 
 								RE_URL.lastIndex = 0;
 								while ((url = RE_URL.exec(value)) !== null) {
-									url = url[1].replace(RE_SPLIT, '');
+									url = url[1].replace(RE_QUERY, '');
 									if (!RE_SERVER.test(url)) {
 
 										url = path.resolve(base, url);
