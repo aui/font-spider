@@ -206,6 +206,7 @@ Spider.prototype = {
 
 				// 根据 css 选择器查询使用了自定义字体的节点
 				cssInfo = that._cssParser(cssContent, cssFile || htmlFile);
+
 				cssInfo.files.forEach(function (data, cssFile) {
 
 					that._files[data.name] = data.files;
@@ -296,7 +297,7 @@ Spider.prototype = {
 
 					rule.declarations.forEach(function (declaration) {
 
-						var property = declaration.property;
+						var property = declaration.property.toLocaleLowerCase();
 						var value = declaration.value;
 
 						switch (property) {
@@ -352,7 +353,7 @@ Spider.prototype = {
 
 					rule.declarations.forEach(function (declaration) {
 
-						var property = declaration.property;
+						var property = declaration.property.toLocaleLowerCase();
 						var value = declaration.value;
 
 						switch (property) {
