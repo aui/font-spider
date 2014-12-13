@@ -252,7 +252,7 @@ Spider.prototype = {
 		try {
 			var ast = css.parse(string, {
 				silent: true
-			});	
+			});
 		} catch (e) {
 			console.error(filename);
 			console.error(e.toString());
@@ -297,8 +297,12 @@ Spider.prototype = {
 
 					rule.declarations.forEach(function (declaration) {
 
-						var property = declaration.property.toLocaleLowerCase();
+						var property = declaration.property;
 						var value = declaration.value;
+
+						if (property) {
+							property = property.toLocaleLowerCase();
+						}
 
 						switch (property) {
 							case 'font-family':
@@ -353,8 +357,12 @@ Spider.prototype = {
 
 					rule.declarations.forEach(function (declaration) {
 
-						var property = declaration.property.toLocaleLowerCase();
+						var property = declaration.property;
 						var value = declaration.value;
+
+						if (property) {
+							property = property.toLocaleLowerCase()
+						}
 
 						switch (property) {
 							case 'font-family':
