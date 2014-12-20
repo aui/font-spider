@@ -71,32 +71,35 @@ Spider.prototype = {
 	},
 
 
+	// 数组除重复
+	_unique: function (array) {
+		var ret = [];
+
+		array.forEach(function (val) {
+			if (ret.indexOf(val) === -1) {
+				ret.push(val);
+			}
+		});
+
+		return ret;
+	},
+
 
 	_getResult: function () {
 
-		var familyName;
 		var list = [];
-		var hashmap;
 		var files = this._files;
 		var chars = this._chars;
-		var fn = function (val) {
-			if (hashmap[val]) {
-				return false;
-			} else {
-				hashmap[val] = true;
-				return true;
-			}
-		};
+		var that = this;
+
 
 		// 对文本进行除重操作
-		for (familyName in chars) {
-			hashmap = {};
-			chars[familyName] = chars[familyName].split('').filter(fn).join('');
-			hashmap = null;
-		}
+		Object.keys(chars).forEach(function (familyName) {
+			chars[familyName] = that._unique(chars[familyName].split('')).join('');
+		});
 
 
-		for (familyName in files) {
+		Object.keys(files).forEach(function (familyName) {
 			if (chars[familyName]) {
 				list.push({
 					name: familyName,
@@ -104,7 +107,7 @@ Spider.prototype = {
 					files: files[familyName]
 				});
 			}
-		}
+		});
 		
 		return list;
 	},

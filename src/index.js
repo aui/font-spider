@@ -177,7 +177,7 @@ FontSpider.prototype = {
 	            	} else {
 		            	error = {
 		            		code: 4,
-		            		message: 'Optimizer error',
+		            		message: 'Optimizer error.\n' + src,
 		            		result: optimizerResult.output
 		            	};
 	            	}
