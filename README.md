@@ -77,6 +77,13 @@ font-spider dest/index.html dest/new.html
 
 来源：<http://caniuse.com/#feat=fontface>
 
+## 贡献者
+
+* [@糖饼](http://www.weibo.com/planeart)
+* [@fufu](http://www.weibo.com/u/1715968673)
+* [@kdd](http://www.weibo.com/kddie)
+
+
 =============
 
 *字体受版权保护，若在网页中使用商业字体，请联系相关字体厂商购买授权*
