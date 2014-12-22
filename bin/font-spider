@@ -41,26 +41,26 @@ var files = process.argv.slice(2);
 
 
 if (!files.length) {
-	return;
+    return;
 }
 
 var fontspider = new FontSpider(files, {
-	debug: false
+    debug: false
 });
 
 fontspider.onoutput = function (data) {
-	console.log('Font name: ' + (data.fontName).cyan);
-	console.log('Original size: ' + (data.originalSize / 1000 + ' KB').green);
+    console.log('Font name: ' + (data.fontName).cyan);
+    console.log('Original size: ' + (data.originalSize / 1000 + ' KB').green);
     console.log('Include chars: ' + data.includeChars);
-	data.output.forEach(function (item) {
-		console.log('File ' + (item.file).cyan + ' created: ' + (item.size / 1000 + ' kB').green);
-	});
-	console.log('')
+    data.output.forEach(function (item) {
+        console.log('File ' + (item.file).cyan + ' created: ' + (item.size / 1000 + ' kB').green);
+    });
+    console.log('');
 };
 
 fontspider.onend = function () {};
 fontspider.onerror = function (e) {
-	console.error((e.message).red);
+    console.error((e.message).red);
     if (e.result) {
         console.error(e.result);
     }
