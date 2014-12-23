@@ -61,10 +61,10 @@ npm install font-spider -g
 ###	压缩 WebFont
 
 ```
-font-spider dest/index.html dest/about.html
+font-spider 1.html 2.html 3.html
 ```
 
-支持通配符，例如：``font-spider dest/*.html``
+> * 支持通配符，例如：``font-spider dest/*.html``
 
 ##	字体兼容性参考
 
