@@ -168,10 +168,10 @@ Spider.prototype = {
 			that._log('[HTML]', elem.outerHTML.replace(/>[\w\W]*<\//, '> ... <\/'));
 
 			var cssInfo;
-			var cssContent;
 			var cssDir = htmlDir;
 			var cssFile;
 			var href = elem.getAttribute('href');
+			var cssContent = '';
 
 			// 忽略含有有 disabled 属性的
 			if (elem.disabled) {
@@ -254,11 +254,17 @@ Spider.prototype = {
 
 		try {
 			var ast = css.parse(string, {
-				silent: true
+				//silent: true
 			});
 		} catch (e) {
-			console.error(filename);
-			console.error(e.toString());
+
+			if (e.line !== undefined) {
+				console.error(filename);
+				console.error(e.toString());
+			} else {
+				throw e;
+			}
+
 			return {
 				files: [],
 				selectors: []
