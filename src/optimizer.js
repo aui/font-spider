@@ -74,7 +74,12 @@ Optimizer.prototype.minify = function (dest, chars) {
 
         // result.output
 
-        fs.renameSync(temp, dest);
+        if (fs.existsSync(temp)) {
+            fs.renameSync(temp, dest);
+        } else {
+            console.error('error', result.output);
+        }
+        
     }
 
     fs.unlinkSync(charsfile);

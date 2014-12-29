@@ -279,7 +279,14 @@ Spider.prototype = {
 				case 'import':
 					
 					RE_URL.lastIndex = 0;
-					var url = RE_URL.exec(rule['import'])[1];
+					var url = rule['import'];
+
+					// @import url("./g.css?t=2009");
+					// @import "./g.css?t=2009";
+					if (/url/i.test(url)) {
+						url = RE_URL.exec(url)[1];
+					}
+
 					url = url.replace(RE_QUERY, '');
 
 					if (!RE_SERVER.test(url)) {
