@@ -4,28 +4,46 @@ var fs = require('fs');
 var path = require('path');
 var async = require('async');
 var css = require('css');
+var ignore = require('ignore');
 var jsdom = require('./jsdom');
 
 // http://font-spider.org/css/style.css
-var RE_SERVER = /^(\/|http\:|https\:)/i;
+//var RE_SERVER = /^(\/|http\:|https\:)/i;
+var RE_SERVER = /^(http\:|https\:)/i;
 
 // ../font/font.eot?#font-spider
 var RE_QUERY = /[#?].*$/g;
 
 
-var Spider = function (htmlFiles, callback, debug) {
+var Spider = function (htmlFiles, options, callback) {
+
+	options = this._getOptions(options);
+
 
 	if (typeof htmlFiles === 'string') {
 		htmlFiles = [htmlFiles];
 	}
 
 	this._htmlFiles = htmlFiles;
-	this._debug = !!debug;
+	this._debug = options.debug;
 	this._files = {};
 	this._chars = {};
 	this._cssFiles = {};
+	this.options = options;
+
+	this._ignore = ignore({
+	    ignore: options.ignore
+	});
 
 	this._load(callback);
+};
+
+
+Spider.defaults = {
+	debug: false,
+	silent: false,
+	ignore: [],
+	map: []
 };
 
 Spider.prototype = {
@@ -42,6 +60,8 @@ Spider.prototype = {
 			htmlFiles = [htmlFiles];
 		}
 
+		htmlFiles = this._ignore.filter(htmlFiles);
+
 		async.each(htmlFiles, function (htmlFile, cb) {
 
 			htmlFile = path.resolve(htmlFile);
@@ -49,15 +69,20 @@ Spider.prototype = {
 			jsdom.env({
 				file: htmlFile,
 				done: function (errors, window) {
+
 					if (errors) {
-						throw errors;
+						var error = new Error('Error: ' + htmlFile + '\n'
+							+ 'Error: syntax error\n');
+						callback(error, null);
+
+					} else {
+
+						that._htmlParser(htmlFile, window);
+						window.close();
+
+						cb();
 					}
 
-
-					that._htmlParser(htmlFile, window);
-					window.close();
-
-					cb();
 				}
 			});
 			
@@ -68,6 +93,52 @@ Spider.prototype = {
 
 			callback(errors, result);
 		});
+	},
+
+
+	_getOptions: function (options) {
+		var ret = {};
+
+		options = options || {};
+
+		Object.keys(Spider.defaults).forEach(function (key) {
+			ret[key] = Spider.defaults[key];
+			if (options[key] !== undefined) {
+				ret[key] = options[key];
+			}
+		});
+
+
+		ret.map = ret.map.map(function (params) {
+			if (typeof params[0] === 'string') {
+				params[0] = new RegExp(params[0]);
+			}
+			return params;
+		});
+
+
+		return ret;
+	},
+
+
+
+	// 根据正则替换 URL
+	_map: function (uri) {
+		var regs = this.options.map;
+
+		if (!regs || !regs.length) {
+			return uri;
+		}
+
+		if (!Array.isArray(regs[0])) {
+			regs = [regs];
+		}
+
+		regs.forEach(function (reg) {
+			uri = uri.replace.apply(uri, reg);
+		});
+
+		return uri;
 	},
 
 
@@ -93,9 +164,12 @@ Spider.prototype = {
 		var that = this;
 
 
-		// 对文本进行除重操作
+		
 		Object.keys(chars).forEach(function (familyName) {
+			// 对文本进行除重操作
 			chars[familyName] = that._unique(chars[familyName].split('')).join('');
+			// 删除无效字符
+			chars[familyName] = chars[familyName].replace(/[\n\r\t]/g, '');
 		});
 
 
@@ -178,9 +252,14 @@ Spider.prototype = {
 				return;
 			}
 
+			if (!that._ignore.filter([href]).length) {
+				return;
+			}
+
 			// link 标签
 			if (href) {
 
+				href = that._map(href);
 				href = href.replace(RE_QUERY, '');
 				
 				if (!RE_SERVER.test(href)) {
@@ -188,11 +267,17 @@ Spider.prototype = {
 					cssFile = path.resolve(htmlDir, href);
 					cssDir = path.dirname(cssFile);
 
-					if (!that._cssFiles[cssFile] && fs.existsSync(cssFile)) {
-						cssContent = fs.readFileSync(cssFile, 'utf-8');
+					if (!that._cssFiles[cssFile]) {
+						if (fs.existsSync(cssFile)) {
+							cssContent = fs.readFileSync(cssFile, 'utf8');
+						} else {
+							that._error('Error: ' + htmlFile);
+							that._error('Error: not found "' + href + '"\n');
+						}
 					}
 				} else {
-					that._log('[CSS] ignore', href);
+					that._error('Error: ' + htmlFile);
+					that._error('Error: does not support the absolute path "' + href + '"\n');
 				}
 
 
@@ -234,9 +319,12 @@ Spider.prototype = {
 	_cssParser: function (string, filename) {
 
 		// url(../font/font.ttf)
-		var RE_URL = /url\(['"]?(.*?)['"]?\)/ig;
+		// url("../font/font.ttf")
+		// url('../font/font.ttf')
+		var RE_URL = /url\((.*?)\)/ig;
 
 		// "../font/font.ttf"
+		// '../font/font.ttf'
 		var RE_QUOTATION = /^['"]|['"]/g;
 
 		// !important
@@ -258,11 +346,11 @@ Spider.prototype = {
 			});
 		} catch (e) {
 
+			that._error('Error: ' + filename);
 			if (e.line !== undefined) {
-				console.error(filename);
-				console.error(e.toString());
-			} else {
-				throw e;
+				that._error(e.toString() + '\n');
+			} else if (e.stack) {
+				that._error(e.stack + '\n');
 			}
 
 			return {
@@ -274,12 +362,15 @@ Spider.prototype = {
 
 		var parser = function (rule) {
 
+			var position = rule.position;
+
 			switch (rule.type) {
 
 				case 'import':
 					
 					RE_URL.lastIndex = 0;
 					var url = rule['import'];
+					
 
 					// @import url("./g.css?t=2009");
 					// @import "./g.css?t=2009";
@@ -287,19 +378,49 @@ Spider.prototype = {
 						url = RE_URL.exec(url)[1];
 					}
 
+					url = url.replace(RE_QUOTATION, '');
+
+					if (!that._ignore.filter([url]).length) {
+						break;
+					};
+
+					url = that._map(url);
 					url = url.replace(RE_QUERY, '');
 
 					if (!RE_SERVER.test(url)) {
 						var target = path.resolve(base, url);
 
+						
 						if (fs.existsSync(target)) {
-							var cssContent = fs.readFileSync(target, 'utf-8');
+							var cssContent = fs.readFileSync(target, 'utf8');
 							var cssInfo = that._cssParser(cssContent, target);
 
 							files = files.concat(cssInfo.files);
 							selectors = selectors.concat(cssInfo.selectors);
+
+						} else {
+							
+							var errorInfo = filename;
+							
+							if (position) {
+								errorInfo += (':' + position.start.line);
+							}
+
+							that._error('Error: ' + errorInfo);
+							that._error('Error: not found "' + url + '"\n');
+
 						}
 
+					} else {
+
+						var errorInfo = filename;
+
+						if (position) {
+							errorInfo += (':' + position.start.line);
+						}
+
+						that._error('Error: ' + errorInfo);
+						that._error('Error: does not support the absolute path "' + url + '"\n');
 					}
 
 					break;
@@ -337,7 +458,12 @@ Spider.prototype = {
 
 								RE_URL.lastIndex = 0;
 								while ((url = RE_URL.exec(value)) !== null) {
-									url = url[1].replace(RE_QUERY, '');
+
+									url = url[1];
+									url = url.replace(RE_QUOTATION, '');
+									url = that._map(url);
+									url = url.replace(RE_QUERY, '');
+
 									if (!RE_SERVER.test(url)) {
 
 										url = path.resolve(base, url);
@@ -346,6 +472,17 @@ Spider.prototype = {
 											family.files.push(url);
 										}
 
+									} else {
+
+										var errorInfo = filename;
+										
+										if (position) {
+											errorInfo += (':' + position.start.line);
+										}
+
+										that._error('Error: ' + errorInfo);
+										that._error('Error: does not support the absolute path "' + url + '"\n');
+
 									}
 								}
 
@@ -353,7 +490,12 @@ Spider.prototype = {
 						}
 					});
 
-					files.push(family);
+
+					if (family.name) {
+						family.files = that._ignore.filter(family.files);
+						files.push(family);
+					}
+
 
 					break;
 
@@ -421,6 +563,12 @@ Spider.prototype = {
 		};
 	},
 
+	_error: function () {
+		if (!this.options.silent || this._debug) {
+			console.error.apply(console, arguments);
+		}
+	},
+
 	_log: function () {
 		if (this._debug) {
 			console.log.apply(console, arguments);
@@ -431,10 +579,3 @@ Spider.prototype = {
 
 module.exports = Spider;
 
-// TODO:
-// 异步优化
-// 测试大写 css 规则
-// html base 标签处理
-// 支持远程资源
-// css hack 语法处理
-// 错误流程优化
