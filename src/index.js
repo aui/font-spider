@@ -32,10 +32,26 @@ var FontSpider = function (src, options) {
 	}
 
 	options = options || {};
-	
+	Object.keys(FontSpider.defaults).forEach(function (key) {
+		if (options[key] === undefined) {
+			options[key] = FontSpider.defaults[key];
+		}
+	});
+
 	this.src = src;
 	this.options = options;
 };
+
+
+FontSpider.BACKUP_EXTNAME = '.backup';
+FontSpider.defaults = {
+	debug: false,
+	silent: false,
+	backup: true,
+	ignore: [],
+	map: []
+};
+
 
 
 FontSpider.prototype = {
@@ -52,47 +68,23 @@ FontSpider.prototype = {
 		var that = this;
 		var src = this.src;
 		var options = this.options;
-
-		var debug = options.debug;
-		var ignore = options.ignore;
-		var chars = options.chars;
 		var backup = options.backup !== false;
 
-		var BACKUP_EXTNAME = '.backup';
+		var BACKUP_EXTNAME = FontSpider.BACKUP_EXTNAME;
 
 
-		new Spider(src, function (error, data) {
+		new Spider(src, options, function (error, data) {
 
 			if (error) {
-				throw error;
+				that.onerror(error);
+				return;
 			}
 
 			var result = [];
 
 			data.forEach(function (item) {
 
-		        // 忽略的字体
-		        if (ignore && ignore.indexOf(item.name) !== -1) {
-		            return;
-		        }
-
-		        var includeChars = '';
 		        var chars = item.chars;
-
-		        
-		        if (typeof chars === 'string') {
-		            includeChars = chars;
-		        } else if (typeof chars === 'object') {
-		            includeChars = chars[item.name];
-		        }
-
-
-		        // 除重
-		        includeChars.split('').forEach(function (char) {
-		            if (item.chars.indexOf(char) === -1) {
-		                chars += char;
-		            }
-		        });
 
 
 		        // 如果没有使用任何字符，则不处理字体
@@ -130,7 +122,7 @@ FontSpider.prototype = {
 
 		            	error = {
 		            		code: 1,
-		            		message: '"' + file + '" file not found.'
+		            		message: '"' + file + '" file not found'
 		            	};
 		            	that.onerror(error);
 		            }
@@ -147,7 +139,7 @@ FontSpider.prototype = {
 		        if (!src) {
 	            	error = {
 	            		code: 2,
-	            		message: '".ttf" file not found.'
+	            		message: '"' + item.name  + '"' + ' did not find tureType fonts'
 	            	};
 	            	that.onerror(error);
 		            return;
@@ -189,7 +181,7 @@ FontSpider.prototype = {
 
 	            var info = {
 	            	fontName: item.name,
-	            	includeChars: chars.replace(/[\n\r\t]/g, ''),
+	            	includeChars: chars,
 	            	originalSize: stat.size,
 	            	output: [{
 	            		file: path.relative('./', dest),
@@ -217,7 +209,7 @@ FontSpider.prototype = {
 	                    });
 
 	                } else {
-		            	console.warn('File ' + path.relative('./', file) + ' not created.')
+		            	console.warn('File ' + path.relative('./', file) + ' not created')
 	                }
 	                
 	            });
@@ -232,7 +224,7 @@ FontSpider.prototype = {
 			that.onend(result);
 
 
-		}, debug);
+		});
 
 	}
 };
