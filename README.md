@@ -27,7 +27,7 @@ npm install font-spider -g
 ```
 
 > * windows 需要安装 [perl](http://www.perl.org) 环境才可以运行。
-> * GruntJS 用户可使用 [gruntjs 插件](file:///Users/tangbin/Documents/github/font-spider-website/install.html)。
+> * GruntJS 用户可使用 [gruntjs 插件](https://github.com/aui/grunt-font-spider)。
 
 ##	使用范例
 
