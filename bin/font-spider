@@ -1,0 +1,142 @@
+#!/usr/bin/env node
+
+'use strict';
+
+var fs = require('fs');
+var path = require('path');
+var FontSpider = require('../');
+var Spider = require('../src/spider');
+var program = require('commander');
+require('../src/color')(String.prototype);
+
+
+program
+    .version(require('../package.json').version)
+    .usage('[options] <htmlFile ...>')
+    .option('--info', 'Show only webfont information')
+    .option('--ignore <pattern>', 'Ignore the files', list)
+    .option('--map <remotePath,localPath>', 'CSS mapping path', toMap)
+    .option('--debug', 'Enable debug mode')
+    .option('--no-backup', 'Do not back up fonts')
+    .option('--silent', 'Silently fail on parse errors')
+    .option('--revert', 'Revert compressed font file')
+    .parse(process.argv);
+
+
+function list(args) {
+    return args.split(',');
+};
+
+function toMap(args) {
+    args = list(args);
+
+    var map = [];
+    var p = 2;
+    var n = args.length / p;
+    for (var i = 0; i < n; i ++) {
+        map.push([
+            args[p * i],
+            args[p * i + 1]
+        ]);
+    }
+
+    return map;
+};
+
+
+var files = program.args;
+var options = {};
+
+if (!files.length) {
+    program.help();
+    process.exit(1);
+}
+
+Object.keys(program).forEach(function (key) {
+    if (key.indexOf('_') !== 0 && key !== 'args') {
+        options[key] = program[key];
+    }
+});
+
+// 显示 WebFont 信息
+if (options.info) {
+
+    new Spider(files, options, function (error, data) {
+        if (error) {
+            console.error(String(error).red);
+            return;
+        }
+
+        data.forEach(function (item) {
+            process.stdout.write(
+                [
+                    'Font name: ' + (item.name).cyan,
+                    'Include chars: ' + item.chars,
+                    'Font File: \n' +
+                        item.files
+                        .map(function (val) {
+                            return (path.relative('./', val)).cyan;
+                        }).join('\n'),
+                    '\n'
+                ].join('\n')
+            );
+        });
+
+    });
+
+// 恢复备份的字体
+} else if (options.revert) {
+
+    var backupExtname = FontSpider.BACKUP_EXTNAME;
+
+    new Spider(files, options, function (error, data) {
+        if (error) {
+            return;
+        }
+
+        data.forEach(function (item) {
+            item.files.forEach(function (file) {
+                if (fs.existsSync(file + backupExtname)) {
+                    fs.renameSync(file + backupExtname, file);
+                    process.stdout.write('File ' + (path.relative('./', file)).cyan + ' revert\n');
+                }
+            });
+        });
+
+    });
+
+
+// 处理 WebFont
+} else {
+
+
+    var fontspider = new FontSpider(files, options);
+
+
+    fontspider.onoutput = function (data) {
+        process.stdout.write(
+            [
+                'Font name: ' + (data.fontName).cyan,
+                'Original size: ' + (data.originalSize / 1000 + ' KB').green,
+                'Include chars: ' + data.includeChars,
+                data.output.map(function (item) {
+                    return 'File ' + (item.file).cyan + ' created: ' + (item.size / 1000 + ' kB').green;
+                }).join('\n'),
+                '\n'
+            ].join('\n')
+        );
+    };
+
+    fontspider.onend = function () {};
+    fontspider.onerror = function (e) {
+        console.error((e.message).red);
+        if (e.result) {
+            console.error(e.result);
+        }
+    }
+
+    fontspider.start(); 
+}
+
+
+
