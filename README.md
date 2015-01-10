@@ -54,17 +54,31 @@ npm install font-spider -g
 ```
 
 > 1. ``@font-face``中的``src``定义的 .ttf 文件必须存在，其余的格式将由工具自动生成
-> 2. 开发阶段请使用相对路径的 CSS 与 WebFont
-> 3. 不支持动态插入的 CSS 规则与字符
-> 4. 不支持 CSS ``content``属性插入的字符
+> 2. 不支持动态插入的 CSS 规则与字符
+> 3. 不支持 CSS ``content``属性插入的字符
 
 ###	压缩 WebFont
 
 ```
-font-spider 1.html 2.html 3.html
+font-spider [options] <htmlFile ...>
 ```
 
-> * 支持通配符，例如：``font-spider dest/*.html``
+> 支持通配符，例如：``font-spider dest/*.html``
+
+#### Options
+
+```
+-h, --help                    输出帮助信息
+-V, --version                 输出当前版本号
+--info                        仅提取 WebFont 信息显示，不压缩与转码
+--ignore <pattern>            忽略的文件配置（可以是字体、CSS、HTML）
+--map <remotePath,localPath>  映射 CSS 内部 HTTP 路径到本地
+--debug                       开启调试模式
+--no-backup                   关闭字体备份功能
+--silent                      不显示非关键错误
+--revert                      恢复被压缩的 WebFont
+```
+
 
 ##	字体兼容性参考
 
@@ -76,6 +90,18 @@ font-spider 1.html 2.html 3.html
 ``.svg`` | -- | -- | 4 | 3.2 | 9.6 | 3.2 | 3 | 36
 
 来源：<http://caniuse.com/#feat=fontface>
+
+## 更新日志
+
+### 0.1.0
+
+  * 优化错误信息显示
+  * 支持``map``配置映射 CSS 文件中的 http 路径到本地目录
+  * 支持``ignore``配置忽略字体、CSS、HTML 文件
+  
+### 0.0.1
+
+  * 基于 CSS 规则压缩与转码 WebFont
 
 ## 贡献者
 
