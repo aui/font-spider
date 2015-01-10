@@ -13,13 +13,13 @@ require('../src/color')(String.prototype);
 program
     .version(require('../package.json').version)
     .usage('[options] <htmlFile ...>')
-    .option('--info', 'Show only webfont information')
-    .option('--ignore <pattern>', 'Ignore the files', list)
-    .option('--map <remotePath,localPath>', 'CSS mapping path', toMap)
-    .option('--debug', 'Enable debug mode')
-    .option('--no-backup', 'Do not back up fonts')
-    .option('--silent', 'Silently fail on parse errors')
-    .option('--revert', 'Revert compressed font file')
+    .option('--info', 'show only webfont information')
+    .option('--ignore <pattern>', 'ignore the files', list)
+    .option('--map <remotePath,localPath>', 'mapping the remote path to the local', toMap)
+    .option('--debug', 'enable debug mode')
+    .option('--no-backup', 'do not back up fonts')
+    .option('--silent', 'silently fail on parse errors')
+    .option('--revert', 'revert compressed font file')
     .parse(process.argv);
 
 
