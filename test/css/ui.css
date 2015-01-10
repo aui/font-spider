@@ -3,6 +3,9 @@
 /** Reset */
 @import url("./g.css?t=2009");
 @import "./g2.css";
+@import "404.css";
+@import "/css/http.css";
+@import "http://test.com/css/test.css";
 @font-face {
   font-family: 'art';
   /*IE*/
@@ -21,7 +24,7 @@
 
 @font-face {
   font-family: 'ft';
-  src: url('../font/FZJT.eot');
+  src: url('../font/FZJT.eot');/*IE9 Compat Modes*/
   src:
     url('../font/FZJT.eot?#font-spider') format('embedded-opentype'),
     url('../font/FZJT.woff') format('woff'),
