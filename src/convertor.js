@@ -2,6 +2,8 @@
 
 var fs = require('fs');
 var path = require('path');
+var util = require('util');
+var SVGO = require('svgo');
 
 var ttf2eot = require('ttf2eot');
 var ttf2woff = require('ttf2woff');
@@ -48,7 +50,17 @@ FontConvertor.prototype = {
 		var ttf = this._ttf;
 		var svg = ttf2svg(ttf);
 
-		fs.writeFileSync(outfile, svg, 'utf8');
+        // 压缩 svg
+        var svgo = new SVGO({});
+        svgo.optimize(svg, function(result) {
+
+            if (result.error) {
+                console.log(result.error);
+                return;
+            }
+
+            fs.writeFileSync(outfile, result.data, 'utf8');
+        });
 	}
 
 };
