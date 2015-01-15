@@ -1,6 +1,6 @@
 #	字蛛
 
-中文字体自动化压缩工具。官方网站：<http://font-spider.org>
+中文 WebFont 自动化压缩工具。官方网站：<http://font-spider.org>
 
 ## 特性
 
