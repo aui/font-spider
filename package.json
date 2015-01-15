@@ -29,7 +29,10 @@
     "node": ">= 0.8.0"
   },
   "scripts": {
-    "test": "grunt test"
+    "_remove": "rm -rf release",
+    "_copy": "mkdir release && cp -R test/* release",
+
+    "test": "npm run _remove && npm run _copy && node release/test.js"
   },
   "dependencies": {
     "ttf2eot": "1.3.0",
@@ -46,7 +49,8 @@
     "xmlhttprequest": ">=1.5.0",
     "cssom": "~0.3.0",
     "cssstyle": "~0.2.9",
-    "ignore": "~2.2.15"
+    "ignore": "~2.2.15",
+    "svgo": "0.5.0"
   },
   "keywords": [
     "font",
