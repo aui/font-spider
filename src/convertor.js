@@ -10,45 +10,45 @@ var ttf2woff = require('ttf2woff');
 var ttf2svg = require('ttf2svg');
 
 var FontConvertor = function (ttfFile) {
-	var dirname = path.dirname(ttfFile);
-	var extname = path.extname(ttfFile);
-	var basename = path.basename(ttfFile, extname);
+    var dirname = path.dirname(ttfFile);
+    var extname = path.extname(ttfFile);
+    var basename = path.basename(ttfFile, extname);
 
-	// if (extname.toLocaleLowerCase() !== '.ttf') {
-	// 	throw "Only accept .ttf file";
-	// }
+    // if (extname.toLocaleLowerCase() !== '.ttf') {
+    //  throw "Only accept .ttf file";
+    // }
 
-	this._out = path.join(dirname, basename);
-	this._ttf = fs.readFileSync(ttfFile);
+    this._out = path.join(dirname, basename);
+    this._ttf = fs.readFileSync(ttfFile);
 }
 
 FontConvertor.prototype = {
 
-	constructor: FontConvertor,
+    constructor: FontConvertor,
 
-	eot: function (outfile) {
-		outfile = outfile || this._out + '.eot';
+    eot: function (outfile) {
+        outfile = outfile || this._out + '.eot';
 
-		var ttf = new Uint8Array(this._ttf);
-		var eot = new Buffer(ttf2eot(ttf).buffer);
+        var ttf = new Uint8Array(this._ttf);
+        var eot = new Buffer(ttf2eot(ttf).buffer);
 
-		fs.writeFileSync(outfile, eot);
-	},
+        fs.writeFileSync(outfile, eot);
+    },
 
-	woff: function (outfile) {
-		outfile = outfile || this._out + '.woff';
+    woff: function (outfile) {
+        outfile = outfile || this._out + '.woff';
 
-		var ttf = new Uint8Array(this._ttf);
-		var woff = new Buffer(ttf2woff(ttf).buffer);
+        var ttf = new Uint8Array(this._ttf);
+        var woff = new Buffer(ttf2woff(ttf).buffer);
 
-		fs.writeFileSync(outfile, woff);
-	},
+        fs.writeFileSync(outfile, woff);
+    },
 
-	svg: function (outfile) {
-		outfile = outfile || this._out + '.svg';
+    svg: function (outfile) {
+        outfile = outfile || this._out + '.svg';
 
-		var ttf = this._ttf;
-		var svg = ttf2svg(ttf);
+        var ttf = this._ttf;
+        var svg = ttf2svg(ttf);
 
         // 压缩 svg
         var svgo = new SVGO({});
@@ -61,7 +61,7 @@ FontConvertor.prototype = {
 
             fs.writeFileSync(outfile, result.data, 'utf8');
         });
-	}
+    }
 
 };
 
