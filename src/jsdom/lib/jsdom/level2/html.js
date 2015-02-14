@@ -1,60 +1,52 @@
-var core                  = require("./core").dom.level2.core,
-    events                = require("./events").dom.level2.events,
+var core                  = require("../level1/core"),
     applyDocumentFeatures = require('../browser/documentfeatures').applyDocumentFeatures,
     defineGetter          = require('../utils').defineGetter,
     defineSetter          = require('../utils').defineSetter,
     inheritFrom           = require("../utils").inheritFrom,
+    resolveHref           = require("../utils").resolveHref,
     URL                   = require("url"),
     Path                  = require('path'),
     fs                    = require("fs"),
     http                  = require('http'),
     https                 = require('https');
 
-// modify cloned instance for more info check: https://github.com/tmpvar/jsdom/issues/325
-core = Object.create(core);
+var isBrowser = Object.prototype.toString.call(process) !== "[object process]";
 
 // Setup the javascript language processor
 core.languageProcessors = {
   javascript : require("./languages/javascript").javascript
 };
 
-// TODO its own package? Pull request to Node?
-function resolveHref(baseUrl, href) {
-  // When switching protocols, the path doesn't get canonicalized (i.e. .s and ..s are still left):
-  // https://github.com/joyent/node/issues/5453
-  var intermediate = URL.resolve(baseUrl, href);
-
-  // This canonicalizes the path, at the cost of overwriting the hash.
-  var nextStep = URL.resolve(intermediate, '#');
-
-  // So, insert the hash back in, if there was one.
-  var parsed = URL.parse(intermediate);
-  var fixed = nextStep.slice(0, -1) + (parsed.hash || '');
-
-  // Finally, fix file:/// URLs on Windows, where Node removes their drive letters:
-  // https://github.com/joyent/node/issues/5452
-  if (/^file\:\/\/\/[a-z]\:\//i.test(baseUrl) && /^file\:\/\/\//.test(fixed) && !/^file\:\/\/\/[a-z]\:\//i.test(fixed)) {
-    fixed = fixed.replace(/^file\:\/\/\//, baseUrl.substring(0, 11));
-  }
-
-  return fixed;
-}
-
 core.resourceLoader = {
   load: function(element, href, callback) {
-    var ownerImplementation = element._ownerDocument.implementation;
+    var ownerDoc = element._ownerDocument;
+    var ownerImplementation = ownerDoc.implementation;
 
-    if (ownerImplementation.hasFeature('FetchExternalResources', element.tagName.toLowerCase())) {
-      var full = this.resolve(element._ownerDocument, href);
+    if (ownerImplementation._hasFeature('FetchExternalResources', element.tagName.toLowerCase())) {
+      var full = this.resolve(ownerDoc, href);
       var url = URL.parse(full);
-      if (ownerImplementation.hasFeature('SkipExternalResources', full)) {
+      if (ownerImplementation._hasFeature('SkipExternalResources', full)) {
         return false;
       }
-      if (url.hostname) {
-        this.download(url, element._ownerDocument._cookie, element._ownerDocument._cookieDomain, this.baseUrl(element._ownerDocument), this.enqueue(element, callback, full));
-      }
-      else {
-        this.readFile(url.pathname, this.enqueue(element, callback, full));
+
+      var cookie = ownerDoc.cookie;
+      var cookieDomain = ownerDoc._cookieDomain;
+      var baseUrl = this.baseUrl(ownerDoc);
+      var enqueued = this.enqueue(element, callback, full);
+
+      if (typeof ownerDoc._resourceLoader == 'function') {
+        var fetch = this.fetch.bind(this);
+        ownerDoc._resourceLoader.call(null, {
+          url: url,
+          cookie: cookie,
+          cookieDomain: cookieDomain,
+          baseUrl: baseUrl,
+          defaultFetch: function(callback) {
+            fetch(this.url, this.cookie, this.cookieDomain, this.baseUrl, callback);
+          }
+        }, enqueued);
+      } else {
+        this.fetch(url, cookie, cookieDomain, baseUrl, enqueued);
       }
     }
   },
@@ -114,8 +106,15 @@ core.resourceLoader = {
 
     return resolveHref(baseUrl, href);
   },
+  fetch: function(url, cookie, cookieDomain, referrer, callback) {
+    if (url.hostname) {
+      this.download(url, cookie, cookieDomain, referrer, callback);
+    } else {
+      this.readFile(url.pathname, callback);
+    }
+  },
   download: function(url, cookie, cookieDomain, referrer, callback) {
-    var path    = url.pathname + (url.search || ''),
+    var path    = (url.pathname || '') + (url.search || ''),
         options = {'method': 'GET', 'host': url.hostname, 'path': path},
         request;
     if (url.protocol === 'https:') {
@@ -126,8 +125,8 @@ core.resourceLoader = {
       request = http.request(options);
     }
 
-    // set header.
-    if (referrer) {
+    // set header; accomodate browserify
+    if (referrer && !isBrowser) {
         request.setHeader('Referer', referrer);
     }
     if (cookie) {
@@ -147,7 +146,12 @@ core.resourceLoader = {
           callback(null, data);
         }
       }
-      response.setEncoding('utf8');
+
+      // Accomodate browserify
+      if (response.setEncoding) {
+        response.setEncoding('utf8');
+      }
+
       response.on('data', function (chunk) {
         data += chunk.toString();
       });
@@ -323,7 +327,7 @@ function closest(e, tagName) {
 function descendants(e, tagName, recursive) {
   var owner = recursive ? e._ownerDocument || e : e;
   return new core.HTMLCollection(owner, core.mapper(e, function(n) {
-    return n.nodeName === tagName && typeof n._publicId == 'undefined';
+    return n.tagName === tagName;
   }, recursive));
 }
 
@@ -382,24 +386,20 @@ ResourceQueue.prototype = {
 };
 
 core.HTMLDocument = function HTMLDocument(options) {
-  options = options || {};
-  if (!options.contentType) {
-    options.contentType = 'text/html';
-  }
   core.Document.call(this, options);
   this._referrer = options.referrer;
   this._cookie = options.cookie;
   this._cookieDomain = options.cookieDomain || '127.0.0.1';
-  this._URL = options.url || '/';
   this._documentRoot = options.documentRoot || Path.dirname(this._URL);
   this._queue = new ResourceQueue(options.deferClose);
+  this._resourceLoader = options.resourceLoader;
   this.readyState = 'loading';
 
   // Add level2 features
-  this.implementation.addFeature('core'  , '2.0');
-  this.implementation.addFeature('html'  , '2.0');
-  this.implementation.addFeature('xhtml' , '2.0');
-  this.implementation.addFeature('xml'   , '2.0');
+  this.implementation._addFeature('core'  , '2.0');
+  this.implementation._addFeature('html'  , '2.0');
+  this.implementation._addFeature('xhtml' , '2.0');
+  this.implementation._addFeature('xml'   , '2.0');
 };
 
 inheritFrom(core.Document, core.HTMLDocument, {
@@ -409,10 +409,6 @@ inheritFrom(core.Document, core.HTMLDocument, {
   },
   get domain() {
     return "";
-  },
-  _URL : "",
-  get URL() {
-    return this._URL;
   },
   get images() {
     return this.getElementsByTagName('IMG');
@@ -448,7 +444,7 @@ inheritFrom(core.Document, core.HTMLDocument, {
     return this.getElementsByTagName('A');
   },
   open  : function() {
-    this._childNodes = new core.NodeList();
+    this._childNodes = [];
     this._documentElement = null;
     this._modified();
   },
@@ -464,35 +460,7 @@ inheritFrom(core.Document, core.HTMLDocument, {
     })(null, true);
   },
 
-  write : function(text) {
-    if (this._writeAfterElement) {
-      // If called from an script element directly (during the first tick),
-      // the new elements are inserted right after that element.
-      var tempDiv       = this.createElement('div');
-      tempDiv.innerHTML = text;
-
-      var child    = tempDiv.firstChild;
-      var previous = this._writeAfterElement;
-      var parent   = this._writeAfterElement.parentNode;
-
-      while (child) {
-        var node = child;
-        child    = child.nextSibling;
-        parent.insertBefore(node, previous.nextSibling);
-        previous = node;
-      }
-    } else if (this.readyState === "loading") {
-      // During page loading, document.write appends to the current element
-      // Find the last child that has ben added to the document.
-      var node = this;
-      while (node.lastChild && node.lastChild.nodeType === this.ELEMENT_NODE) {
-        node = node.lastChild;
-      }
-      node.innerHTML = text || "<html><head></head><body></body></html>";
-    } else if (text) {
-      this.innerHTML = text;
-    }
-  },
+  // document.write is defined in browser/index.js.
 
   writeln : function(text) {
     this.write(text + '\n');
@@ -538,13 +506,6 @@ inheritFrom(core.Document, core.HTMLDocument, {
     return body;
   },
 
-  get documentElement() {
-    if (!this._documentElement) {
-      this._documentElement = firstChild(this, 'HTML');
-    }
-    return this._documentElement;
-  },
-
   _cookie : "",
   get cookie() {
     var cookies = Array.isArray(this._cookie) ?
@@ -556,6 +517,7 @@ inheritFrom(core.Document, core.HTMLDocument, {
     }).join('; ');
   },
   set cookie(val) {
+    if (val == null) return val;
     var key = val.split('=')[0];
     var cookies = Array.isArray(this._cookie) ?
       this._cookie :
@@ -607,6 +569,12 @@ define('HTMLElement', {
         width: 0
       };
     },
+    focus : function() {
+      this._ownerDocument.activeElement = this;
+    },
+    blur : function() {
+      this._ownerDocument.activeElement = this._ownerDocument.body;
+    },
     _eventDefaults : {}
   },
   attributes: [
@@ -628,6 +596,25 @@ var listedElements = /button|fieldset|input|keygen|object|select|textarea/i;
 define('HTMLFormElement', {
   tagName: 'FORM',
   proto: {
+    _descendantAdded: function(parent, child) {
+      var form = this;
+      core.visitTree(child, function(el) {
+        if (typeof el._changedFormOwner === 'function') {
+          el._changedFormOwner(form);
+        }
+      });
+
+      core.HTMLElement.prototype._descendantAdded.apply(this, arguments);
+    },
+    _descendantRemoved: function(parent, child) {
+      core.visitTree(child, function(el) {
+        if (typeof el._changedFormOwner === 'function') {
+          el._changedFormOwner(null);
+        }
+      });
+
+      core.HTMLElement.prototype._descendantRemoved.apply(this, arguments);
+    },
     get elements() {
       return new core.HTMLCollection(this._ownerDocument, core.mapper(this, function(e) {
         return listedElements.test(e.nodeName) ; // TODO exclude <input type="image">
@@ -647,7 +634,9 @@ define('HTMLFormElement', {
     },
     reset: function() {
       this.elements._toArray().forEach(function(el) {
-        el.value = el.defaultValue;
+        if (typeof el._formReset === 'function') {
+          el._formReset();
+        }
       });
     }
   },
@@ -783,6 +772,68 @@ define('HTMLBodyElement', {
 define('HTMLSelectElement', {
   tagName: 'SELECT',
   proto: {
+    _formReset: function() {
+      this.options._toArray().forEach(function(option, i) {
+        option._selectedness = option.defaultSelected;
+        option._dirtyness = false;
+      });
+      this._askedForAReset();
+    },
+    _askedForAReset: function() {
+      if (this.hasAttribute('multiple')) {
+        return;
+      }
+
+      var options = this.options._toArray();
+      var selected = options.filter(function(option){
+        return option._selectedness;
+      });
+
+      // size = 1 is default if not multiple
+      if ((!this.size || this.size === 1) && !selected.length) {
+        // select the first option that is not disabled
+        for (var i = 0; i < options.length; ++i) {
+          var option = options[i];
+          var disabled = option.disabled;
+          if (option._parentNode &&
+              option._parentNode.nodeName.toUpperCase() === 'OPTGROUP' &&
+              option._parentNode.disabled) {
+            disabled = true;
+          }
+
+          if (!disabled) {
+            // (do not set dirty)
+            option._selectedness = true;
+            break;
+          }
+        }
+      } else if (selected.length >= 2) {
+        // select the last selected option
+        selected.forEach(function(option, index) {
+          option._selectedness = index === selected.length - 1;
+        });
+      }
+    },
+    _descendantAdded: function(parent, child) {
+      if (child.nodeType === core.Node.ELEMENT_NODE) {
+        this._askedForAReset();
+      }
+
+      core.HTMLElement.prototype._descendantAdded.apply(this, arguments);
+    },
+    _descendantRemoved: function(parent, child) {
+      if (child.nodeType === core.Node.ELEMENT_NODE) {
+        this._askedForAReset();
+      }
+
+      core.HTMLElement.prototype._descendantRemoved.apply(this, arguments);
+    },
+    _attrModified: function(name, value) {
+      if (name === 'multiple' || name === 'size') {
+        this._askedForAReset();
+      }
+      core.HTMLElement.prototype._attrModified.apply(this, arguments);
+    },
     get options() {
       return new core.HTMLOptionsCollection(this, core.mapper(this, function(n) {
         return n.nodeName === 'OPTION';
@@ -854,13 +905,6 @@ define('HTMLSelectElement', {
         var el = opts[index];
         el._parentNode.removeChild(el);
       }
-    },
-
-    blur : function() {
-      this._ownerDocument.activeElement = this._ownerDocument.body;
-    },
-    focus : function() {
-      this._ownerDocument.activeElement = this;
     }
 
   },
@@ -884,11 +928,48 @@ define('HTMLOptGroupElement', {
 define('HTMLOptionElement', {
   tagName: 'OPTION',
   proto: {
-    _attrModified: function(name, value) {
-      if (name === 'selected') {
-        this.selected = this.defaultSelected;
+    // whenever selectedness is set to true, make sure all
+    // other options set selectedness to false
+    _selectedness: false,
+    _dirtyness: false,
+    _removeOtherSelectedness: function() {
+      //Remove the selectedness flag from all other options in this select
+      var select = this._selectNode;
+
+      if (select && !select.multiple) {
+        var o = select.options;
+        for (var i = 0; i < o.length; i++) {
+          if (o[i] !== this) {
+            o[i]._selectedness = false;
+          }
+        }
       }
-      core.HTMLElement.prototype._attrModified.call(this, arguments);
+    },
+    _askForAReset: function() {
+      var select = this._selectNode;
+      if (select) {
+        select._askedForAReset();
+      }
+    },
+    _attrModified: function(name, value) {
+      if (!this._dirtyness && name === 'selected') {
+        this._selectedness = this.defaultSelected;
+        if (this._selectedness) {
+          this._removeOtherSelectedness();
+        }
+        this._askForAReset();
+      }
+      core.HTMLElement.prototype._attrModified.apply(this, arguments);
+    },
+    get _selectNode() {
+      var select = this._parentNode;
+      if (!select) return null;
+      if (select.nodeName.toUpperCase() !== 'SELECT') {
+        select = select._parentNode;
+        if (!select) return null;
+        if (select.nodeName.toUpperCase() !== 'SELECT') return null;
+      }
+      return select;
     },
     get form() {
       return closest(this, 'FORM');
@@ -913,53 +994,15 @@ define('HTMLOptionElement', {
       return closest(this, 'SELECT').options._toArray().indexOf(this);
     },
     get selected() {
-      if (this._selected === undefined) {
-        this._selected = this.defaultSelected;
-      }
-
-      if (!this._selected && this.parentNode) {
-        var select = closest(this, 'SELECT');
-
-        if (select) {
-          var options = select.options;
-
-          if (options.item(0) === this && !select.hasAttribute('multiple')) {
-            var found = false, optArray = options._toArray();
-
-            for (var i = 1, l = optArray.length; i<l; i++) {
-              if (optArray[i]._selected) {
-                return false;
-              }
-            }
-            return true;
-          }
-        }
-      }
-
-      return this._selected;
+      return this._selectedness;
     },
     set selected(s) {
-      // TODO: The 'selected' content attribute is the initial value of the
-      // IDL attribute, but the IDL attribute should not relfect the content
-      this._selected = !!s;
-      if (s) {
-        //Remove the selected bit from all other options in this select
-        var select = this._parentNode;
-        if (!select) return;
-        if (select.nodeName !== 'SELECT') {
-          select = select._parentNode;
-          if (!select) return;
-          if (select.nodeName !== 'SELECT') return;
-        }
-        if (!select.multiple) {
-          var o = select.options;
-          for (var i = 0; i < o.length; i++) {
-            if (o[i] !== this) {
-                o[i].selected = false;
-            }
-          }
-        }
+      this._dirtyness = true;
+      this._selectedness = !!s;
+      if (this._selectedness) {
+        this._removeOtherSelectedness();
       }
+      this._askForAReset();
     }
   },
   attributes: [
@@ -976,57 +1019,118 @@ define('HTMLInputElement', {
     }
   },
   proto: {
-    _initDefaultValue: function() {
-      if (this._defaultValue === undefined) {
-        var attr = this.getAttributeNode('value');
-        this._defaultValue = attr ? attr.value : null;
+    _value: null,
+    _dirtyValue: false,
+    _checkedness: false,
+    _dirtyCheckedness: false,
+    _attrModified: function(name, value) {
+      if (!this._dirtyValue && name === 'value') {
+        this._value = this.defaultValue;
       }
-      return this._defaultValue;
+      if (!this._dirtyCheckedness && name === 'checked') {
+        this._checkedness = this.defaultChecked;
+        if (this._checkedness) {
+          this._removeOtherRadioCheckedness();
+        }
+      }
+
+      if (name === 'name' || name === 'type') {
+        if (this._checkedness) {
+          this._removeOtherRadioCheckedness();
+        }
+      }
+
+      core.HTMLElement.prototype._attrModified.apply(this, arguments);
     },
-    _initDefaultChecked: function() {
-      if (this._defaultChecked === undefined) {
-        this._defaultChecked = !!this.getAttribute('checked');
+    _formReset: function() {
+      this._value = this.defaultValue;
+      this._dirtyValue = false;
+      this._checkedness = this.defaultChecked;
+      this._dirtyCheckedness = false;
+      if (this._checkedness) {
+        this._removeOtherRadioCheckedness();
       }
-      return this._defaultChecked;
+    },
+    _changedFormOwner: function(newForm) {
+      if (this._checkedness) {
+        this._removeOtherRadioCheckedness();
+      }
+    },
+    _removeOtherRadioCheckedness: function() {
+      var root = this._radioButtonGroupRoot;
+      if (!root) {
+        return;
+      }
+
+      var name = this.name.toLowerCase();
+      var radios = new core.HTMLCollection(this, core.mapper(root, function(el) {
+        return el.type === 'radio' &&
+               el.name &&
+               el.name.toLowerCase() === name &&
+               el._radioButtonGroupRoot === root;
+      }));
+
+      radios._toArray().forEach(function(radio) {
+        if (radio !== this) {
+          radio._checkedness = false;
+        }
+      }, this);
+    },
+    get _radioButtonGroupRoot() {
+      if (this.type !== 'radio' || !this.name) {
+        return null;
+      }
+
+      var e = this._parentNode;
+      while (e) {
+        // root node of this home sub tree
+        // or the form element we belong to
+        if (!e._parentNode || e.nodeName.toUpperCase() === 'FORM') {
+          return e;
+        }
+        e = e._parentNode;
+      }
+      return null;
     },
     get form() {
       return closest(this, 'FORM');
     },
     get defaultValue() {
-      return this._initDefaultValue();
+      var val = this.getAttribute('value');
+      return val !== null ? val : "";
+    },
+    set defaultValue(val) {
+      this.setAttribute('value', String(val));
     },
     get defaultChecked() {
-      return this._initDefaultChecked();
+      return this.getAttribute('checked') !== null;
+    },
+    set defaultChecked(s) {
+      if (s) this.setAttribute('checked', 'checked');
+      else this.removeAttribute('checked');
     },
     get checked() {
-      return !!this._attributes.getNamedItem('checked');
+      return this._checkedness;
     },
     set checked(checked) {
-      this._initDefaultChecked();
-      if (checked) {
-        this.setAttribute('checked', 'checked');
-        if (this.type === 'radio') {
-          var elements = this._ownerDocument.getElementsByName(this.name);
-          for (var i = 0; i < elements.length; i++) {
-            if (elements[i] !== this && elements[i].tagName === "INPUT" && elements[i].type === "radio") {
-              elements[i].checked = false;
-            }
-          }
-        }
-      } else {
-        this.removeAttribute('checked');
+      this._checkedness = !!checked;
+      this._dirtyCheckedness = true;
+      if (this._checkedness) {
+        this._removeOtherRadioCheckedness();
       }
     },
     get value() {
-      return this.getAttribute('value');
+      if (this._value === null) {
+        return '';
+      }
+      return this._value;
     },
     set value(val) {
-      this._initDefaultValue();
+      this._dirtyValue = true;
       if (val === null) {
-        this.removeAttribute('value');
-      }
-      else {
-        this.setAttribute('value', val);
+        this._value = null;
+      } else {
+        this._value = String(val);
       }
     },
     get type() {
@@ -1035,12 +1139,6 @@ define('HTMLInputElement', {
     },
     set type(type) {
         this.setAttribute('type', type);
-    },
-    blur : function() {
-      this._ownerDocument.activeElement = this._ownerDocument.body;
-    },
-    focus : function() {
-      this._ownerDocument.activeElement = this;
     },
     select: function() {
     },
@@ -1089,33 +1187,50 @@ define('HTMLInputElement', {
 define('HTMLTextAreaElement', {
   tagName: 'TEXTAREA',
   proto: {
-    _initDefaultValue: function() {
-      if (this._defaultValue === undefined) {
-        this._defaultValue = this.textContent;
-      }
-      return this._defaultValue;
+    _apiValue: null,
+    _dirtyValue: false,
+    // "raw value" and "value" are not used here because jsdom has no GUI
+    _formReset: function() {
+      this._apiValue = null;
+      this._dirtyValue = false;
     },
     get form() {
       return closest(this, 'FORM');
     },
     get defaultValue() {
-      return this._initDefaultValue();
-    },
-    get value() {
       return this.textContent;
     },
-    set value(val) {
-      this._initDefaultValue();
+    set defaultValue(val) {
       this.textContent = val;
+    },
+    get value() {
+      // The WHATWG specifies that when "textContent" changes, the "raw value"
+      // (just the API value in jsdom) must also be updated.
+      // This slightly different solution has identical results, but is a lot less complex.
+      if (this._dirtyValue) {
+        if (this._apiValue === null) {
+          return '';
+        }
+        return this._apiValue;
+      }
+
+      var val = this.defaultValue;
+      val = val.replace(/\r\n|\r/g, '\n'); // API value normalizes line breaks per WHATWG
+      return val;
+    },
+    set value(val) {
+      if (val) {
+        val = val.replace(/\r\n|\r/g, '\n'); // API value normalizes line breaks per WHATWG
+      }
+
+      this._dirtyValue = true;
+      this._apiValue = val;
+    },
+    get textLength() {
+      return this.value.length; // code unit length (16 bit)
     },
     get type() {
       return 'textarea';
-    },
-    blur : function() {
-      this._ownerDocument.activeElement = this._ownerDocument.body;
-    },
-    focus : function() {
-      this._ownerDocument.activeElement = this;
     },
     select: function() {
     }
@@ -1137,12 +1252,6 @@ define('HTMLButtonElement', {
   proto: {
     get form() {
       return closest(this, 'FORM');
-    },
-    focus : function() {
-      this._ownerDocument.activeElement = this;
-    },
-    blur : function() {
-      this._ownerDocument.activeElement = this._ownerDocument.body;
     }
   },
   attributes: [
@@ -1261,7 +1370,10 @@ define('HTMLDivElement', {
   tagName: 'DIV',
   attributes: [
     'align'
-  ]
+  ],
+  proto: {
+    toString: function() { return '[object HTMLDivElement]'; }
+  }
 });
 
 define('HTMLParagraphElement', {
@@ -1339,12 +1451,6 @@ define('HTMLAnchorElement', {
   tagName: 'A',
 
   proto: {
-    blur : function() {
-      this._ownerDocument.activeElement = this._ownerDocument.body;
-    },
-    focus : function() {
-      this._ownerDocument.activeElement = this;
-    },
     get href() {
       return core.resourceLoader.resolve(this._ownerDocument, this.getAttribute('href'));
     },
@@ -1538,7 +1644,7 @@ define('HTMLScriptElement', {
   },
   proto: {
     _eval: function(text, filename) {
-      if (this._ownerDocument.implementation.hasFeature("ProcessExternalResources", "script") &&
+      if (this._ownerDocument.implementation._hasFeature("ProcessExternalResources", "script") &&
           this.language                                                                      &&
           core.languageProcessors[this.language])
       {
@@ -1552,17 +1658,17 @@ define('HTMLScriptElement', {
       return type.split("/").pop().toLowerCase();
     },
     get text() {
-      var i=0, children = this.childNodes, l = children.length, ret = [];
+      var i=0, children = this._childNodes, l = children.length, ret = [];
 
       for (i; i<l; i++) {
-        ret.push(children.item(i).nodeValue);
+        ret.push(children[i].nodeValue);
       }
 
       return ret.join("");
     },
     set text(text) {
-      while (this.childNodes.length) {
-        this.removeChild(this.childNodes[0]);
+      while (this._childNodes.length) {
+        this.removeChild(this._childNodes[this._childNodes.length-1]);
       }
       this.appendChild(this._ownerDocument.createTextNode(text));
     }
@@ -1659,7 +1765,7 @@ define('HTMLTableElement', {
     },
     insertRow: function(index) {
       var tr = this._ownerDocument.createElement('TR');
-      if (this.childNodes.length === 0) {
+      if (this._childNodes.length === 0) {
         this.appendChild(this._ownerDocument.createElement('TBODY'));
       }
       var rows = this.rows._toArray();
@@ -1906,6 +2012,7 @@ function loadFrame (frame) {
   // (http://www.whatwg.org/specs/web-apps/current-work/#the-iframe-element)
   var url = core.resourceLoader.resolve(parentDoc, src);
   var contentDoc = frame._contentDocument = new core.HTMLDocument({
+    parsingMode: 'html',
     url: url,
     documentRoot: Path.dirname(url)
   });
@@ -1995,7 +2102,7 @@ define('HTMLFrameElement', {
     _contentDocument : null,
     get contentDocument() {
       if (this._contentDocument == null) {
-        this._contentDocument = new core.HTMLDocument();
+        this._contentDocument = new core.HTMLDocument({ parsingMode: "html" });
       }
       return this._contentDocument;
     },
@@ -2031,11 +2138,3 @@ define('HTMLIFrameElement', {
     'width'
   ]
 });
-
-exports.define = define;
-exports.dom = {
-  level2 : {
-    html : core
-  }
-}
-

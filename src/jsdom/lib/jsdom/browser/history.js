@@ -1,6 +1,6 @@
 "use strict";
-
-var URL = require('url');
+var URL = require("url");
+var resolveHref = require("../utils").resolveHref;
 
 function StateEntry(data, title, url) {
   this.data = data;
@@ -11,8 +11,8 @@ function StateEntry(data, title, url) {
 module.exports = History;
 
 function History(window) {
-  this._states = [];
-  this._index = -1;
+  this._states = [new StateEntry(null, "", window.location._url.href)];
+  this._index = 0;
   this._window = window;
   this._location = window.location;
 }
@@ -50,7 +50,11 @@ History.prototype = {
     }
 
     this._index = newIndex;
-    this._applyState(this._states[this._index]);
+
+    var state = this._states[newIndex];
+
+    this._applyState(state);
+    this._signalPopstate(state);
   },
 
   pushState: function (data, title, url) {
@@ -69,10 +73,8 @@ History.prototype = {
     this._applyState(state);
   },
 
-  _applyState: function(state) {
-    this._location._url = URL.parse(URL.resolve(this._location._url.href, state.url));
-
-    this._signalPopstate(state);
+  _applyState: function (state) {
+    this._location._url = URL.parse(resolveHref(this._location._url.href, state.url));
   },
 
   _signalPopstate: function(state) {

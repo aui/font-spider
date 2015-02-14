@@ -1,15 +1,8 @@
-var events        = require("../level2/events"),
-    core          = require("../level2/core").dom.level2.core,
+var core          = require("../level1/core"),
     defineGetter  = require('../utils').defineGetter,
     defineSetter  = require('../utils').defineSetter,
     HtmlToDom     = require('../browser/htmltodom').HtmlToDom,
-    domToHtml     = require('../browser/domtohtml').domToHtml,
-    htmlencoding  = require('../browser/htmlencoding'),
-    HTMLEncode    = htmlencoding.HTMLEncode,
-    HTMLDecode    = htmlencoding.HTMLDecode;
-
-// modify cloned instance for more info check: https://github.com/tmpvar/jsdom/issues/325
-core = Object.create(core);
+    domToHtml     = require('../browser/domtohtml').domToHtml;
 
 /*
   valuetype DOMString sequence<unsigned short>;
@@ -118,10 +111,10 @@ core.Node.prototype.compareDocumentPosition = function compareDocumentPosition( 
   if( thisOwner !== otherOwner ) return DOCUMENT_POSITION_DISCONNECTED
 
   // Text nodes for attributes does not have a _parentNode. So we need to find them as attribute child.
-  if( this.nodeType === this.ATTRIBUTE_NODE && this._childNodes && this._childNodes._toArray().indexOf(otherNode) !== -1)
+  if( this.nodeType === this.ATTRIBUTE_NODE && this._childNodes && this._childNodes.indexOf(otherNode) !== -1)
     return DOCUMENT_POSITION_FOLLOWING + DOCUMENT_POSITION_CONTAINED_BY
 
-  if( otherNode.nodeType === this.ATTRIBUTE_NODE && otherNode._childNodes && otherNode._childNodes._toArray().indexOf(this) !== -1)
+  if( otherNode.nodeType === this.ATTRIBUTE_NODE && otherNode._childNodes && otherNode._childNodes.indexOf(this) !== -1)
     return DOCUMENT_POSITION_PRECEDING + DOCUMENT_POSITION_CONTAINS
 
   var point = this
@@ -139,8 +132,8 @@ core.Node.prototype.compareDocumentPosition = function compareDocumentPosition( 
     var location_index = parents.indexOf( point )
     if( location_index !== -1) {
      var smallest_common_ancestor = parents[ location_index ]
-     var this_index = smallest_common_ancestor._childNodes._toArray().indexOf( parents[location_index - 1] )
-     var other_index = smallest_common_ancestor._childNodes._toArray().indexOf( previous )
+     var this_index = smallest_common_ancestor._childNodes.indexOf( parents[location_index - 1] )
+     var other_index = smallest_common_ancestor._childNodes.indexOf( previous )
      if( this_index > other_index ) {
            return DOCUMENT_POSITION_PRECEDING
      }
@@ -152,15 +145,6 @@ core.Node.prototype.compareDocumentPosition = function compareDocumentPosition( 
     point = point._parentNode
   }
   return DOCUMENT_POSITION_DISCONNECTED
-};
-/*
-    // Introduced in DOM Level 3:
-             attribute DOMString       textContent;
-                                        // raises(DOMException) on setting
-                                        // raises(DOMException) on retrieval
-*/
-core.Node.prototype.isSameNode = function(other) {
-  return (other === this);
 };
 
 // @see http://www.w3.org/TR/2004/REC-DOM-Level-3-Core-20040407/core.html#Node3-textContent
@@ -175,13 +159,11 @@ defineGetter(core.Node.prototype, 'textContent', function() {
     case this.ATTRIBUTE_NODE:
     case this.DOCUMENT_FRAGMENT_NODE:
     case this.ELEMENT_NODE:
-    case this.ENTITY_NODE:
-    case this.ENTITY_REFERENCE_NODE:
       var out = '';
-      for (var i = 0 ; i < this.childNodes.length ; ++i) {
-        if (this.childNodes[i].nodeType !== this.COMMENT_NODE &&
-            this.childNodes[i].nodeType !== this.PROCESSING_INSTRUCTION_NODE) {
-          out += this.childNodes[i].textContent || '';
+      for (var i = 0 ; i < this._childNodes.length ; ++i) {
+        if (this._childNodes[i].nodeType !== this.COMMENT_NODE &&
+            this._childNodes[i].nodeType !== this.PROCESSING_INSTRUCTION_NODE) {
+          out += this._childNodes[i].textContent || '';
         }
       }
       return out;
@@ -200,8 +182,8 @@ defineSetter(core.Node.prototype, 'textContent', function(txt) {
       return this.nodeValue = String(txt);
   }
 
-  for (var i = this.childNodes.length; --i >=0;) {
-    this.removeChild(this.childNodes.item(i));
+  for (var i = this._childNodes.length; --i >=0;) {
+    this.removeChild(this._childNodes[i]);
   }
   if (txt !== "" && txt != null) {
     this.appendChild(this._ownerDocument.createTextNode(txt));
@@ -216,60 +198,6 @@ defineSetter(core.Node.prototype, 'textContent', function(txt) {
     boolean            isDefaultNamespace(in DOMString namespaceURI);
     // Introduced in DOM Level 3:
     DOMString          lookupNamespaceURI(in DOMString prefix);
-*/
-// Introduced in DOM Level 3:
-core.Node.prototype.isEqualNode = function(other) {
-  var self = this;
-  var diffValues = function() {
-    for (var i=0;i<arguments.length;i++) {
-      var k = arguments[i];
-      if (self[k] != other[k]) return(true);
-    }
-    return(false);
-  };
-  var diffNamedNodeMaps = function(snnm, onnm) {
-    if ((snnm == null) && (onnm == null)) return(false);
-    if ((snnm == null) || (onnm == null)) return(true);
-    if (snnm.length != onnm.length) return(true);
-    var js = [];
-    for (var j=0;j<onnm.length;j++) { js[j] = j }
-    for (var i=0;i<snnm.length;i++) {
-      var found=false;
-      for (var j=0;j<js.length;j++) {
-        if (snnm.item(i).isEqualNode(onnm.item(js[j]))) {
-          found = true;
-          // in order to be 100% accurate, we remove index values from consideration once they've matched
-          js.splice(j,1);
-          break;
-        }
-      }
-      if (!found) return(true);
-    }
-    return(false);
-  };
-  var diffNodeLists = function(snl, onl) {
-    if ((snl == null) && (onl == null)) return(false);
-    if ((snl == null) || (onl == null)) return(true);
-    if (snl.length != onl.length) return(true);
-    for (var i=0;i<snl.length;i++) {
-      if (!snl.item(i).isEqualNode(onl.item(i))) return(true);
-    }
-    return(false);
-  };
-  if (!other) return(false);
-  if (this.isSameNode(other)) return(true);
-  if (this.nodeType != other.nodeType) return(false);
-  if (diffValues('nodeName', 'localName', 'namespaceURI', 'prefix', 'nodeValue')) return(false);
-  if (diffNamedNodeMaps(this.attributes, other.attributes)) return(false);
-  if (diffNodeLists(this.childNodes, other.childNodes)) return(false);
-  if (this.nodeType == DOCUMENT_TYPE_NODE) {
-    if (diffValues('publicId', 'systemId', 'internalSubset')) return(false);
-    if (diffNamedNodeMaps(this.entities, other.entities)) return(false);
-    if (diffNamedNodeMaps(this.notations, other.notations)) return(false);
-  }
-  return (true);
-};
-/*
     // Introduced in DOM Level 3:
     DOMObject          getFeature(in DOMString feature,
                                   in DOMString version);
@@ -635,12 +563,6 @@ core.DOMStringList.prototype = {
     // Introduced in DOM Level 2:
     Element            getElementById(in DOMString elementId);
 */
-
-// Introduced in DOM Level 3:
-core.Document.prototype._inputEncoding = null;
-defineGetter(core.Document.prototype, 'inputEncoding', function() {
-  return this._inputEncoding;
-});
 /*
     // Introduced in DOM Level 3:
     readonly attribute DOMString       xmlEncoding;
@@ -673,9 +595,3 @@ defineGetter(core.Document.prototype, 'inputEncoding', function() {
 
 #endif // _DOM_IDL_
 */
-
-exports.dom = {
-  level3 : {
-    core: core
-  }
-};

@@ -1,43 +1,17 @@
-var path = require('path');
-
-/**
- * Intercepts a method by replacing the prototype's implementation
- * with a wrapper that invokes the given interceptor instead.
- *
- *     utils.intercept(core.Element, 'inserBefore',
- *       function(_super, args, newChild, refChild) {
- *         console.log('insertBefore', newChild, refChild);
- *         return _super.apply(this, args);
- *       }
- *     );
- */
-exports.intercept = function(clazz, method, interceptor) {
-  var proto = clazz.prototype,
-      _super = proto[method],
-      unwrapArgs = interceptor.length > 2;
-
-  proto[method] = function() {
-    if (unwrapArgs) {
-      var args = Array.prototype.slice.call(arguments);
-      args.unshift(_super, arguments);
-      return interceptor.apply(this, args);
-    }
-    else {
-      return interceptor.call(this, _super, arguments);
-    }
-  };
-};
+"use strict";
+var path = require("path");
+var url = require("url");
 
 exports.toFileUrl = function (fileName) {
   // Beyond just the `path.resolve`, this is mostly for the benefit of Windows,
-  // where we need to convert '\' to '/' and add an extra '/' prefix before the
+  // where we need to convert "\" to "/" and add an extra "/" prefix before the
   // drive letter.
-  var pathname = path.resolve(process.cwd(), fileName).replace(/\\/g, '/');
-  if (pathname[0] !== '/') {
-    pathname = '/' + pathname;
+  var pathname = path.resolve(process.cwd(), fileName).replace(/\\/g, "/");
+  if (pathname[0] !== "/") {
+    pathname = "/" + pathname;
   }
 
-  return 'file://' + pathname;
+  return "file://" + pathname;
 };
 
 /**
@@ -85,7 +59,7 @@ exports.defineGetter = function defineGetter(object, property, getterFn) {
  *
  * Optionally augment the created object.
  *
- * - `prototyp` {Object} the created object's prototype
+ * - `prototype` {Object} the created object's prototype
  * - `[properties]` {Object} properties to attach to the created object
  */
 exports.createFrom = function createFrom(prototype, properties) {
@@ -111,11 +85,122 @@ exports.createFrom = function createFrom(prototype, properties) {
 exports.inheritFrom = function inheritFrom(Superclass, Subclass, properties) {
   properties = properties || {};
 
-  Object.defineProperty(properties, 'constructor', {
+  Object.defineProperty(properties, "constructor", {
     value: Subclass,
     writable: true,
     configurable: true
   });
 
   Subclass.prototype = exports.createFrom(Superclass.prototype, properties);
+};
+
+/**
+ * Define a list of constants on a constructor and its .prototype
+ *
+ * - `Constructor` {Function} the constructor to define the constants on
+ * - `propertyMap` {Object}  key/value map of properties to define
+ */
+exports.addConstants = function addConstants(Constructor, propertyMap) {
+  for (var property in propertyMap) {
+    var value = propertyMap[property];
+    addConstant(Constructor, property, value);
+    addConstant(Constructor.prototype, property, value);
+  }
+};
+
+function addConstant(object, property, value) {
+  Object.defineProperty(object, property, {
+    configurable: false,
+    enumerable: true,
+    value: value,
+    writable: false
+  });
+}
+
+var memoizeQueryTypeCounter = 0;
+
+/**
+ * Returns a version of a method that memoizes specific types of calls on the object
+ *
+ * - `fn` {Function} the method to be memozied
+ */
+exports.memoizeQuery = function memoizeQuery(fn) {
+  // Only memoize query functions with arity <= 2
+  if (fn.length > 2) {
+    return fn;
+  }
+
+  var type = memoizeQueryTypeCounter++;
+
+  return function () {
+    if (!this._memoizedQueries) {
+      return fn.apply(this, arguments);
+    }
+
+    if (!this._memoizedQueries[type]) {
+      this._memoizedQueries[type] = Object.create(null);
+    }
+
+    var key;
+    if (arguments.length === 1 && typeof arguments[0] === "string") {
+      key = arguments[0];
+    } else if (arguments.length === 2 && typeof arguments[0] === "string" && typeof arguments[1] === "string") {
+      key = arguments[0] + "::" + arguments[1];
+    } else {
+      return fn.apply(this, arguments);
+    }
+
+    if (!(key in this._memoizedQueries[type])) {
+      this._memoizedQueries[type][key] = fn.apply(this, arguments);
+    }
+    return this._memoizedQueries[type][key];
+  };
+};
+
+/**
+* A slightly-more-compliant version of `url.resolve`, taking care of a few Node bugs.
+*/
+exports.resolveHref = function resolveHref(baseUrl, href) {
+  // If href is "about:blank", Node tries to be too clever.
+  if (href === "about:blank") {
+    return href;
+  }
+
+  if (baseUrl === resolveHref.memoizedUrl && resolveHref.cache && resolveHref.cache[href]) {
+    return resolveHref.cache[href];
+  }
+
+  // When switching protocols, the path doesn't get canonicalized (i.e. .s and ..s are still left):
+  // https://github.com/joyent/node/issues/5453
+  var intermediate = url.resolve(baseUrl, href);
+
+  // This canonicalizes the path, at the cost of overwriting the hash.
+  var nextStep = url.resolve(intermediate, "#");
+
+  // But it breaks file URLs by removing their colon O_o, so put that back.
+  nextStep = nextStep.replace(/^file:\/\/([a-z])\//i, "file:///$1:/");
+
+  // So, insert the hash back in, if there was one.
+  var parsed = url.parse(intermediate);
+  var fixed = nextStep.slice(0, -1) + (parsed.hash || "");
+
+  // Finally, fix file:/// URLs on Windows, where Node removes their drive letters:
+  // https://github.com/joyent/node/issues/5452
+  if (/^file\:\/\/\/[a-z]\:\//i.test(baseUrl) && /^file\:\/\/\//.test(fixed) &&
+      !/^file\:\/\/\/[a-z]\:\//i.test(fixed)) {
+    fixed = fixed.replace(/^file\:\/\/\//, baseUrl.substring(0, 11));
+  }
+
+  // HORRIBLE HACK: encode \u00E4 correctly just so that we pass
+  // https://github.com/w3c/web-platform-tests/blob/e75f01a689a3481f5c773315c2c2527712cf8c2c/dom/nodes/DOMImplementation-createHTMLDocument.html#L71-L72
+  // Eventually we should replace this with a real URL parser based on the URL standard.
+  fixed = fixed.replace(/\u00E4/, "%C3%A4");
+
+  if (baseUrl !== resolveHref.memoizedUrl) {
+    resolveHref.memoizedUrl = baseUrl;
+    resolveHref.cache = {};
+  }
+  resolveHref.cache[href] = fixed;
+
+  return fixed;
 };

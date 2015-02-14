@@ -1,0 +1,23 @@
+language: node_js
+
+git:
+  submodules: false
+
+before_install:
+  - git submodule update --init --recursive
+
+matrix:
+  include:
+    - env: TEST_SUITE=node
+      node_js: "0.10"
+      sudo: false
+    - env: TEST_SUITE=browser
+      node_js: "0.10"
+      addons:
+        sauce_connect:
+          username: "jsdom"
+          access_key: "7d402b1d-0388-467c-8d99-edf195456eee"
+
+
+script:
+  - '([ "${TRAVIS_PULL_REQUEST}" != "false" ] && [ "${TEST_SUITE}" = "browser" ]) || (npm run lint && node test/ci.js)'

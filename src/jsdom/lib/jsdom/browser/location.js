@@ -1,25 +1,31 @@
 "use strict";
 
 var URL = require("url");
+var resolveHref = require("../utils").resolveHref;
 var NOT_IMPLEMENTED = require("./utils").NOT_IMPLEMENTED;
 
 module.exports = Location;
 
-function Location(urlString, window) {
+function Location(urlString, document) {
   this._url = URL.parse(urlString);
-  this._window = window;
+  this._document = document;
 }
 
 Location.prototype = {
   constructor: Location,
   reload: function () {
-    NOT_IMPLEMENTED(this._window, "location.reload")();
+    NOT_IMPLEMENTED(this._document, "location.reload")();
   },
   get protocol() { return this._url.protocol || ":"; },
   get host() { return this._url.host || ""; },
   get auth() { return this._url.auth; },
   get hostname() { return this._url.hostname || ""; },
-  get origin() { return ((this._url.protocol !== undefined && this._url.protocol !== null) ? this._url.protocol + "//" : this._url.protocol) + this._url.host || ""; },
+  get origin() {
+    return ((this._url.protocol !== undefined && this._url.protocol !== null) ?
+              this._url.protocol + "//" :
+              this._url.protocol) +
+        this._url.host || "";
+  },
   get port() { return this._url.port || ""; },
   get pathname() { return this._url.pathname || ""; },
   get href() { return this._url.href; },
@@ -33,7 +39,7 @@ Location.prototype = {
     var oldPathname = this._url.pathname;
     var oldHash = this._url.hash || "";
 
-    this._url = URL.parse(URL.resolve(oldUrl, val));
+    this._url = URL.parse(resolveHref(oldUrl, val));
     var newUrl = this._url.href;
     var newProtocol = this._url.protocol;
     var newHost = this._url.host;
@@ -43,7 +49,7 @@ Location.prototype = {
     if (oldProtocol === newProtocol && oldHost === newHost && oldPathname === newPathname && oldHash !== newHash) {
       this._signalHashChange(oldUrl, newUrl);
     } else {
-      NOT_IMPLEMENTED(this._window, "location.href (no reload)")();
+      NOT_IMPLEMENTED(this._document, "location.href (no reload)")();
     }
   },
 
@@ -55,7 +61,7 @@ Location.prototype = {
       val = "#" + val;
     }
 
-    this._url = URL.parse(URL.resolve(oldUrl, val));
+    this._url = URL.parse(resolveHref(oldUrl, val));
     var newUrl = this._url.href;
     var newHash = this._url.hash || "";
 
@@ -71,7 +77,7 @@ Location.prototype = {
       if (val.lastIndexOf("?", 0) !== 0) {
         val = "?" + val;
       }
-      this._url = URL.parse(URL.resolve(oldUrl, val + oldHash));
+      this._url = URL.parse(resolveHref(oldUrl, val + oldHash));
     } else {
       this._url = URL.parse(oldUrl.replace(/\?([^#]+)/, ""));
     }
@@ -86,14 +92,12 @@ Location.prototype = {
   },
 
   _signalHashChange: function (oldUrl, newUrl) {
-    if (this._window.document) {
-      var ev = this._window.document.createEvent("HTMLEvents");
-      ev.initEvent("hashchange", false, false);
-      ev.oldUrl = oldUrl;
-      ev.newUrl = newUrl;
-      process.nextTick(function () {
-        this._window.dispatchEvent(ev);
-      }.bind(this));
-    }
+    var ev = this._document.createEvent("HTMLEvents");
+    ev.initEvent("hashchange", false, false);
+    ev.oldUrl = oldUrl;
+    ev.newUrl = newUrl;
+    process.nextTick(function () {
+      this._document.parentWindow.dispatchEvent(ev);
+    }.bind(this));
   }
 };

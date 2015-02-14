@@ -1,25 +1,27 @@
 var fs = require('fs');
 var path = require('path');
 var URL = require('url');
-var pkg = require('../package.json');
 
 var toFileUrl = require('./jsdom/utils').toFileUrl;
 var defineGetter = require('./jsdom/utils').defineGetter;
 var defineSetter = require('./jsdom/utils').defineSetter;
-var style = require('./jsdom/level2/style');
 var features = require('./jsdom/browser/documentfeatures');
-var dom = exports.dom = require('./jsdom/living/index').dom;
-var createWindow = exports.createWindow = require('./jsdom/browser/index').createWindow;
+var dom = require('./jsdom/living');
+var browserAugmentation = require('./jsdom/browser/index').browserAugmentation;
+var domToHtml = require('./jsdom/browser/domtohtml').domToHtml;
+var VirtualConsole = require('./jsdom/virtual-console');
 
+var canReadFilesFromFS = !!fs.readFile; // in a browserify environment, this isn't present
 
-var request = function(options, cb) {
+var request = function() { // lazy loading request
   request = require('request');
-  return request(options, cb);
+  return request.apply(undefined, arguments);
 }
 
-exports.defaultLevel = dom.living.html;
-exports.browserAugmentation = require('./jsdom/browser/index').browserAugmentation;
-exports.windowAugmentation = require('./jsdom/browser/index').windowAugmentation;
+exports.getVirtualConsole = function (window) {
+  return window._virtualConsole;
+};
+exports.debugMode = false;
 
 // Proxy feature functions to features module.
 ['availableDocumentFeatures',
@@ -33,167 +35,119 @@ exports.windowAugmentation = require('./jsdom/browser/index').windowAugmentation
   });
 });
 
-exports.debugMode = false;
-
-defineGetter(exports, 'version', function() {
-  return pkg.version;
-});
-
-exports.level = function (level, feature) {
-  if(!feature) {
-    feature = 'core';
+exports.jsdom = function (html, options) {
+  if (options === undefined) {
+    options = {};
+  }
+  if (options.parsingMode === undefined || options.parsingMode === 'auto') {
+    options.parsingMode = 'html';
   }
 
-  if (String(level) === '1' || String(level) === '2' || String(level) === '3') {
-    level = 'level' + level;
+  var browser = browserAugmentation(dom, options);
+  var doc = new browser.HTMLDocument(options);
+
+  if (options.created) {
+    options.created(null, doc.parentWindow);
   }
-
-  return require('./jsdom/' + level + '/' + feature).dom[level][feature];
-};
-
-exports.jsdom = function (html, level, options) {
-
-  options = options || {};
-  if(typeof level == 'string') {
-    level = exports.level(level, 'html');
-  } else {
-    level   = level || exports.defaultLevel;
-  }
-
-  if (!options.url) {
-    options.url = (module.parent.id === 'jsdom') ?
-                  module.parent.parent.filename  :
-                  module.parent.filename;
-    options.url = options.url.replace(/\\/g, '/');
-    if (options.url[0] !== '/') {
-      options.url = '/' + options.url;
-    }
-    options.url = 'file://' + options.url;
-  }
-
-  var browser = exports.browserAugmentation(level, options),
-      doc     = (browser.HTMLDocument)             ?
-                 new browser.HTMLDocument(options) :
-                 new browser.Document(options);
-
-  require('./jsdom/selectors/index').applyQuerySelectorPrototype(level);
 
   features.applyDocumentFeatures(doc, options.features);
 
-  if (typeof html === 'undefined' || html === null ||
-      (html.trim && !html.trim())) {
-    doc.write('<html><head></head><body></body></html>');
-  } else {
-    doc.write(html + '');
+  if (html === undefined) {
+    html = '';
   }
+  html = String(html);
+  doc.write(html);
 
   if (doc.close && !options.deferClose) {
     doc.close();
   }
 
-  // Kept for backwards-compatibility. The window is lazily created when
-  // document.parentWindow or document.defaultView is accessed.
-  doc.createWindow = function() {
-    // Remove ourself
-    if (doc.createWindow) {
-      delete doc.createWindow;
-    }
-    return doc.parentWindow;
-  };
-
   return doc;
 };
 
-exports.html = function(html, level, options) {
-  html += '';
-
-  // TODO: cache a regex and use it here instead
-  //       or make the parser handle it
-  var htmlLowered = html.toLowerCase();
-
-  // body
-  if (!~htmlLowered.indexOf('<body')) {
-    html = '<body>' + html + '</body>';
-  }
-
-  // html
-  if (!~htmlLowered.indexOf('<html')) {
-    html = '<html>' + html + '</html>';
-  }
-  return exports.jsdom(html, level, options);
-};
-
-exports.jQueryify = exports.jsdom.jQueryify = function (window /* path [optional], callback */) {
-
-  if (!window || !window.document) { return; }
-
-  var args = Array.prototype.slice.call(arguments),
-      callback = (typeof(args[args.length - 1]) === 'function') && args.pop(),
-      path,
-      jQueryTag = window.document.createElement('script');
-      jQueryTag.className = 'jsdom';
-
-  if (args.length > 1 && typeof args[1] === 'string') {
-    path = args[1];
+exports.jQueryify = exports.jsdom.jQueryify = function (window, jqueryUrl, callback) {
+  if (!window || !window.document) {
+    return;
   }
 
   var features = window.document.implementation._features;
+  window.document.implementation._addFeature('FetchExternalResources', ['script']);
+  window.document.implementation._addFeature('ProcessExternalResources', ['script']);
+  window.document.implementation._addFeature('MutationEvents', ['2.0']);
 
-  window.document.implementation.addFeature('FetchExternalResources', ['script']);
-  window.document.implementation.addFeature('ProcessExternalResources', ['script']);
-  window.document.implementation.addFeature('MutationEvents', ['2.0']);
-  jQueryTag.src = path || 'http://code.jquery.com/jquery.js';
-  window.document.body.appendChild(jQueryTag);
+  var scriptEl = window.document.createElement('script');
+  scriptEl.className = 'jsdom';
+  scriptEl.src = jqueryUrl;
+  scriptEl.onload = scriptEl.onerror = function () {
+    window.document.implementation._features = features;
 
-  jQueryTag.onload = function() {
     if (callback) {
       callback(window, window.jQuery);
     }
-
-    window.document.implementation._features = features;
   };
 
-  return window;
+  window.document.body.appendChild(scriptEl);
 };
-
 
 exports.env = exports.jsdom.env = function () {
   var config = getConfigFromArguments(arguments);
-  var callback = config.done;
 
-  if (config.file) {
+  if (config.file && canReadFilesFromFS) {
     fs.readFile(config.file, 'utf-8', function (err, text) {
       if (err) {
-        return callback(err);
+        if (config.created) {
+          config.created(err);
+        }
+        if (config.done) {
+          config.done([err]);
+        }
+        return;
       }
+
+      setParsingModeFromExtension(config, config.file);
 
       config.html = text;
       processHTML(config);
     });
-  } else if (config.html) {
+  } else if (config.html !== undefined) {
     processHTML(config);
   } else if (config.url) {
     handleUrl(config);
-  } else if (config.somethingToAutodetect) {
+  } else if (config.somethingToAutodetect !== undefined) {
     var url = URL.parse(config.somethingToAutodetect);
     if (url.protocol && url.hostname) {
       config.url = config.somethingToAutodetect;
       handleUrl(config.somethingToAutodetect);
-    } else {
+    } else if (canReadFilesFromFS) {
       fs.readFile(config.somethingToAutodetect, 'utf-8', function (err, text) {
         if (err) {
-          if (err.code === 'ENOENT' || err.code === 'ENAMETOOLONG') {
+          // the toString() test is because in Node.js, there is no proper code for this.
+          // This is fixed in io.js: https://github.com/iojs/io.js/issues/517 so:
+          // TODO: remove when we start requiring io.js
+          if (err.code === 'ENOENT' || err.code === 'ENAMETOOLONG'
+          	|| (err.toString() == 'Error: Path must be a string without null bytes.')
+          ) {
             config.html = config.somethingToAutodetect;
             processHTML(config);
           } else {
-            callback(err);
+            if (config.created) {
+              config.created(err);
+            }
+            if (config.done) {
+              config.done([err]);
+            }
           }
         } else {
+          setParsingModeFromExtension(config, config.somethingToAutodetect);
+
           config.html = text;
           config.url = toFileUrl(config.somethingToAutodetect);
           processHTML(config);
         }
       });
+    } else {
+      config.html = config.somethingToAutodetect;
+      processHTML(config);
     }
   }
 
@@ -208,24 +162,44 @@ exports.env = exports.jsdom.env = function () {
 
     request(options, function (err, res, responseText) {
       if (err) {
-        return callback(err);
+        if (config.created) {
+          config.created(err);
+        }
+        if (config.done) {
+          config.done([err]);
+        }
+        return;
       }
 
       // The use of `res.request.uri.href` ensures that `window.location.href`
       // is updated when `request` follows redirects.
       config.html = responseText;
       config.url = res.request.uri.href;
+
+      if (config.parsingMode === "auto" && (
+        res.headers["content-type"] === "application/xml" ||
+        res.headers["content-type"] === "text/xml" ||
+        res.headers["content-type"] === "application/xhtml+xml")) {
+        config.parsingMode = "xml";
+      }
+
       processHTML(config);
     });
   }
 };
 
+exports.serializeDocument = function (doc) {
+  return domToHtml(doc, true);
+};
+
 function processHTML(config) {
-  var callback = config.done;
   var options = {
     features: config.features,
     url: config.url,
-    parser: config.parser
+    parser: config.parser,
+    parsingMode: config.parsingMode,
+    created: config.created,
+    resourceLoader: config.resourceLoader
   };
 
   if (config.document) {
@@ -234,7 +208,7 @@ function processHTML(config) {
     options.cookieDomain = config.document.cookieDomain;
   }
 
-  var window = exports.html(config.html, null, options).createWindow();
+  var window = exports.jsdom(config.html, options).parentWindow;
   var features = JSON.parse(JSON.stringify(window.document.implementation._features));
 
   var docsLoaded = 0;
@@ -243,12 +217,18 @@ function processHTML(config) {
   var errors = [];
 
   if (!window || !window.document) {
-    return callback(new Error('JSDOM: a window object could not be created.'));
+    if (config.created) {
+      config.created(new Error('JSDOM: a window object could not be created.'));
+    }
+    if (config.done) {
+      config.done([new Error('JSDOM: a window object could not be created.')]);
+    }
+    return;
   }
 
-  window.document.implementation.addFeature('FetchExternalResources', ['script']);
-  window.document.implementation.addFeature('ProcessExternalResources', ['script']);
-  window.document.implementation.addFeature('MutationEvents', ['2.0']);
+  window.document.implementation._addFeature('FetchExternalResources', ['script']);
+  window.document.implementation._addFeature('ProcessExternalResources', ['script']);
+  window.document.implementation._addFeature('MutationEvents', ['2.0']);
 
   function scriptComplete() {
     docsLoaded++;
@@ -262,7 +242,12 @@ function processHTML(config) {
       }
 
       process.nextTick(function() {
-        callback(errors, window);
+        if (config.loaded) {
+          config.loaded(errors, window);
+        }
+        if (config.done) {
+          config.done(errors, window);
+        }
       });
     }
   }
@@ -305,7 +290,13 @@ function processHTML(config) {
       window.document.documentElement.removeChild(script);
     });
   } else {
-    scriptComplete();
+    if (window.document.readyState === 'complete') {
+      scriptComplete();
+    } else {
+      window.addEventListener('load', function() {
+        scriptComplete();
+      });
+    }
   }
 }
 
@@ -338,16 +329,18 @@ function getConfigFromArguments(args, callback) {
     });
   }
 
-  if (!config.done) {
-    throw new Error('Must pass a "done" option or a callback to jsdom.env.');
+  if (!config.done && !config.created && !config.loaded) {
+    throw new Error('Must pass a "created", "loaded", "done" option or a callback to jsdom.env.');
   }
 
-  if (!config.somethingToAutodetect && !config.html && !config.file && !config.url) {
+  if (config.somethingToAutodetect === undefined &&
+      config.html === undefined && !config.file && !config.url) {
     throw new Error('Must pass a "html", "file", or "url" option, or a string, to jsdom.env');
   }
 
   config.scripts = ensureArray(config.scripts);
   config.src = ensureArray(config.src);
+  config.parsingMode = config.parsingMode || "auto";
 
   config.features = config.features || {
     FetchExternalResources: false,
@@ -374,4 +367,13 @@ function extend(config, overrides) {
   Object.keys(overrides).forEach(function (key) {
     config[key] = overrides[key];
   });
+}
+
+function setParsingModeFromExtension(config, filename) {
+  if (config.parsingMode === "auto") {
+    var ext = path.extname(filename);
+    if (ext === ".xhtml" || ext === ".xml") {
+      config.parsingMode = "xml";
+    }
+  }
 }
