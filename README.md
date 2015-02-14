@@ -93,15 +93,19 @@ font-spider [options] <htmlFile ...>
 
 ## 更新日志
 
+### 0.1.1
+
+* 修复和最新版 NodeJS 兼容问题 
+
 ### 0.1.0
 
-  * 优化错误信息显示
-  * 支持``map``配置映射 CSS 文件中的 http 路径到本地目录
-  * 支持``ignore``配置忽略字体、CSS、HTML 文件
+* 优化错误信息显示
+* 支持``map``配置映射 CSS 文件中的 http 路径到本地目录
+* 支持``ignore``配置忽略字体、CSS、HTML 文件
   
 ### 0.0.1
 
-  * 基于 CSS 规则压缩与转码 WebFont
+* 基于 CSS 规则压缩与转码 WebFont
 
 ## 贡献者
 
