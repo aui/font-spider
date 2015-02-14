@@ -93,6 +93,10 @@ font-spider [options] <htmlFile ...>
 
 ## 更新日志
 
+### 0.1.2
+
+* 优化性能，使用 cheerio 代替 jsdom 解析 HTML
+
 ### 0.1.1
 
 * 修复和最新版 NodeJS 兼容问题 
