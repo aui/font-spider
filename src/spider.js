@@ -2,10 +2,10 @@
 
 var fs = require('fs');
 var path = require('path');
-var async = require('async');
 var css = require('css');
 var ignore = require('ignore');
-var jsdom = require('./jsdom');
+var cheerio = require('cheerio');
+
 
 // http://font-spider.org/css/style.css
 //var RE_SERVER = /^(\/|http\:|https\:)/i;
@@ -62,37 +62,13 @@ Spider.prototype = {
 
         htmlFiles = this._ignore.filter(htmlFiles);
 
-        async.each(htmlFiles, function (htmlFile, cb) {
+        htmlFiles.forEach(that._htmlParser.bind(this));
 
-            htmlFile = path.resolve(htmlFile);
 
-            jsdom.env({
-                file: htmlFile,
-                done: function (errors, window) {
+        var result = that._getResult();
+        that._log('result', result);
 
-                    if (errors) {
-                        var error = new Error('Error: ' + htmlFile + '\n'
-                            + 'Error: syntax error\n');
-                        callback(error, null);
-
-                    } else {
-
-                        that._htmlParser(htmlFile, window);
-                        window.close();
-
-                        cb();
-                    }
-
-                }
-            });
-            
-        }, function (errors) {
-
-            var result = errors ? null : that._getResult();
-            that._log('result', result);
-
-            callback(errors, result);
-        });
+        callback(null, result);
     },
 
 
@@ -187,17 +163,19 @@ Spider.prototype = {
     },
 
 
-    // 在 DOM 环境中提取信息
-    _htmlParser: function (htmlFile, window) {
+    // 解析 HTML
+    _htmlParser: function (htmlFile) {
 
-        var document = window.document;
-
-        this._log('[HTML] document.URL', document.URL);
+        htmlFile = path.resolve(htmlFile)
+        this._log('[HTML] document.URL', htmlFile);
         
         var that = this;
-        var htmlDir = path.dirname(htmlFile);
-        var styleSheets = document.querySelectorAll('link[rel=stylesheet], style');
+        var htmlContent = fs.readFileSync(htmlFile, 'utf8');
+        var $ = cheerio.load(htmlContent);
+        var styleSheets = $('link[rel=stylesheet], style');
         var RE_SPURIOUS = /\:(link|visited|hover|active|focus)\b/ig;
+        var htmlDir = path.dirname(htmlFile);
+
 
         var setCharsCache = function (data) {
 
@@ -214,19 +192,17 @@ Spider.prototype = {
                 var selectors = cssSelectors.replace(RE_SPURIOUS, '');
 
                 try {
-                    var elements = document.querySelectorAll(selectors);
+                    var elements = $(selectors);
                 } catch (e) {
                     // 1. 包含 :before 等不支持的伪类
                     // 2. 非法语句
                     return;
                 }
                 
-
-                elements = Array.prototype.slice.call(elements);
-                elements.forEach(function (element) {
+                elements.each(function (index, element) {
 
                     // 找到使用了字体的文本
-                    that._chars[family] += element.textContent;
+                    that._chars[family] += $(element).text();
 
                 });
             });
@@ -236,19 +212,19 @@ Spider.prototype = {
 
 
         // 查询页面中所有样式表
-        styleSheets = Array.prototype.slice.call(styleSheets);
-        styleSheets.forEach(function (elem) {
+        styleSheets.each(function (index, element) {
 
-            that._log('[HTML]', elem.outerHTML.replace(/>[\w\W]*<\//, '> ... <\/'));
+            //that._log('[HTML]', $(element).outerHTML.replace(/>[\w\W]*<\//, '> ... <\/'));
 
+            var $this = $(this);
             var cssInfo;
             var cssDir = htmlDir;
             var cssFile;
-            var href = elem.getAttribute('href');
+            var href = $this.attr('href');
             var cssContent = '';
 
             // 忽略含有有 disabled 属性的
-            if (elem.disabled) {
+            if ($this.attr('disabled') && $this.attr('disabled') !== 'false') {
                 return;
             }
 
@@ -283,7 +259,7 @@ Spider.prototype = {
 
             // style 标签
             } else {
-                cssContent = elem.textContent;
+                cssContent = $this.text();
 
             }
 
