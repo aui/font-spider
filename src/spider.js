@@ -5,6 +5,17 @@ var path = require('path');
 var css = require('css');
 var ignore = require('ignore');
 var cheerio = require('cheerio');
+var Promise = require('promise');
+
+var readFile = Promise.denodeify(fs.readFile);
+var writeFile = Promise.denodeify(fs.writeFile);
+var exists = function (uri) {
+    return new Promise(function (resolve, reject) {
+        fs.exists(uri, function (exists) {
+            resolve(exists);
+        });
+    });
+};
 
 
 // http://font-spider.org/css/style.css
@@ -24,18 +35,48 @@ var Spider = function (htmlFiles, options, callback) {
         htmlFiles = [htmlFiles];
     }
 
-    this._htmlFiles = htmlFiles;
+    var promiseList = [];
+    var that = this;
+
     this._debug = options.debug;
-    this._files = {};
-    this._chars = {};
-    this._cssFiles = {};
+
+
+    this._fontsCache = {};
+    this._charsCache = {};
+    this._fileCache = {};
+    this._cssParserCache = {};
+
     this.options = options;
 
     this._ignore = ignore({
         ignore: options.ignore
     });
 
-    this._load(callback);
+
+    htmlFiles = this._ignore.filter(htmlFiles);
+
+   
+    htmlFiles.forEach(function (htmlFile) {
+        promiseList.push(that._htmlParser(htmlFile));
+    });
+
+    Promise.all(promiseList)
+    .then(function (contents) {
+
+        var result = that._getResult();
+        //that._log('result', result);
+
+        callback(null, result);
+
+    }, function (errors) {
+
+    })
+
+    .then(null, function (errors) {
+        console.error(errors)
+    });
+
+
 };
 
 
@@ -46,31 +87,242 @@ Spider.defaults = {
     map: []
 };
 
+
+
+
+
+
+
 Spider.prototype = {
 
     constructor: Spider,
 
-    _load: function (callback) {
-
-        var that = this;
-
-        var htmlFiles = this._htmlFiles;
-
-        if (typeof htmlFiles === 'string') {
-            htmlFiles = [htmlFiles];
-        }
-
-        htmlFiles = this._ignore.filter(htmlFiles);
-
-        htmlFiles.forEach(that._htmlParser.bind(this));
 
 
-        var result = that._getResult();
-        that._log('result', result);
 
-        callback(null, result);
+    /*
+     * 文件对象构造器
+     * @param   {String}        文件绝对路径
+     * @param   {String}        文件内容
+     * @param   {Object}        file, content
+     */
+    _File: function (file, content) {
+        this.file = file;
+        this.content = content;
     },
 
+
+
+
+    /*
+     * 获取文件对象。注意：读取错误的文件会返回空字符串，不会进入错误流程
+     * @param   {String}                                文件绝对路径
+     * @param   {String}                                调用此功能的源文件（供调试）
+     * @param   {Number}                                调用此功能的源文件所在行数（供调试）
+     * @return   {Spider.prototype._File, Promise}       文件对象
+     */
+    _getFile: function (file, sourceFile, sourceLine) {
+        var that = this;
+        var cache = this._fileCache[file];
+
+
+        if (cache) {
+
+            return cache;
+
+        } else if (RE_SERVER.test(file)) {
+
+            if (sourceLine) {
+                that._error('Error: ' + sourceFile + ':' + sourceLine);
+            }
+
+            that._error('Error: does not support the absolute path "' + file + '"\n');
+            this._fileCache[file] = new that._File(file, content);
+
+        } else {
+
+            this._fileCache[file] = exists(file)
+            .then(function (exists) {
+                if (exists) {
+                    return readFile(file, 'utf8')
+                    .then(function (content) {
+                        return new that._File(file, content);
+                    });
+                } else {
+                    that._error('Error: not found "' + file + '"\n');
+                    return new that._File(file, '');
+                }
+            });
+        }
+
+        return this._fileCache[file];
+    },
+
+
+
+    /*
+     * 解析 HTML 
+     * @param   {String}            文件绝对路径
+     * @return  {}
+     */
+    _htmlParser: function (htmlFile) {
+
+
+        htmlFile = path.resolve(htmlFile)
+        this._log('[HTML] document.URL', htmlFile);
+        
+        var $;
+        var that = this;
+        
+        
+        var htmlDir = path.dirname(htmlFile);
+
+
+        return this._getFile(htmlFile)
+
+
+        // 查找页面中的样式内容
+        // 如 link 标签与页面内联 style 标签
+
+        .then(function (data) {
+            
+            var htmlContent = data.content;
+            $ = cheerio.load(htmlContent);
+
+            var styleSheets = $('link[rel=stylesheet], style');
+            var cssContents = [];
+
+            // 查询页面中所有样式表
+            styleSheets.each(function (index, element) {
+
+                //that._log('[HTML]', $(element).outerHTML.replace(/>[\w\W]*<\//, '> ... <\/'));
+
+                var $this = $(this);
+                var cssInfo;
+                var cssFile;
+                var href = $this.attr('href');
+                var cssContent = '';
+
+
+
+                // 忽略含有有 disabled 属性的
+                if ($this.attr('disabled') && $this.attr('disabled') !== 'false') {
+
+                    return;
+                }
+
+                if (!that._ignore.filter([href]).length) {
+
+                    return;
+                }
+                
+
+                // link 标签
+                if (href) {
+
+                    href = that._map(href);
+                    href = href.replace(RE_QUERY, ''); 
+
+                    cssFile = path.resolve(htmlDir, href);
+
+                    cssContent = that._getFile(cssFile);
+                    
+
+
+                // style 标签
+                } else {
+                    cssContent = new that._File(htmlFile, $this.text());
+                }
+
+
+                cssContents.push(cssContent);
+
+            });
+            
+
+
+            return Promise.all(cssContents);
+        })
+    
+
+        // 解析样式表
+
+        .then(function (cssContents) {
+
+            var cssInfos = [];
+
+            cssContents.forEach(function (item) {
+                var cssContent = item.content;
+                var cssFile = item.file;
+                var cssInfo = that._cssParser(cssContent, cssFile);
+                cssInfos.push(cssInfo);
+            });
+
+            return Promise.all(cssInfos);
+        })
+
+
+        // 根据选择器查询 HTML 节点
+
+        .then(function (cssInfos) {
+
+            var RE_SPURIOUS = /\:(link|visited|hover|active|focus)\b/ig;
+
+            var eachSelectors = function (selectors) {
+
+                var rules = selectors.rules.join(', ');
+                selectors.familys.forEach(function (family) {
+
+                    if (!that._fontsCache[family]) {
+                        return;
+                    }
+
+                    that._charsCache[family] = that._charsCache[family] || '';
+
+                    // 剔除状态伪类
+                    rules = rules.replace(RE_SPURIOUS, '');
+
+                    try {
+                        var elements = $(rules);
+                    } catch (e) {
+                        // 1. 包含 :before 等不支持的伪类
+                        // 2. 非法语句
+                        return;
+                    }
+                    
+                    elements.each(function (index, element) {
+
+                        // 找到使用了字体的文本
+                        that._charsCache[family] += $(element).text();
+
+                    });
+                });
+
+
+            };
+
+
+            cssInfos.forEach(function (cssInfo) {
+
+                cssInfo.fonts.forEach(function (item) {
+                    that._fontsCache[item.name] = item.files;
+                });
+
+                // 提取 HTML 的文本
+                cssInfo.selectors.forEach(eachSelectors);
+
+                that._log('[CSS]', JSON.stringify(cssInfo, null, 4));
+
+            });
+
+
+        })
+
+        .then(null, function (errors) {
+            console.error(errors && errors.stack || errors);
+        });
+        
+    },
 
     _getOptions: function (options) {
         var ret = {};
@@ -135,8 +387,8 @@ Spider.prototype = {
     _getResult: function () {
 
         var list = [];
-        var files = this._files;
-        var chars = this._chars;
+        var files = this._fontsCache;
+        var chars = this._charsCache;
         var that = this;
 
 
@@ -163,132 +415,6 @@ Spider.prototype = {
     },
 
 
-    // 解析 HTML
-    _htmlParser: function (htmlFile) {
-
-        htmlFile = path.resolve(htmlFile)
-        this._log('[HTML] document.URL', htmlFile);
-        
-        var that = this;
-        var htmlContent = fs.readFileSync(htmlFile, 'utf8');
-        var $ = cheerio.load(htmlContent);
-        var styleSheets = $('link[rel=stylesheet], style');
-        var RE_SPURIOUS = /\:(link|visited|hover|active|focus)\b/ig;
-        var htmlDir = path.dirname(htmlFile);
-
-
-        var setCharsCache = function (data) {
-
-            var cssSelectors = data.selectors.join(', ');
-            data.familys.forEach(function (family) {
-
-                if (!that._files[family]) {
-                    return;
-                }
-
-                that._chars[family] = that._chars[family] || '';
-
-                // 剔除状态伪类
-                var selectors = cssSelectors.replace(RE_SPURIOUS, '');
-
-                try {
-                    var elements = $(selectors);
-                } catch (e) {
-                    // 1. 包含 :before 等不支持的伪类
-                    // 2. 非法语句
-                    return;
-                }
-                
-                elements.each(function (index, element) {
-
-                    // 找到使用了字体的文本
-                    that._chars[family] += $(element).text();
-
-                });
-            });
-
-
-        };
-
-
-        // 查询页面中所有样式表
-        styleSheets.each(function (index, element) {
-
-            //that._log('[HTML]', $(element).outerHTML.replace(/>[\w\W]*<\//, '> ... <\/'));
-
-            var $this = $(this);
-            var cssInfo;
-            var cssDir = htmlDir;
-            var cssFile;
-            var href = $this.attr('href');
-            var cssContent = '';
-
-            // 忽略含有有 disabled 属性的
-            if ($this.attr('disabled') && $this.attr('disabled') !== 'false') {
-                return;
-            }
-
-            if (!that._ignore.filter([href]).length) {
-                return;
-            }
-
-            // link 标签
-            if (href) {
-
-                href = that._map(href);
-                href = href.replace(RE_QUERY, '');
-                
-                if (!RE_SERVER.test(href)) {
-
-                    cssFile = path.resolve(htmlDir, href);
-                    cssDir = path.dirname(cssFile);
-
-                    if (!that._cssFiles[cssFile]) {
-                        if (fs.existsSync(cssFile)) {
-                            cssContent = fs.readFileSync(cssFile, 'utf8');
-                        } else {
-                            that._error('Error: ' + htmlFile);
-                            that._error('Error: not found "' + href + '"\n');
-                        }
-                    }
-                } else {
-                    that._error('Error: ' + htmlFile);
-                    that._error('Error: does not support the absolute path "' + href + '"\n');
-                }
-
-
-            // style 标签
-            } else {
-                cssContent = $this.text();
-
-            }
-
-
-            if (cssFile && that._cssFiles[cssFile]) {
-                cssInfo = that._cssFiles[cssFile];
-            } else {
-
-                // 根据 css 选择器查询使用了自定义字体的节点
-                cssInfo = that._cssParser(cssContent, cssFile || htmlFile);
-
-                cssInfo.files.forEach(function (data, cssFile) {
-
-                    that._files[data.name] = data.files;
-
-                });
-
-                // 记录已处理过的样式文件
-                cssFile && (that._cssFiles[cssFile] = cssInfo);
-            }
-
-            // 提取 HTML 的文本
-            cssInfo.selectors.forEach(setCharsCache);
-
-            that._log('[CSS]', JSON.stringify(cssInfo, null, 4));
-
-        });
-
-    },
 
 
     // 提取 css 中要用到的信息
@@ -311,15 +437,25 @@ Spider.prototype = {
 
         filename = filename.replace(RE_QUERY, '');
 
+
         var that = this;
+        var cache = this._cssParserCache;
         var base = path.dirname(filename);
-        var files = [];
+        var importInfo = null;
+
+
+        if (cache[filename]) {
+            return cache[filename];
+        }
+
+        // 字体文件信息
+        var fonts = [];
+
+        // 选择器信息
         var selectors = [];
 
         try {
-            var ast = css.parse(string, {
-                //silent: true
-            });
+            var ast = css.parse(string);
         } catch (e) {
 
             that._error('Error: ' + filename);
@@ -330,7 +466,7 @@ Spider.prototype = {
             }
 
             return {
-                files: [],
+                fonts: [],
                 selectors: []
             };
         }
@@ -364,41 +500,21 @@ Spider.prototype = {
                     url = that._map(url);
                     url = url.replace(RE_QUERY, '');
 
-                    if (!RE_SERVER.test(url)) {
-                        var target = path.resolve(base, url);
-
-                        
-                        if (fs.existsSync(target)) {
-                            var cssContent = fs.readFileSync(target, 'utf8');
-                            var cssInfo = that._cssParser(cssContent, target);
-
-                            files = files.concat(cssInfo.files);
-                            selectors = selectors.concat(cssInfo.selectors);
-
-                        } else {
-                            
-                            var errorInfo = filename;
-                            
-                            if (position) {
-                                errorInfo += (':' + position.start.line);
-                            }
-
-                            that._error('Error: ' + errorInfo);
-                            that._error('Error: not found "' + url + '"\n');
-
+                    var target = path.resolve(base, url);
+                    var line = position ? position.start.line : null;
+                    
+                    importInfo = that._getFile(target, url, line)
+                    .then(function (data) {
+                        var cssContent = data.content;
+                        var cssInfo = that._cssParser(cssContent, target);
+                        return cssInfo;
+                    })
+                    .then(function (cssInfo) {
+                        return {
+                            fonts: fonts.concat(cssInfo.fonts),
+                            selectors: selectors.concat(cssInfo.selectors)
                         }
-
-                    } else {
-
-                        var errorInfo = filename;
-
-                        if (position) {
-                            errorInfo += (':' + position.start.line);
-                        }
-
-                        that._error('Error: ' + errorInfo);
-                        that._error('Error: does not support the absolute path "' + url + '"\n');
-                    }
+                    });
 
                     break;
 
@@ -470,7 +586,7 @@ Spider.prototype = {
 
                     if (family.name) {
                         family.files = that._ignore.filter(family.files);
-                        files.push(family);
+                        fonts.push(family);
                     }
 
 
@@ -484,9 +600,8 @@ Spider.prototype = {
                 case 'rule':
 
                     var selector = {
-                        selectors: rule.selectors,// 注意：包含伪类选择器
-                        familys: [],
-                        content: ''
+                        rules: rule.selectors,// 注意：包含伪类选择器
+                        familys: []
                     };
 
 
@@ -516,7 +631,7 @@ Spider.prototype = {
                                 break;
 
                             case 'content':
-                                // 忽略这里
+                                // TODO
                                 break;
                         }
                     });
@@ -534,8 +649,8 @@ Spider.prototype = {
         ast.stylesheet.rules.forEach(parser);
 
 
-        return {
-            files: files,
+        return cache[filename] = importInfo || {
+            fonts: fonts,
             selectors: selectors
         };
     },
