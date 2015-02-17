@@ -7,16 +7,6 @@ var ignore = require('ignore');
 var cheerio = require('cheerio');
 var Promise = require('promise');
 
-var readFile = Promise.denodeify(fs.readFile);
-var writeFile = Promise.denodeify(fs.writeFile);
-var exists = function (uri) {
-    return new Promise(function (resolve, reject) {
-        fs.exists(uri, function (exists) {
-            resolve(exists);
-        });
-    });
-};
-
 
 // http://font-spider.org/css/style.css
 //var RE_SERVER = /^(\/|http\:|https\:)/i;
@@ -29,6 +19,7 @@ var RE_QUERY = /[#?].*$/g;
 var Spider = function (htmlFiles, options, callback) {
 
     options = this._getOptions(options);
+    callback = callback || function () {};
 
 
     if (typeof htmlFiles === 'string') {
@@ -60,22 +51,46 @@ var Spider = function (htmlFiles, options, callback) {
         promiseList.push(that._htmlParser(htmlFile));
     });
 
-    Promise.all(promiseList)
+
+    return Promise.all(promiseList)
     .then(function (contents) {
 
-        var result = that._getResult();
-        //that._log('result', result);
 
-        callback(null, result);
+        var list = [];
+        var files = this._fontsCache;
+        var chars = this._charsCache;
+        var that = this;
 
-    }, function (errors) {
+        
+        Object.keys(chars).forEach(function (familyName) {
+            // 对文本进行除重操作
+            chars[familyName] = that._unique(chars[familyName].split('')).join('');
+            // 删除无效字符
+            chars[familyName] = chars[familyName].replace(/[\n\r\t]/g, '');
+        });
 
-    })
+
+        Object.keys(files).forEach(function (familyName) {
+            if (chars[familyName]) {
+                list.push({
+                    name: familyName,
+                    chars: chars[familyName],
+                    files: files[familyName]
+                });
+            }
+        });
+        
+
+        callback(null, list);
+
+        return list;
+    }.bind(this))
 
     .then(null, function (errors) {
-        console.error(errors)
+        callback(errors);
+        console.error(errors && errors.stack || errors);
+        return errors;
     });
-
 
 };
 
@@ -125,6 +140,10 @@ Spider.prototype = {
         var that = this;
         var cache = this._fileCache[file];
 
+        if (sourceFile) {
+            sourceFile = sourceFile + (sourceLine ? (':' + sourceLine) : '');
+        }
+
 
         if (cache) {
 
@@ -132,8 +151,8 @@ Spider.prototype = {
 
         } else if (RE_SERVER.test(file)) {
 
-            if (sourceLine) {
-                that._error('Error: ' + sourceFile + ':' + sourceLine);
+            if (sourceFile) {
+                that._error('Source: ' + sourceFile);
             }
 
             that._error('Error: does not support the absolute path "' + file + '"\n');
@@ -141,17 +160,24 @@ Spider.prototype = {
 
         } else {
 
-            this._fileCache[file] = exists(file)
-            .then(function (exists) {
-                if (exists) {
-                    return readFile(file, 'utf8')
-                    .then(function (content) {
-                        return new that._File(file, content);
-                    });
-                } else {
-                    that._error('Error: not found "' + file + '"\n');
-                    return new that._File(file, '');
-                }
+            this._fileCache[file] = new Promise(function (resolve, reject) {
+
+                fs.readFile(file, 'utf8', function (errors, content) {
+
+                    if (errors) {
+
+                        if (sourceFile) {
+                            that._error('Source: ' + sourceFile);
+                        }
+
+                        that._error('Error: read "' + file + '" failed\n');
+
+                        resolve(new that._File(file, ''));
+                    } else {
+                        resolve(new that._File(file, content));
+                    }
+
+                });  
             });
         }
 
@@ -195,8 +221,6 @@ Spider.prototype = {
             // 查询页面中所有样式表
             styleSheets.each(function (index, element) {
 
-                //that._log('[HTML]', $(element).outerHTML.replace(/>[\w\W]*<\//, '> ... <\/'));
-
                 var $this = $(this);
                 var cssInfo;
                 var cssFile;
@@ -225,7 +249,7 @@ Spider.prototype = {
 
                     cssFile = path.resolve(htmlDir, href);
 
-                    cssContent = that._getFile(cssFile);
+                    cssContent = that._getFile(cssFile, htmlFile);
                     
 
 
@@ -316,10 +340,6 @@ Spider.prototype = {
             });
 
 
-        })
-
-        .then(null, function (errors) {
-            console.error(errors && errors.stack || errors);
         });
         
     },
@@ -384,39 +404,6 @@ Spider.prototype = {
     },
 
 
-    _getResult: function () {
-
-        var list = [];
-        var files = this._fontsCache;
-        var chars = this._charsCache;
-        var that = this;
-
-
-        
-        Object.keys(chars).forEach(function (familyName) {
-            // 对文本进行除重操作
-            chars[familyName] = that._unique(chars[familyName].split('')).join('');
-            // 删除无效字符
-            chars[familyName] = chars[familyName].replace(/[\n\r\t]/g, '');
-        });
-
-
-        Object.keys(files).forEach(function (familyName) {
-            if (chars[familyName]) {
-                list.push({
-                    name: familyName,
-                    chars: chars[familyName],
-                    files: files[familyName]
-                });
-            }
-        });
-        
-        return list;
-    },
-
-
-
-
     // 提取 css 中要用到的信息
     _cssParser: function (string, filename) {
 
@@ -458,7 +445,8 @@ Spider.prototype = {
             var ast = css.parse(string);
         } catch (e) {
 
-            that._error('Error: ' + filename);
+            that._error('Source: ' + filename);
+
             if (e.line !== undefined) {
                 that._error(e.toString() + '\n');
             } else if (e.stack) {
@@ -503,7 +491,7 @@ Spider.prototype = {
                     var target = path.resolve(base, url);
                     var line = position ? position.start.line : null;
                     
-                    importInfo = that._getFile(target, url, line)
+                    importInfo = that._getFile(target, filename, line)
                     .then(function (data) {
                         var cssContent = data.content;
                         var cssInfo = that._cssParser(cssContent, target);
@@ -573,7 +561,7 @@ Spider.prototype = {
                                             errorInfo += (':' + position.start.line);
                                         }
 
-                                        that._error('Error: ' + errorInfo);
+                                        that._error('Source: ' + errorInfo);
                                         that._error('Error: does not support the absolute path "' + url + '"\n');
 
                                     }
