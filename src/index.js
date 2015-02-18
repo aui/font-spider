@@ -54,6 +54,11 @@ FontSpider.defaults = {
 
 
 
+FontSpider.Spider = Spider;
+FontSpider.Optimizer = Optimizer;
+FontSpider.Convertor = Convertor;
+
+
 FontSpider.prototype = {
 
     constructor: FontSpider,

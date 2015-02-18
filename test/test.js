@@ -8,7 +8,7 @@ var fontspider = new FontSpider([__dirname + '/*.html'], {
 		['http://test.com/css', __dirname + '/css']
 	],
     ignore: ['FZXiaoZhuanTi-S13T.svg', '*.bk.css'],
-    debug: false
+    debug: true
 });
 
 fontspider.onoutput = function (data) {
