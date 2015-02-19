@@ -10,6 +10,10 @@ var Spider = require('./spider.js');
 var Optimizer = require('./optimizer.js');
 var Convertor = require('./convertor.js');
 
+// http://font-spider.org/css/style.css
+//var RE_SERVER = /^(\/|http\:|https\:)/i;
+var RE_SERVER = /^(http\:|https\:)/i;
+
 
 
 var copyFile = function (srcpath, destpath) {
@@ -107,6 +111,12 @@ FontSpider.prototype = {
                         return;
                     }
 
+                    if (RE_SERVER.test(file)) {
+                        error = new Error('Error: does not support the absolute path "' + file + '"');
+                        that.onerror(error);
+                        return;
+                    }
+
                     if (extname !== '.ttf') {
                         return;
                     }
@@ -125,10 +135,7 @@ FontSpider.prototype = {
                         dest = file;
                     } else {
 
-                        error = {
-                            code: 1,
-                            message: '"' + file + '" file not found'
-                        };
+                        error = new Error('"' + file + '" file not found');
                         that.onerror(error);
                     }
                     
@@ -142,10 +149,7 @@ FontSpider.prototype = {
 
 
                 if (!src) {
-                    error = {
-                        code: 2,
-                        message: '"' + item.name  + '"' + ' did not find tureType fonts'
-                    };
+                    error = new Error('"' + item.name  + '"' + ' did not find turetype fonts');
                     that.onerror(error);
                     return;
                 }
@@ -167,16 +171,11 @@ FontSpider.prototype = {
                 if (optimizerResult.code !== 0) {
 
                     if (optimizerResult.code === Optimizer.COMMAND_NOT_FOUND) {
-                        error = {
-                            code: 3,
-                            message: 'Please install perl. See: http://www.perl.org'
-                        };
+                        error = new Error('Please install perl. See: http://www.perl.org');
                     } else {
-                        error = {
-                            code: 4,
-                            message: 'Optimizer error.\n' + src,
-                            result: optimizerResult.output
-                        };
+                        error = new Error('Optimizer error.\n' + src);
+                        error.result = optimizerResult.output;
+
                     }
 
                     that.onerror(error);

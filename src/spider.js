@@ -17,7 +17,7 @@ var RE_SERVER = /^(http\:|https\:)/i;
 
 var Spider = function (htmlFiles, options, callback) {
 
-    options = this._getOptions(options);
+    options = this.getOptions(options);
     callback = callback || function () {};
 
 
@@ -30,23 +30,24 @@ var Spider = function (htmlFiles, options, callback) {
     var promiseList = [];
 
 
-    this._fontsCache = {};
-    this._charsCache = {};
-    this._fileCache = {};
-    this._cssParserCache = {};
+    this.fontsCache = {};
+    this.charsCache = {};
+    this.fileCache = {};
+    this.cssParserCache = {};
 
     this.options = options;
 
-    this._ignore = ignore({
+
+    this.ignore = ignore({
         ignore: options.ignore
     });
 
 
-    htmlFiles = this._ignore.filter(htmlFiles);
+    htmlFiles = this.filter(htmlFiles);
 
    
     htmlFiles.forEach(function (htmlFile) {
-        promiseList.push(that._htmlParser(htmlFile));
+        promiseList.push(that.htmlParser(htmlFile));
     });
 
 
@@ -55,8 +56,8 @@ var Spider = function (htmlFiles, options, callback) {
 
 
         var list = [];
-        var files = this._fontsCache;
-        var chars = this._charsCache;
+        var files = this.fontsCache;
+        var chars = this.charsCache;
         var that = this;
 
         function sort (a, b) {
@@ -155,7 +156,7 @@ Spider.prototype = {
      * @param   {String}        文件内容
      * @param   {Object}        file, content
      */
-    _File: function (file, content) {
+    File: function (file, content) {
         this.file = file;
         this.content = content;
     },
@@ -168,14 +169,13 @@ Spider.prototype = {
      * @param   {String}                                文件绝对路径
      * @param   {String}                                调用此功能的源文件（供调试）
      * @param   {Number}                                调用此功能的源文件所在行数（供调试）
-     * @return   {Spider.prototype._File, Promise}      文件对象
+     * @return   {Spider.prototype.File, Promise}      文件对象
      */
-    _getFile: function (file, isCache, sourceFile, sourceLine) {
-
-        file = this._normalize(file);
+    getFile: function (file, sourceFile, sourceLine) {
 
         var that = this;
-        var cache = this._fileCache[file];
+        var isCache = true; 
+        var cache = this.fileCache[file];
         var ret;
 
         if (sourceFile) {
@@ -209,19 +209,21 @@ Spider.prototype = {
 
                             var content = data.toString();
 
-                            that._log('[GET] OK', file);
-                            resolve(new that._File(file, content));
+                            that.info('[GET]', 'OK', file);
+                            resolve(new that.File(file, content));
                         });
 
                     })
                     .on('error', function (errors) {
+
+                        var err = ['Error: get "' + file + '" failed'];
                         if (sourceFile) {
-                            that._error('Source: ' + sourceFile);
+                            err.push('Source: ' + sourceFile);
                         }
 
-                        that._error('Error: get "' + file + '" failed\n');
+                        that.error(err.join('\n'));
 
-                        resolve(new that._File(file, ''));
+                        resolve(new that.File(file, ''));
                     });
 
 
@@ -232,17 +234,18 @@ Spider.prototype = {
 
                         if (errors) {
 
+                            var err = ['Error: read "' + file + '" failed'];
                             if (sourceFile) {
-                                that._error('Source: ' + sourceFile);
+                                err.push('Source: ' + sourceFile);
                             }
 
-                            that._error('Error: read "' + file + '" failed\n');
+                            that.error(err.join('\n'));
 
-                            resolve(new that._File(file, ''));
+                            resolve(new that.File(file, ''));
                         } else {
 
-                            that._log('[READ] OK', file);
-                            resolve(new that._File(file, content));
+                            that.log('[READ]', 'OK', file);
+                            resolve(new that.File(file, content));
                         }
 
                     });
@@ -254,7 +257,7 @@ Spider.prototype = {
 
 
         if (isCache) {
-            this._fileCache[file] = ret;
+            this.fileCache[file] = ret;
         }
 
 
@@ -269,7 +272,8 @@ Spider.prototype = {
      * @param   {String}    子路径
      * @return  {String}    绝对路径
      */
-    _resolve: function (from, to) {
+    resolve: function (from, to) {
+
         if (RE_SERVER.test(from)) {
             return url.resolve(from, to);
         } else if (RE_SERVER.test(to)) {
@@ -281,15 +285,21 @@ Spider.prototype = {
 
 
 
-    _normalize: function (uri) {
+    /*
+     * 标准化路径
+     * @param   {String}    路径
+     * @return  {String}    标准化路径
+     */
+    normalize: function (src) {
 
         // ../font/font.eot?#font-spider
         var RE_QUERY = /[#?].*$/g;
 
-        if (RE_SERVER.test(uri)) {
-            return uri;
+        if (RE_SERVER.test(src)) {
+            return src;
         } else {
-            return uri.replace(RE_QUERY, ''); 
+            src = src.replace(RE_QUERY, '');
+            return path.normalize(src); 
         }
     },
 
@@ -299,7 +309,7 @@ Spider.prototype = {
      * @param   {String}            文件绝对路径
      * @return  {}
      */
-    _htmlParser: function (htmlFile) {
+    htmlParser: function (htmlFile) {
 
 
         //htmlFile = path.resolve(htmlFile);
@@ -311,7 +321,7 @@ Spider.prototype = {
         var base = path.dirname(htmlFile);
 
 
-        return this._getFile(htmlFile, false)
+        return this.getFile(htmlFile)
 
 
         // 查找页面中的样式内容
@@ -346,7 +356,7 @@ Spider.prototype = {
                     return;
                 }
 
-                if (!that._ignore.filter([href]).length) {
+                if (!that.filter([href]).length) {
 
                     return;
                 }
@@ -355,17 +365,19 @@ Spider.prototype = {
                 // link 标签
                 if (href) {
 
-                    href = that._map(href);
+                    
 
-                    cssFile = that._resolve(base, href);
+                    cssFile = that.resolve(base, href);
+                    cssFile = that.map(cssFile);
+                    cssFile = that.normalize(cssFile);
 
-                    cssContent = that._getFile(cssFile, true, htmlFile);
+                    cssContent = that.getFile(cssFile, htmlFile);
                     
 
 
                 // style 标签
                 } else {
-                    cssContent = new that._File(htmlFile, $this.text());
+                    cssContent = new that.File(htmlFile, $this.text());
                 }
 
 
@@ -388,7 +400,7 @@ Spider.prototype = {
             cssContents.forEach(function (item) {
                 var cssContent = item.content;
                 var cssFile = item.file;
-                var cssInfo = that._cssParser(cssContent, cssFile);
+                var cssInfo = that.cssParser(cssContent, cssFile);
                 cssInfos.push(cssInfo);
             });
 
@@ -407,11 +419,11 @@ Spider.prototype = {
                 var rules = selectors.rules.join(', ');
                 selectors.familys.forEach(function (family) {
 
-                    if (!that._fontsCache[family]) { // TODO 这一句可能因为顺序问题产生BUG
+                    if (!that.fontsCache[family]) { // TODO 这一句可能因为顺序问题产生BUG
                         return;
                     }
 
-                    that._charsCache[family] = that._charsCache[family] || '';
+                    that.charsCache[family] = that.charsCache[family] || '';
 
                     // 剔除状态伪类
                     rules = rules.replace(RE_SPURIOUS, '');
@@ -424,12 +436,12 @@ Spider.prototype = {
                         return;
                     }
 
-                    that._log('[INFO]', family, rules);
+                    that.log('[%s]', family, rules);
                     
                     elements.each(function (index, element) {
 
                         // 找到使用了字体的文本
-                        that._charsCache[family] += $(element).text();
+                        that.charsCache[family] += $(element).text();
 
                     });
                 });
@@ -441,13 +453,13 @@ Spider.prototype = {
             cssInfos.forEach(function (cssInfo) {
 
                 cssInfo.fonts.forEach(function (item) {
-                    that._fontsCache[item.name] = item.files;
+                    that.fontsCache[item.name] = item.files;
                 });
 
                 // 提取 HTML 的文本
                 cssInfo.selectors.forEach(eachSelectors);
 
-                //that._log('[CSS]', JSON.stringify(cssInfo, null, 4));
+                //that.log('[CSS]', JSON.stringify(cssInfo, null, 4));
 
             });
 
@@ -456,7 +468,7 @@ Spider.prototype = {
         
     },
 
-    _getOptions: function (options) {
+    getOptions: function (options) {
         var ret = {};
 
         options = options || {};
@@ -483,11 +495,11 @@ Spider.prototype = {
 
 
     // 根据正则替换 URL
-    _map: function (uri) {
+    map: function (src) {
         var regs = this.options.map;
 
         if (!regs || !regs.length) {
-            return uri;
+            return src;
         }
 
         if (!Array.isArray(regs[0])) {
@@ -495,16 +507,23 @@ Spider.prototype = {
         }
 
         regs.forEach(function (reg) {
-            uri = uri.replace.apply(uri, reg);
+            src = src.replace.apply(src, reg);
         });
 
-        return uri;
+        return src;
+    },
+
+
+
+    // 筛选路径
+    filter: function (srcs) {
+        return this.ignore.filter(srcs);
     },
 
 
 
     // 提取 css 中要用到的信息
-    _cssParser: function (string, filename) {
+    cssParser: function (string, filename) {
 
         // url(../font/font.ttf)
         // url("../font/font.ttf")
@@ -523,7 +542,7 @@ Spider.prototype = {
 
 
         var that = this;
-        var cache = this._cssParserCache[filename];
+        var cache = this.cssParserCache[filename];
         var base = path.dirname(filename);
         var importInfo = null;
 
@@ -543,13 +562,18 @@ Spider.prototype = {
             var ast = css.parse(string);
         } catch (e) {
 
-            that._error('Source: ' + filename);
+            
+            var err = [];
 
             if (e.line !== undefined) {
-                that._error(e.toString() + '\n');
+                err.push(e.toString());
             } else if (e.stack) {
-                that._error(e.stack + '\n');
+                err.push(e.stack);
             }
+
+            err.push('Source: ' + filename);
+
+            that.error(err.join('\n'));
 
             return {
                 fonts: [],
@@ -567,31 +591,34 @@ Spider.prototype = {
                 case 'import':
                     
                     
-                    var url = rule['import'];
+                    var src = rule['import'];
                     
 
                     // @import url("./g.css?t=2009");
                     // @import "./g.css?t=2009";
-                    if (RE_URL.test(url)) {
+                    if (RE_URL.test(src)) {
                         RE_URL.lastIndex = 0;
-                        url = RE_URL.exec(url)[1];
+                        src = RE_URL.exec(src)[1];
                     }
 
-                    url = url.replace(RE_QUOTATION, '');
+                    src = src.replace(RE_QUOTATION, '');
 
-                    if (!that._ignore.filter([url]).length) {
+                    if (!that.filter([src]).length) {
                         break;
                     }
 
-                    url = that._map(url);
+                    
 
-                    var target = that._resolve(base, url);
+                    var target = that.resolve(base, src);
                     var line = position ? position.start.line : null;
                     
-                    importInfo = that._getFile(target, true, filename, line)
+                    target = that.map(target);
+                    target = that.normalize(target);
+
+                    importInfo = that.getFile(target, filename, line)
                     .then(function (data) {
                         var cssContent = data.content;
-                        var cssInfo = that._cssParser(cssContent, target);
+                        var cssInfo = that.cssParser(cssContent, target);
                         return cssInfo;
                     })
                     .then(function (cssInfo) {
@@ -632,19 +659,20 @@ Spider.prototype = {
                                 break;
 
                             case 'src':
-                                var url;
+                                var src;
 
                                 RE_URL.lastIndex = 0;
-                                while ((url = RE_URL.exec(value)) !== null) {
+                                while ((src = RE_URL.exec(value)) !== null) {
 
-                                    url = url[1];
-                                    url = url.replace(RE_QUOTATION, '');
-                                    url = that._map(url);
-                                    url = that._normalize(url);
-                                    url = that._resolve(base, url);
+                                    src = src[1];
+                                    src = src.replace(RE_QUOTATION, '');
+                                    
+                                    src = that.resolve(base, src);
+                                    src = that.map(src);
+                                    src = that.normalize(src);
 
-                                    if (family.files.indexOf(url) === -1) {
-                                        family.files.push(url);
+                                    if (family.files.indexOf(src) === -1) {
+                                        family.files.push(src);
                                     }
                                 }
 
@@ -654,7 +682,7 @@ Spider.prototype = {
 
 
                     if (family.name) {
-                        family.files = that._ignore.filter(family.files);
+                        family.files = that.filter(family.files);
                         fonts.push(family);
                     }
 
@@ -718,19 +746,26 @@ Spider.prototype = {
         ast.stylesheet.rules.forEach(parser);
 
 
-        return this._cssParserCache[filename] = importInfo || {
+        return this.cssParserCache[filename] = importInfo || {
             fonts: fonts,
             selectors: selectors
         };
     },
 
-    _error: function () {
+
+    info: function () {
+        console.info.apply(console, arguments);
+    },
+
+
+    error: function () {
         if (!this.options.silent || this.options.debug) {
             console.error.apply(console, arguments);
         }
     },
 
-    _log: function () {
+
+    log: function () {
         if (this.options.debug) {
             console.log.apply(console, arguments);
         }
