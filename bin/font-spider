@@ -7,8 +7,14 @@ var path = require('path');
 var FontSpider = require('../');
 var Spider = require('../src/spider');
 var program = require('commander');
-require('../src/color')(String.prototype);
+var colors = require('../src/color');
 
+
+Object.keys(colors).forEach(function (color) {
+    String.prototype.__defineGetter__(color, function () {
+        return colors[color][0] + this + colors[color][1];
+    });
+});
 
 program
     .version(require('../package.json').version)
@@ -16,9 +22,9 @@ program
     .option('--info', 'show only webfont information')
     .option('--ignore <pattern>', 'ignore the files', list)
     .option('--map <remotePath,localPath>', 'mapping the remote path to the local', toMap)
-    .option('--debug', 'enable debug mode')
+    .option('--log', 'enable debug mode')
     .option('--no-backup', 'do not back up fonts')
-    .option('--silent', 'silently fail on parse errors')
+    .option('--no-error', 'silently fail on parse errors')
     .option('--revert', 'revert compressed font file')
     .parse(process.argv);
 
