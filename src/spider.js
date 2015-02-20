@@ -8,11 +8,17 @@ var css = require('css');
 var ignore = require('ignore');
 var cheerio = require('cheerio');
 var Promise = require('promise');
+var ColorConsole = require('./color-console.js');
 
 
 // http://font-spider.org/css/style.css
 //var RE_SERVER = /^(\/|http\:|https\:)/i;
 var RE_SERVER = /^(http\:|https\:)/i;
+
+
+var getCssError = function (error) {
+    return error.toString().replace(/^Error:\s*/, '');
+};
 
 
 var Spider = function (htmlFiles, options, callback) {
@@ -24,6 +30,13 @@ var Spider = function (htmlFiles, options, callback) {
     if (typeof htmlFiles === 'string') {
         htmlFiles = [htmlFiles];
     }
+
+    new ColorConsole({
+        log: options.log,
+        info: options.info,
+        error: options.error,
+        warn: options.warn
+    }).apply(this);
 
     
     var that = this;
@@ -129,12 +142,14 @@ var Spider = function (htmlFiles, options, callback) {
 
 
 Spider.defaults = {
-    debug: false,
-    silent: false,
     sort: true,
     unique: true,
     ignore: [],
-    map: []
+    map: [],
+    log: false,
+    info: true,
+    error: true,
+    warn: true
 };
 
 
@@ -151,109 +166,102 @@ Spider.prototype = {
 
 
     /*
-     * 文件对象构造器
-     * @param   {String}        文件绝对路径
-     * @param   {String}        文件内容
-     * @param   {Object}        file, content
+     * 本地或远程资源。注意：读取错误的文件会返回空字符串，不会进入错误流程
+     * @param   {Object options}            <options.file>, ...
+     * @param   {Promise, options}          <options.file>, <options.content>, ...
      */
-    File: function (file, content) {
-        this.file = file;
-        this.content = content;
-    },
+    resource: function (options) {
 
+        var file = options.file;
+        var content = options.content;
 
+        if (content !== undefined) {
+            return options;
+        } else {
+            options.content = '';
+        }
 
-
-    /*
-     * 获取文件对象。注意：读取错误的文件会返回空字符串，不会进入错误流程
-     * @param   {String}                                文件绝对路径
-     * @param   {String}                                调用此功能的源文件（供调试）
-     * @param   {Number}                                调用此功能的源文件所在行数（供调试）
-     * @return   {Spider.prototype.File, Promise}      文件对象
-     */
-    getFile: function (file, sourceFile, sourceLine) {
+        var from = options.from;
 
         var that = this;
-        var isCache = true; 
+        var isCache = options.cache !== undefined; 
         var cache = this.fileCache[file];
         var ret;
-
-        if (sourceFile) {
-            sourceFile = sourceFile + (sourceLine ? (':' + sourceLine) : '');
-        }
 
 
         if (cache) {
 
             return cache;
         
-        } else {
-
-            ret = new Promise(function (resolve, reject) {
-
-                // 远程文件
-                if (RE_SERVER.test(file)) {
-
-                    http.get(file, function (res) {
-
-                        var size = 0;
-                        var chunks = [];
-
-                        res.on('data', function (chunk) {
-                            size += chunk.length;
-                            chunks.push(chunk);
-                        });
-
-                        res.on('end', function () {
-                            var data = Buffer.concat(chunks, size);
-
-                            var content = data.toString();
-
-                            that.info('[GET]', 'OK', file);
-                            resolve(new that.File(file, content));
-                        });
-
-                    })
-                    .on('error', function (errors) {
-
-                        var err = ['Error: get "' + file + '" failed'];
-                        if (sourceFile) {
-                            err.push('Source: ' + sourceFile);
-                        }
-
-                        that.error(err.join('\n'));
-
-                        resolve(new that.File(file, ''));
-                    });
-
-
-                // 本地文件
-                } else {
-
-                    fs.readFile(file, 'utf8', function (errors, content) {
-
-                        if (errors) {
-
-                            var err = ['Error: read "' + file + '" failed'];
-                            if (sourceFile) {
-                                err.push('Source: ' + sourceFile);
-                            }
-
-                            that.error(err.join('\n'));
-
-                            resolve(new that.File(file, ''));
-                        } else {
-
-                            that.log('[READ]', 'OK', file);
-                            resolve(new that.File(file, content));
-                        }
-
-                    });
-
-                }
-            });
-
         }
+
+        var error = function (errors) {
+            var fromCode = from;
+
+            if (typeof options.line !== undefined) {
+                fromCode == from + ':' + options.line;
+            }
+
+            that.error('[ERROR]', 'load "' + file + '" failed',
+                '\n     ', 'from:', fromCode);
+        };
+
+        ret = new Promise(function (resolve, reject) {
+
+            // 远程文件
+            if (RE_SERVER.test(file)) {
+
+                http.get(file, function (res) {
+
+                    var size = 0;
+                    var chunks = [];
+
+                    res.on('data', function (chunk) {
+                        size += chunk.length;
+                        chunks.push(chunk);
+                    });
+
+                    res.on('end', function () {
+                        var buffer = Buffer.concat(chunks, size);
+
+                        options.content = buffer.toString();
+
+                        that.info('Load', '<' + file + '>');
+                        resolve(options);
+                    });
+
+                })
+                .on('error', function (errors) {
+
+                    error(errors);
+
+                    resolve(options);
+                });
+
+
+            // 本地文件
+            } else {
+
+                fs.readFile(file, 'utf8', function (errors, content) {
+
+                    if (errors) {
+
+                        error(errors);
+
+                        resolve(options);
+                    } else {
+
+                        options.content = content;
+                        that.log('[SUCCEED]', '<read>', file);
+                        resolve(options);
+                    }
+
+                });
+
+            }
+        });
+
+        
 
 
         if (isCache) {
@@ -321,86 +329,95 @@ Spider.prototype = {
         var base = path.dirname(htmlFile);
 
 
-        return this.getFile(htmlFile)
+        return this.resource({
+            file: htmlFile,
+            cache: false
+        })
 
 
         // 查找页面中的样式内容
         // 如 link 标签与页面内联 style 标签
 
-        .then(function (data) {
+        .then(function (resource) {
             
-            var htmlContent = data.content;
+            var htmlContent = resource.content;
+            var resources = [];
 
             $ = cheerio.load(htmlContent);
 
-            var styleSheets = $('link[rel=stylesheet], style');
-            var cssContents = [];
 
             // TODO base 标签顺序影响
             base = $('base[href]').attr('href') || base;
 
 
-            // 查询并读取页面中所有样式表
-            styleSheets.each(function (index, element) {
+            // 外部样式
+            $('link[rel=stylesheet]').each(function (index) {
 
+                var line = index + 1;
                 var $this = $(this);
-                var cssInfo;
                 var cssFile;
                 var href = $this.attr('href');
-                var cssContent = '';
 
 
                 // 忽略含有有 disabled 属性的
                 if ($this.attr('disabled') && $this.attr('disabled') !== 'false') {
-
                     return;
                 }
 
                 if (!that.filter([href]).length) {
-
                     return;
                 }
-                
-
-                // link 标签
-                if (href) {
-
-                    
-
-                    cssFile = that.resolve(base, href);
-                    cssFile = that.map(cssFile);
-                    cssFile = that.normalize(cssFile);
-
-                    cssContent = that.getFile(cssFile, htmlFile);
-                    
 
 
-                // style 标签
-                } else {
-                    cssContent = new that.File(htmlFile, $this.text());
+
+                cssFile = that.resolve(base, href);
+                cssFile = that.map(cssFile);
+                cssFile = that.normalize(cssFile);
+
+                resources.push(that.resource({
+                    file: cssFile,
+                    from: htmlFile + '#<link:nth-of-type(' + line + ')>',
+                    base: path.dirname(cssFile),
+                    cache: true
+                }));
+
+            });
+
+
+
+            // 页面内联样式
+            $('style').each(function (index) {
+
+                var line = index + 1;
+                var $this = $(this);
+                // 忽略含有有 disabled 属性的
+                if ($this.attr('disabled') && $this.attr('disabled') !== 'false') {
+                    return;
                 }
 
-
-                cssContents.push(cssContent);
+                resources.push(that.resource({
+                    file: htmlFile + '#' + line,
+                    from: htmlFile + '#<style:nth-of-type(' + line + ')>',
+                    base: base,
+                    cache: false,
+                    content: $this.text()
+                }));
 
             });
             
 
-
-            return Promise.all(cssContents);
+            return Promise.all(resources);
         })
     
 
         // 解析样式表
 
-        .then(function (cssContents) {
+        .then(function (resources) {
 
             var cssInfos = [];
 
-            cssContents.forEach(function (item) {
-                var cssContent = item.content;
-                var cssFile = item.file;
-                var cssInfo = that.cssParser(cssContent, cssFile);
+            resources.forEach(function (resource) {
+                var cssInfo = that.cssParser(resource);
                 cssInfos.push(cssInfo);
             });
 
@@ -459,7 +476,7 @@ Spider.prototype = {
                 // 提取 HTML 的文本
                 cssInfo.selectors.forEach(eachSelectors);
 
-                //that.log('[CSS]', JSON.stringify(cssInfo, null, 4));
+                that.log(JSON.stringify(cssInfo, null, 4));
 
             });
 
@@ -523,7 +540,12 @@ Spider.prototype = {
 
 
     // 提取 css 中要用到的信息
-    cssParser: function (string, filename) {
+    cssParser: function (resource) {
+
+        var string = resource.content;
+        var file = resource.file;
+        var from = resource.from;
+        var base = resource.base;
 
         // url(../font/font.ttf)
         // url("../font/font.ttf")
@@ -542,9 +564,9 @@ Spider.prototype = {
 
 
         var that = this;
-        var cache = this.cssParserCache[filename];
-        var base = path.dirname(filename);
-        var importInfo = null;
+        var cache = this.cssParserCache[file];
+        
+        var imports = [];
 
 
         if (cache) {
@@ -563,21 +585,19 @@ Spider.prototype = {
         } catch (e) {
 
             
-            var err = [];
 
             if (e.line !== undefined) {
-                err.push(e.toString());
+                that.error('[ERROR]', getCssError(e),
+                    '\n     ', 'file:', file);
             } else if (e.stack) {
-                err.push(e.stack);
+                that.error('[ERROR]',
+                    '\n     ', 'file:', file, e.stack);
             }
-
-            err.push('Source: ' + filename);
-
-            that.error(err.join('\n'));
 
             return {
                 fonts: [],
-                selectors: []
+                selectors: [],
+                from: from
             };
         }
 
@@ -615,18 +635,19 @@ Spider.prototype = {
                     target = that.map(target);
                     target = that.normalize(target);
 
-                    importInfo = that.getFile(target, filename, line)
-                    .then(function (data) {
-                        var cssContent = data.content;
-                        var cssInfo = that.cssParser(cssContent, target);
-                        return cssInfo;
-                    })
-                    .then(function (cssInfo) {
-                        return {
-                            fonts: fonts.concat(cssInfo.fonts),
-                            selectors: selectors.concat(cssInfo.selectors)
-                        }
-                    });
+                    // TODO 超过一层嵌套后，from 不准确
+                    imports.push(
+                        that.resource({
+                            file: target,
+                            base: path.dirname(target),
+                            from: file,
+                            line: line,
+                            cache: true
+                        })
+                        .then(function (resource) {
+                            return that.cssParser(resource);
+                        })
+                    );
 
                     break;
 
@@ -746,30 +767,30 @@ Spider.prototype = {
         ast.stylesheet.rules.forEach(parser);
 
 
-        return this.cssParserCache[filename] = importInfo || {
+        imports.unshift({
             fonts: fonts,
-            selectors: selectors
-        };
-    },
+            selectors: selectors,
+            from: from
+        });
 
 
-    info: function () {
-        console.info.apply(console, arguments);
-    },
+        return this.cssParserCache[file] = Promise.all(imports)
+        .then(function (res) {
+            var cssInfo = {
+                fonts: [],
+                selectors: [],
+                from: from
+            };
 
+            res.forEach(function (item) {
+                cssInfo.fonts = cssInfo.fonts.concat(item.fonts);
+                cssInfo.selectors = cssInfo.selectors.concat(item.selectors);
+            });
 
-    error: function () {
-        if (!this.options.silent || this.options.debug) {
-            console.error.apply(console, arguments);
-        }
-    },
-
-
-    log: function () {
-        if (this.options.debug) {
-            console.log.apply(console, arguments);
-        }
+            return cssInfo;
+        });
     }
+
 };
 
 
