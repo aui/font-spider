@@ -48,13 +48,8 @@ var FontSpider = function (src, options) {
 
 
 FontSpider.BACKUP_EXTNAME = '.backup';
-FontSpider.defaults = {
-    debug: false,
-    silent: false,
-    backup: true,
-    ignore: [],
-    map: []
-};
+FontSpider.defaults = Object.create(Spider.defaults);
+FontSpider.defaults.backup = true;
 
 
 
