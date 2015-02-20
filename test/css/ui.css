@@ -1,28 +1,39 @@
 @charset "utf-8";
 
 /** Reset */
-@import url("./g.css?t=2009");
+@import url("./sub/g.css?t=2009");
 @import "./g2.css";
 @import "404.css";
 @import "/css/http.css";
-@import "http://5453453xxxxx.com/css/test.css";
+@import "http://test.com/css/test.css";
 @font-face {
   font-family: 'art';
   /*IE*/
-  src: url('../font/art.eot');
+  src: url('../font/FZLTCXHJW--GB1-0.eot');
   /*现代浏览器*/
   src:
-    url('../font/art.eot?#font-spider') format('embedded-opentype'),
-    url('../font/art.woff') format('woff'),
-    url('../font/art.ttf') format('truetype'),
-    url('../font/art.svg') format('svg');
+    url('../font/FZLTCXHJW--GB1-0.eot?#font-spider') format('embedded-opentype'),
+    url('../font/FZLTCXHJW--GB1-0.woff') format('woff'),
+    url('../font/FZLTCXHJW--GB1-0.ttf') format('truetype'),
+    url('../font/FZLTCXHJW--GB1-0.svg') format('svg');
   font-weight: normal;
   font-style: normal;
 }
 
 
 
+@font-face {
+  font-family: 'ft';
+  src: url('../font/FZJT.eot');/*IE9 Compat Modes*/
+  src:
+    url('../font/FZJT.eot?#font-spider') format('embedded-opentype'),
+    url('../font/FZJT.woff') format('woff'),
+    url('../font/FZJT.ttf') format('truetype'),
+    url('../font/FZJT.svg') format('svg');
+  font-weight: normal;
+  font-style: normal;
 
+}
 h1 strong {
   font-family: 'ft', arial, sans-serif;
   font-size: 64px;
