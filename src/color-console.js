@@ -14,6 +14,14 @@ var TAGS = [
 ];
 
 
+var API = [
+    ['log'],
+    ['info'],
+    ['error', 'red'],
+    ['warn', 'yellow']
+];
+
+
 function setColor (name, string) {
     return STYLES[name][0] + string + STYLES[name][1];
 };
@@ -24,11 +32,12 @@ function ColorConsole (options) {
     var that = this;
     var noop = function () {};
 
-    Object.keys(this.config).forEach(function (key) {
+    API.forEach(function (item) {
+        var key = item[0];
+        var color = item[1];
+
         that[key] = options[key] ? function () {
-            var config = that.config;
             var args = [].slice.call(arguments);
-            var color = config[key];
 
             args = args.map(function (item, index) {
 
@@ -56,15 +65,7 @@ function ColorConsole (options) {
 
 ColorConsole.prototype = Object.create(console);
 ColorConsole.prototype.constructor = ColorConsole;
-ColorConsole.prototype.config = {
-    log: null,
-    error: 'red',
-    warn: 'yellow',
-    info: null
-};
-
-
-ColorConsole.prototype.apply = function (context) {
+ColorConsole.prototype.mix = function (context) {
     Object.keys(this).forEach(function (key) {
         context[key] = this[key];
     }.bind(this));

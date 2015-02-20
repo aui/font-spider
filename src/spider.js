@@ -23,7 +23,7 @@ var getCssError = function (error) {
 
 var Spider = function (htmlFiles, options, callback) {
 
-    options = this.getOptions(options);
+    options = this._getOptions(options);
     callback = callback || function () {};
 
 
@@ -31,16 +31,10 @@ var Spider = function (htmlFiles, options, callback) {
         htmlFiles = [htmlFiles];
     }
 
-    new ColorConsole({
-        log: options.log,
-        info: options.info,
-        error: options.error,
-        warn: options.warn
-    }).apply(this);
+    new ColorConsole(options).mix(this);
 
     
     var that = this;
-    var promiseList = [];
 
 
     this.fontsCache = {};
@@ -56,15 +50,13 @@ var Spider = function (htmlFiles, options, callback) {
     });
 
 
-    htmlFiles = this.filter(htmlFiles);
-
-   
-    htmlFiles.forEach(function (htmlFile) {
-        promiseList.push(that.htmlParser(htmlFile));
+    htmlFiles = this.filter(htmlFiles)
+    .map(function (htmlFile) {
+        return that.htmlParser(htmlFile);
     });
 
 
-    return Promise.all(promiseList)
+    return Promise.all(htmlFiles)
     .then(function (contents) {
 
 
@@ -142,14 +134,14 @@ var Spider = function (htmlFiles, options, callback) {
 
 
 Spider.defaults = {
-    sort: true,
-    unique: true,
-    ignore: [],
-    map: [],
-    log: false,
-    info: true,
-    error: true,
-    warn: true
+    sort: true,         // 是否将查询到的文本按字体中字符的顺序排列
+    unique: true,       // 是否去除重复字符
+    ignore: [],         // 忽略的文件配置
+    map: [],            // 文件映射配置
+    log: false,         // 是否显示调试日志
+    info: true,         // 是否显示提示
+    error: true,        // 是否显示错误
+    warn: true          // 是否显示警告
 };
 
 
@@ -163,12 +155,439 @@ Spider.prototype = {
     constructor: Spider,
 
 
+    /*
+     * 解析 HTML 
+     * @param   {String}            文件绝对路径
+     * @return  {Promise}
+     */
+    htmlParser: function (htmlFile) {
+
+        
+        var $;
+        var that = this;
+        
+        
+        var base = path.dirname(htmlFile);
+
+
+        return this.resource({
+            file: htmlFile,
+            cache: false
+        })
+
+
+        // 查找页面中的样式内容
+        // 如 link 标签与页面内联 style 标签
+
+        .then(function (resource) {
+            
+            var htmlContent = resource.content;
+            var resources = [];
+
+            $ = cheerio.load(htmlContent);
+
+
+            // TODO base 标签顺序影响
+            base = $('base[href]').attr('href') || base;
+
+
+            // 外部样式
+            $('link[rel=stylesheet]').each(function (index) {
+
+                var line = index + 1;
+                var $this = $(this);
+                var cssFile;
+                var href = $this.attr('href');
+
+
+                // 忽略含有有 disabled 属性的
+                if ($this.attr('disabled') && $this.attr('disabled') !== 'false') {
+                    return;
+                }
+
+                if (!that.filter([href]).length) {
+                    return;
+                }
+
+
+
+                cssFile = that._resolve(base, href);
+                cssFile = that.map(cssFile);
+                cssFile = that._normalize(cssFile);
+
+                resources.push(that.resource({
+                    file: cssFile,
+                    from: htmlFile + '#<link:nth-of-type(' + line + ')>',
+                    base: path.dirname(cssFile),
+                    cache: true
+                }));
+
+            });
+
+
+
+            // 页面内联样式
+            $('style').each(function (index) {
+
+                var line = index + 1;
+                var $this = $(this);
+                // 忽略含有有 disabled 属性的
+                if ($this.attr('disabled') && $this.attr('disabled') !== 'false') {
+                    return;
+                }
+
+                resources.push(that.resource({
+                    file: htmlFile + '#<style:nth-of-type(' + line + ')>',
+                    from: htmlFile,
+                    base: base,
+                    cache: false,
+                    content: $this.text()
+                }));
+
+            });
+            
+
+            return Promise.all(resources);
+        })
+    
+
+        // 解析样式表
+
+        .then(function (resources) {
+
+            var cssInfos = [];
+
+            resources.forEach(function (resource) {
+                var cssInfo = that.cssParser(resource);
+                cssInfos.push(cssInfo);
+            });
+
+            return Promise.all(cssInfos);
+        })
+
+
+        // 根据选择器查询 HTML 节点
+
+        .then(function (cssInfos) {
+
+            var RE_SPURIOUS = /\:(link|visited|hover|active|focus)\b/ig;
+
+            var eachSelectors = function (selectors) {
+
+                var rules = selectors.rules.join(', ');
+                selectors.familys.forEach(function (family) {
+
+                    if (!that.fontsCache[family]) { // TODO 这一句可能因为顺序问题产生BUG
+                        return;
+                    }
+
+                    that.charsCache[family] = that.charsCache[family] || '';
+
+                    // 剔除状态伪类
+                    rules = rules.replace(RE_SPURIOUS, '');
+
+                    try {
+                        var elements = $(rules);
+                    } catch (e) {
+                        // 1. 包含 :before 等不支持的伪类
+                        // 2. 非法语句
+                        return;
+                    }
+
+                    that.log('[%s]', family, rules);
+                    
+                    elements.each(function (index, element) {
+
+                        // 找到使用了字体的文本
+                        that.charsCache[family] += $(element).text();
+
+                    });
+                });
+
+
+            };
+
+
+            cssInfos.forEach(function (cssInfo) {
+
+                cssInfo.fonts.forEach(function (item) {
+                    that.fontsCache[item.name] = item.files;
+                });
+
+                // 提取 HTML 的文本
+                cssInfo.selectors.forEach(eachSelectors);
+
+                that.log(JSON.stringify(cssInfo, null, 4));
+
+            });
+
+
+        });
+        
+    },
+
+
+
+
+    // 提取 css 中要用到的信息
+    cssParser: function (resource) {
+
+        var string = resource.content;
+        var file = resource.file;
+        var from = resource.from;
+        var base = resource.base;
+
+        // url(../font/font.ttf)
+        // url("../font/font.ttf")
+        // url('../font/font.ttf')
+        var RE_URL = /url\((.*?)\)/ig;
+
+        // "../font/font.ttf"
+        // '../font/font.ttf'
+        var RE_QUOTATION = /^['"]|['"]/g;
+
+        // !important
+        var RE_IMPORTANT = /!important[\s\t]*$/i;
+
+        // art, lanting, heiti
+        var RE_SPLIT_COMMA = /\s*,\s*/;
+
+
+        var that = this;
+        var cache = this.cssParserCache[file];
+        
+        var imports = [];
+
+
+        if (cache) {
+            return cache;
+        }
+
+
+        // 字体文件信息
+        var fonts = [];
+
+        // 选择器信息
+        var selectors = [];
+
+        try {
+            var ast = css.parse(string);
+        } catch (e) {
+
+            
+
+            if (e.line !== undefined) {
+                that.error('[ERROR]', getCssError(e),
+                    '\n     ', 'file:', file);
+            } else if (e.stack) {
+                that.error('[ERROR]',
+                    '\n     ', 'file:', file, e.stack);
+            }
+
+            return {
+                fonts: [],
+                selectors: [],
+                from: from
+            };
+        }
+
+
+        var parser = function (rule) {
+
+            var position = rule.position;
+
+            switch (rule.type) {
+
+                case 'import':
+                    
+                    
+                    var src = rule['import'];
+                    
+
+                    // @import url("./g.css?t=2009");
+                    // @import "./g.css?t=2009";
+                    if (RE_URL.test(src)) {
+                        RE_URL.lastIndex = 0;
+                        src = RE_URL.exec(src)[1];
+                    }
+
+                    src = src.replace(RE_QUOTATION, '');
+
+                    if (!that.filter([src]).length) {
+                        break;
+                    }
+
+                    
+
+                    var target = that._resolve(base, src);
+                    var line = position ? position.start.line : null;
+                    
+                    target = that.map(target);
+                    target = that._normalize(target);
+
+                    // TODO 超过一层嵌套后，from 不准确
+                    imports.push(
+                        that.resource({
+                            file: target,
+                            base: path.dirname(target),
+                            from: file,
+                            line: line,
+                            cache: true
+                        })
+                        .then(function (resource) {
+                            return that.cssParser(resource);
+                        })
+                    );
+
+                    break;
+
+                case 'font-face':
+
+                    var family = {
+                        name: '',
+                        files: []
+                    };
+
+                    rule.declarations.forEach(function (declaration) {
+
+                        var property = declaration.property;
+                        var value = declaration.value;
+
+                        if (property) {
+                            property = property.toLocaleLowerCase();
+                        }
+
+                        switch (property) {
+                            case 'font-family':
+
+                                value = value
+                                .replace(RE_IMPORTANT, '')
+                                .replace(RE_QUOTATION, '')
+                                .trim();
+
+                                family.name = value;
+                                
+                                break;
+
+                            case 'src':
+                                var src;
+
+                                RE_URL.lastIndex = 0;
+                                while ((src = RE_URL.exec(value)) !== null) {
+
+                                    src = src[1];
+                                    src = src.replace(RE_QUOTATION, '');
+                                    
+                                    src = that._resolve(base, src);
+                                    src = that.map(src);
+                                    src = that._normalize(src);
+
+                                    if (family.files.indexOf(src) === -1) {
+                                        family.files.push(src);
+                                    }
+                                }
+
+                                break;
+                        }
+                    });
+
+
+                    if (family.name) {
+                        family.files = that.filter(family.files);
+                        fonts.push(family);
+                    }
+
+
+                    break;
+
+                case 'media':
+
+                    rule.rules.forEach(parser);
+                    break;
+
+                case 'rule':
+
+                    var selector = {
+                        rules: rule.selectors,// 注意：包含伪类选择器
+                        familys: []
+                    };
+
+
+                    rule.declarations.forEach(function (declaration) {
+
+                        var property = declaration.property;
+                        var value = declaration.value;
+
+                        if (property) {
+                            property = property.toLocaleLowerCase()
+                        }
+
+                        switch (property) {
+                            case 'font-family':
+
+                                value.split(RE_SPLIT_COMMA).forEach(function (val) {
+                                    // 去掉空格与前后引号
+                                    val = val
+                                    .replace(RE_IMPORTANT, '')
+                                    .replace(RE_QUOTATION, '')
+                                    .trim();
+
+
+                                    selector.familys.push(val);
+                                });
+                                
+                                break;
+
+                            case 'content':
+                                // TODO
+                                break;
+                        }
+                    });
+
+
+                    if (selector.familys.length) {
+                        selectors.push(selector);
+                    }
+
+                    break;
+            }
+
+        };
+
+        ast.stylesheet.rules.forEach(parser);
+
+
+        imports.unshift({
+            fonts: fonts,
+            selectors: selectors,
+            from: from
+        });
+
+
+        return this.cssParserCache[file] = Promise.all(imports)
+        .then(function (res) {
+            var cssInfo = {
+                fonts: [],
+                selectors: [],
+                from: from
+            };
+
+            res.forEach(function (item) {
+                cssInfo.fonts = cssInfo.fonts.concat(item.fonts);
+                cssInfo.selectors = cssInfo.selectors.concat(item.selectors);
+            });
+
+            return cssInfo;
+        });
+    },
+
+
 
 
     /*
-     * 本地或远程资源。注意：读取错误的文件会返回空字符串，不会进入错误流程
-     * @param   {Object options}            <options.file>, ...
-     * @param   {Promise, options}          <options.file>, <options.content>, ...
+     * 资源。注意：读取错误的文件会返回空字符串，不会进入错误流程
+     * @param   {Object options}          <options.file>, ...
+     * @param   {Promise, options}        <options.file>, <options.content>, ...
      */
     resource: function (options) {
 
@@ -280,7 +699,7 @@ Spider.prototype = {
      * @param   {String}    子路径
      * @return  {String}    绝对路径
      */
-    resolve: function (from, to) {
+    _resolve: function (from, to) {
 
         if (RE_SERVER.test(from)) {
             return url.resolve(from, to);
@@ -298,7 +717,7 @@ Spider.prototype = {
      * @param   {String}    路径
      * @return  {String}    标准化路径
      */
-    normalize: function (src) {
+    _normalize: function (src) {
 
         // ../font/font.eot?#font-spider
         var RE_QUERY = /[#?].*$/g;
@@ -312,180 +731,9 @@ Spider.prototype = {
     },
 
 
-    /*
-     * 解析 HTML 
-     * @param   {String}            文件绝对路径
-     * @return  {}
-     */
-    htmlParser: function (htmlFile) {
 
 
-        //htmlFile = path.resolve(htmlFile);
-        
-        var $;
-        var that = this;
-        
-        
-        var base = path.dirname(htmlFile);
-
-
-        return this.resource({
-            file: htmlFile,
-            cache: false
-        })
-
-
-        // 查找页面中的样式内容
-        // 如 link 标签与页面内联 style 标签
-
-        .then(function (resource) {
-            
-            var htmlContent = resource.content;
-            var resources = [];
-
-            $ = cheerio.load(htmlContent);
-
-
-            // TODO base 标签顺序影响
-            base = $('base[href]').attr('href') || base;
-
-
-            // 外部样式
-            $('link[rel=stylesheet]').each(function (index) {
-
-                var line = index + 1;
-                var $this = $(this);
-                var cssFile;
-                var href = $this.attr('href');
-
-
-                // 忽略含有有 disabled 属性的
-                if ($this.attr('disabled') && $this.attr('disabled') !== 'false') {
-                    return;
-                }
-
-                if (!that.filter([href]).length) {
-                    return;
-                }
-
-
-
-                cssFile = that.resolve(base, href);
-                cssFile = that.map(cssFile);
-                cssFile = that.normalize(cssFile);
-
-                resources.push(that.resource({
-                    file: cssFile,
-                    from: htmlFile + '#<link:nth-of-type(' + line + ')>',
-                    base: path.dirname(cssFile),
-                    cache: true
-                }));
-
-            });
-
-
-
-            // 页面内联样式
-            $('style').each(function (index) {
-
-                var line = index + 1;
-                var $this = $(this);
-                // 忽略含有有 disabled 属性的
-                if ($this.attr('disabled') && $this.attr('disabled') !== 'false') {
-                    return;
-                }
-
-                resources.push(that.resource({
-                    file: htmlFile + '#' + line,
-                    from: htmlFile + '#<style:nth-of-type(' + line + ')>',
-                    base: base,
-                    cache: false,
-                    content: $this.text()
-                }));
-
-            });
-            
-
-            return Promise.all(resources);
-        })
-    
-
-        // 解析样式表
-
-        .then(function (resources) {
-
-            var cssInfos = [];
-
-            resources.forEach(function (resource) {
-                var cssInfo = that.cssParser(resource);
-                cssInfos.push(cssInfo);
-            });
-
-            return Promise.all(cssInfos);
-        })
-
-
-        // 根据选择器查询 HTML 节点
-
-        .then(function (cssInfos) {
-
-            var RE_SPURIOUS = /\:(link|visited|hover|active|focus)\b/ig;
-
-            var eachSelectors = function (selectors) {
-
-                var rules = selectors.rules.join(', ');
-                selectors.familys.forEach(function (family) {
-
-                    if (!that.fontsCache[family]) { // TODO 这一句可能因为顺序问题产生BUG
-                        return;
-                    }
-
-                    that.charsCache[family] = that.charsCache[family] || '';
-
-                    // 剔除状态伪类
-                    rules = rules.replace(RE_SPURIOUS, '');
-
-                    try {
-                        var elements = $(rules);
-                    } catch (e) {
-                        // 1. 包含 :before 等不支持的伪类
-                        // 2. 非法语句
-                        return;
-                    }
-
-                    that.log('[%s]', family, rules);
-                    
-                    elements.each(function (index, element) {
-
-                        // 找到使用了字体的文本
-                        that.charsCache[family] += $(element).text();
-
-                    });
-                });
-
-
-            };
-
-
-            cssInfos.forEach(function (cssInfo) {
-
-                cssInfo.fonts.forEach(function (item) {
-                    that.fontsCache[item.name] = item.files;
-                });
-
-                // 提取 HTML 的文本
-                cssInfo.selectors.forEach(eachSelectors);
-
-                that.log(JSON.stringify(cssInfo, null, 4));
-
-            });
-
-
-        });
-        
-    },
-
-    getOptions: function (options) {
+    _getOptions: function (options) {
         var ret = {};
 
         options = options || {};
@@ -535,260 +783,6 @@ Spider.prototype = {
     // 筛选路径
     filter: function (srcs) {
         return this.ignore.filter(srcs);
-    },
-
-
-
-    // 提取 css 中要用到的信息
-    cssParser: function (resource) {
-
-        var string = resource.content;
-        var file = resource.file;
-        var from = resource.from;
-        var base = resource.base;
-
-        // url(../font/font.ttf)
-        // url("../font/font.ttf")
-        // url('../font/font.ttf')
-        var RE_URL = /url\((.*?)\)/ig;
-
-        // "../font/font.ttf"
-        // '../font/font.ttf'
-        var RE_QUOTATION = /^['"]|['"]/g;
-
-        // !important
-        var RE_IMPORTANT = /!important[\s\t]*$/i;
-
-        // art, lanting, heiti
-        var RE_SPLIT_COMMA = /\s*,\s*/;
-
-
-        var that = this;
-        var cache = this.cssParserCache[file];
-        
-        var imports = [];
-
-
-        if (cache) {
-            return cache;
-        }
-
-
-        // 字体文件信息
-        var fonts = [];
-
-        // 选择器信息
-        var selectors = [];
-
-        try {
-            var ast = css.parse(string);
-        } catch (e) {
-
-            
-
-            if (e.line !== undefined) {
-                that.error('[ERROR]', getCssError(e),
-                    '\n     ', 'file:', file);
-            } else if (e.stack) {
-                that.error('[ERROR]',
-                    '\n     ', 'file:', file, e.stack);
-            }
-
-            return {
-                fonts: [],
-                selectors: [],
-                from: from
-            };
-        }
-
-
-        var parser = function (rule) {
-
-            var position = rule.position;
-
-            switch (rule.type) {
-
-                case 'import':
-                    
-                    
-                    var src = rule['import'];
-                    
-
-                    // @import url("./g.css?t=2009");
-                    // @import "./g.css?t=2009";
-                    if (RE_URL.test(src)) {
-                        RE_URL.lastIndex = 0;
-                        src = RE_URL.exec(src)[1];
-                    }
-
-                    src = src.replace(RE_QUOTATION, '');
-
-                    if (!that.filter([src]).length) {
-                        break;
-                    }
-
-                    
-
-                    var target = that.resolve(base, src);
-                    var line = position ? position.start.line : null;
-                    
-                    target = that.map(target);
-                    target = that.normalize(target);
-
-                    // TODO 超过一层嵌套后，from 不准确
-                    imports.push(
-                        that.resource({
-                            file: target,
-                            base: path.dirname(target),
-                            from: file,
-                            line: line,
-                            cache: true
-                        })
-                        .then(function (resource) {
-                            return that.cssParser(resource);
-                        })
-                    );
-
-                    break;
-
-                case 'font-face':
-
-                    var family = {
-                        name: '',
-                        files: []
-                    };
-
-                    rule.declarations.forEach(function (declaration) {
-
-                        var property = declaration.property;
-                        var value = declaration.value;
-
-                        if (property) {
-                            property = property.toLocaleLowerCase();
-                        }
-
-                        switch (property) {
-                            case 'font-family':
-
-                                value = value
-                                .replace(RE_IMPORTANT, '')
-                                .replace(RE_QUOTATION, '')
-                                .trim();
-
-                                family.name = value;
-                                
-                                break;
-
-                            case 'src':
-                                var src;
-
-                                RE_URL.lastIndex = 0;
-                                while ((src = RE_URL.exec(value)) !== null) {
-
-                                    src = src[1];
-                                    src = src.replace(RE_QUOTATION, '');
-                                    
-                                    src = that.resolve(base, src);
-                                    src = that.map(src);
-                                    src = that.normalize(src);
-
-                                    if (family.files.indexOf(src) === -1) {
-                                        family.files.push(src);
-                                    }
-                                }
-
-                                break;
-                        }
-                    });
-
-
-                    if (family.name) {
-                        family.files = that.filter(family.files);
-                        fonts.push(family);
-                    }
-
-
-                    break;
-
-                case 'media':
-
-                    rule.rules.forEach(parser);
-                    break;
-
-                case 'rule':
-
-                    var selector = {
-                        rules: rule.selectors,// 注意：包含伪类选择器
-                        familys: []
-                    };
-
-
-                    rule.declarations.forEach(function (declaration) {
-
-                        var property = declaration.property;
-                        var value = declaration.value;
-
-                        if (property) {
-                            property = property.toLocaleLowerCase()
-                        }
-
-                        switch (property) {
-                            case 'font-family':
-
-                                value.split(RE_SPLIT_COMMA).forEach(function (val) {
-                                    // 去掉空格与前后引号
-                                    val = val
-                                    .replace(RE_IMPORTANT, '')
-                                    .replace(RE_QUOTATION, '')
-                                    .trim();
-
-
-                                    selector.familys.push(val);
-                                });
-                                
-                                break;
-
-                            case 'content':
-                                // TODO
-                                break;
-                        }
-                    });
-
-
-                    if (selector.familys.length) {
-                        selectors.push(selector);
-                    }
-
-                    break;
-            }
-
-        };
-
-        ast.stylesheet.rules.forEach(parser);
-
-
-        imports.unshift({
-            fonts: fonts,
-            selectors: selectors,
-            from: from
-        });
-
-
-        return this.cssParserCache[file] = Promise.all(imports)
-        .then(function (res) {
-            var cssInfo = {
-                fonts: [],
-                selectors: [],
-                from: from
-            };
-
-            res.forEach(function (item) {
-                cssInfo.fonts = cssInfo.fonts.concat(item.fonts);
-                cssInfo.selectors = cssInfo.selectors.concat(item.selectors);
-            });
-
-            return cssInfo;
-        });
     }
 
 };
