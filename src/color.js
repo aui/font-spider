@@ -1,4 +1,4 @@
-var styles = {
+module.exports = {
     // styles
     'bold'      : ['\x1B[1m',  '\x1B[22m'],
     'italic'    : ['\x1B[3m',  '\x1B[23m'],
@@ -14,12 +14,4 @@ var styles = {
     'magenta'   : ['\x1B[35m', '\x1B[39m'],
     'red'       : ['\x1B[31m', '\x1B[39m'],
     'yellow'    : ['\x1B[33m', '\x1B[39m']
-};
-
-module.exports = function (prototype) {
-    Object.keys(styles).forEach(function (color) {
-        prototype.__defineGetter__(color, function () {
-            return styles[color][0] + this + styles[color][1];
-        });
-    });
 };
