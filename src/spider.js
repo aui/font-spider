@@ -172,6 +172,7 @@ Spider.prototype = {
 
         return this.resource({
             file: htmlFile,
+            from: 'Node',
             cache: false
         })
 
@@ -593,6 +594,7 @@ Spider.prototype = {
 
         var file = options.file;
         var content = options.content;
+        var isCache = options.cache !== undefined;
 
         if (content !== undefined) {
             return options;
@@ -603,7 +605,7 @@ Spider.prototype = {
         var from = options.from;
 
         var that = this;
-        var isCache = options.cache !== undefined; 
+        
         var cache = this.fileCache[file];
         var ret;
 
