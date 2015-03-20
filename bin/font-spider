@@ -5,7 +5,6 @@
 var fs = require('fs');
 var path = require('path');
 var FontSpider = require('../');
-var Spider = require('../src/spider');
 var program = require('commander');
 var colors = require('../src/color');
 
@@ -67,12 +66,8 @@ Object.keys(program).forEach(function (key) {
 // 显示 WebFont 信息
 if (options.info) {
 
-    new Spider(files, options, function (error, data) {
-        if (error) {
-            console.error(String(error).red);
-            return;
-        }
-
+    new FontSpider.Spider(files, options)
+    .then(function (data) {
         data.forEach(function (item) {
             process.stdout.write(
                 [
@@ -95,7 +90,8 @@ if (options.info) {
 
     var backupExtname = FontSpider.BACKUP_EXTNAME;
 
-    new Spider(files, options, function (error, data) {
+    new FontSpider.Spider(files, options)
+    .then(function (error, data) {
         if (error) {
             return;
         }
@@ -116,32 +112,7 @@ if (options.info) {
 } else {
 
 
-    var fontspider = new FontSpider(files, options);
-
-
-    fontspider.onoutput = function (data) {
-        process.stdout.write(
-            [
-                'Font name: ' + (data.fontName).cyan,
-                'Original size: ' + (data.originalSize / 1000 + ' KB').green,
-                'Include chars: ' + data.includeChars,
-                data.output.map(function (item) {
-                    return 'File ' + (item.file).cyan + ' created: ' + (item.size / 1000 + ' kB').green;
-                }).join('\n'),
-                '\n'
-            ].join('\n')
-        );
-    };
-
-    fontspider.onend = function () {};
-    fontspider.onerror = function (e) {
-        console.error((e.message).red);
-        if (e.result) {
-            console.error(e.result);
-        }
-    }
-
-    fontspider.start(); 
+    new FontSpider(files, options);
 }
 
 

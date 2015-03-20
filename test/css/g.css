@@ -1,5 +1,4 @@
 @charset "utf-8";
-@import "./sub.css";
 body, input, button, select, input, textarea {
 	font-family: tahoma, arial, sans-sarif;
 	font-size: 12px;

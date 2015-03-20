@@ -1,7 +1,11 @@
 @charset "utf-8";
 
 /** Reset */
-@import url("./sub/g.css?t=2009");
+@import url("./g.css?t=2009");
+@import url(500.css);
+@import url( 501.css );
+@import url('502.css');
+@import url( '503.css' );
 @import "./g2.css";
 @import "404.css";
 @import "/css/http.css";

@@ -1,3 +1,5 @@
+// 爬虫模块
+
 'use strict';
 
 var fs = require('fs');
@@ -21,10 +23,9 @@ var getCssError = function (error) {
 };
 
 
-var Spider = function (htmlFiles, options, callback) {
+var Spider = function (htmlFiles, options) {
 
     options = this._getOptions(options);
-    callback = callback || function () {};
 
 
     if (typeof htmlFiles === 'string') {
@@ -117,15 +118,11 @@ var Spider = function (htmlFiles, options, callback) {
                 });
             }
         });
-        
-
-        callback(null, list);
 
         return list;
     }.bind(this))
 
     .then(null, function (errors) {
-        callback(errors);
         console.error(errors && errors.stack || errors);
         return errors;
     });
@@ -341,7 +338,8 @@ Spider.prototype = {
         // url(../font/font.ttf)
         // url("../font/font.ttf")
         // url('../font/font.ttf')
-        var RE_URL = /url\((.*?)\)/ig;
+        var RE_FONT_URL = /url\((.*?)\)/ig;
+        var RE_CSS_URL = /url\((.*?)\)/i;
 
         // "../font/font.ttf"
         // '../font/font.ttf'
@@ -407,12 +405,12 @@ Spider.prototype = {
 
                     // @import url("./g.css?t=2009");
                     // @import "./g.css?t=2009";
-                    if (RE_URL.test(src)) {
-                        RE_URL.lastIndex = 0;
-                        src = RE_URL.exec(src)[1];
+                    if (RE_CSS_URL.test(src)) {
+                        RE_CSS_URL.lastIndex = 0;
+                        src = RE_CSS_URL.exec(src)[1];
                     }
 
-                    src = src.replace(RE_QUOTATION, '');
+                    src = src.trim().replace(RE_QUOTATION, '')
 
                     if (!that.filter([src]).length) {
                         break;
@@ -473,11 +471,11 @@ Spider.prototype = {
                             case 'src':
                                 var src;
 
-                                RE_URL.lastIndex = 0;
-                                while ((src = RE_URL.exec(value)) !== null) {
+                                RE_FONT_URL.lastIndex = 0;
+                                while ((src = RE_FONT_URL.exec(value)) !== null) {
 
                                     src = src[1];
-                                    src = src.replace(RE_QUOTATION, '');
+                                    src = src.trim().replace(RE_QUOTATION, '');
                                     
                                     src = that._resolve(base, src);
                                     src = that.map(src);

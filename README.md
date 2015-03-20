@@ -26,7 +26,6 @@
 npm install font-spider -g
 ```
 
-> * windows 需要安装 [perl](http://www.perl.org) 环境才可以运行。
 > * GruntJS 用户可使用 [gruntjs 插件](https://github.com/aui/grunt-font-spider)。
 
 ##	使用范例
@@ -73,9 +72,9 @@ font-spider [options] <htmlFile ...>
 --info                        仅提取 WebFont 信息显示，不压缩与转码
 --ignore <pattern>            忽略的文件配置（可以是字体、CSS、HTML）
 --map <remotePath,localPath>  映射 CSS 内部 HTTP 路径到本地
---debug                       开启调试模式
+--log                       	开启调试模式
 --no-backup                   关闭字体备份功能
---silent                      不显示非关键错误
+--no-error                    不显示非关键错误
 --revert                      恢复被压缩的 WebFont
 ```
 
@@ -93,9 +92,11 @@ font-spider [options] <htmlFile ...>
 
 ## 更新日志
 
-### 0.1.2
+### 0.2.0
 
+* 使用 fontmin 取代字蛛内置的字体压缩库，解除对 Perl 环境的依赖 [#18](https://github.com/aui/font-spider/issues/18)
 * 优化性能，使用 cheerio 代替 jsdom 解析 HTML
+* 支持解析远程动态页面
 
 ### 0.1.1
 
@@ -111,12 +112,17 @@ font-spider [options] <htmlFile ...>
 
 * 基于 CSS 规则压缩与转码 WebFont
 
-## 贡献者
+## 贡献者 
+
+字蛛诞生离不开这三位小伙伴，他们是：
 
 * [@糖饼](http://www.weibo.com/planeart)
 * [@fufu](http://www.weibo.com/u/1715968673)
 * [@kdd](http://www.weibo.com/kddie)
 
+### 特别鸣谢
+
+字蛛自 v0.2 版本开始，使用了百度前端团队开源作品 —— [fontmin](https://github.com/ecomfe/fontmin) 取代了字蛛内置的字体压缩库。字蛛希望与更多的人或团队一起合作，为中文 WebFont 的发展出一份力！
 
 =============
 
