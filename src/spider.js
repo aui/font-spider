@@ -321,7 +321,9 @@ Spider.prototype = {
         // url(../font/font.ttf)
         // url("../font/font.ttf")
         // url('../font/font.ttf')
-        var RE_URL = /url\((.*?)\)/ig;
+        var RE_FONT_URL = /url\((.*?)\)/ig;
+        var RE_CSS_URL = /url\((.*?)\)/i;
+        var RE_SPACE = /\s/g;
 
         // "../font/font.ttf"
         // '../font/font.ttf'
@@ -374,12 +376,13 @@ Spider.prototype = {
 
                     // @import url("./g.css?t=2009");
                     // @import "./g.css?t=2009";
-                    if (RE_URL.test(url)) {
-                        RE_URL.lastIndex = 0;
-                        url = RE_URL.exec(url)[1];
+                    if (RE_CSS_URL.test(url)) {
+                        RE_CSS_URL.lastIndex = 0;
+                        url = RE_CSS_URL.exec(url)[1];
                     }
 
                     url = url.replace(RE_QUOTATION, '');
+                    url = url.replace(RE_SPACE, '');
 
                     if (!that._ignore.filter([url]).length) {
                         break;
@@ -457,11 +460,12 @@ Spider.prototype = {
                             case 'src':
                                 var url;
 
-                                RE_URL.lastIndex = 0;
-                                while ((url = RE_URL.exec(value)) !== null) {
+                                RE_FONT_URL.lastIndex = 0;
+                                while ((url = RE_FONT_URL.exec(value)) !== null) {
 
                                     url = url[1];
                                     url = url.replace(RE_QUOTATION, '');
+                                    url = url.replace(RE_SPACE, '');
                                     url = that._map(url);
                                     url = url.replace(RE_QUERY, '');
 
