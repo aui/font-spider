@@ -69,6 +69,10 @@ h1 span {
   *writing-mode: tb-rl;/* IE 写法 */
   unicode-bidi : bidi-override;
 }
+.zhuanti:after {
+  font-family: 'art', arial, sans-serif;
+  content: '字';
+}
 
 .test {
   font-family: 'LT';

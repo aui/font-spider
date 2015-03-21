@@ -9,4 +9,6 @@ var fontspider = new FontSpider([__dirname + '/*.html'], {
 	],
     ignore: ['FZXiaoZhuanTi-S13T.svg', '*.bk.css'],
     log: true
+}).then(function () {
+    console.info('test end');
 });
