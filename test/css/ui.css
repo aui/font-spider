@@ -2,6 +2,10 @@
 
 /** Reset */
 @import url("./g.css?t=2009");
+@import url(500.css);
+@import url( 501.css );
+@import url('502.css');
+@import url( '503.css' );
 @import "./g2.css";
 @import "404.css";
 @import "/css/http.css";
@@ -64,6 +68,10 @@ h1 span {
   writing-mode: vertical-rl;
   *writing-mode: tb-rl;/* IE 写法 */
   unicode-bidi : bidi-override;
+}
+.zhuanti:after {
+  font-family: 'art', arial, sans-serif;
+  content: '字';
 }
 
 .test {

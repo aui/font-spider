@@ -26,7 +26,6 @@
 npm install font-spider -g
 ```
 
-> * windows 需要安装 [perl](http://www.perl.org) 环境才可以运行。
 > * GruntJS 用户可使用 [gruntjs 插件](https://github.com/aui/grunt-font-spider)。
 
 ##	使用范例
@@ -55,7 +54,7 @@ npm install font-spider -g
 
 > 1. ``@font-face``中的``src``定义的 .ttf 文件必须存在，其余的格式将由工具自动生成
 > 2. 不支持动态插入的 CSS 规则与字符
-> 3. 不支持 CSS ``content``属性插入的字符
+> 3. CSS ``content``属性插入的字符需要定义``font-family``，不支持继承
 
 ###	压缩 WebFont
 
@@ -73,9 +72,9 @@ font-spider [options] <htmlFile ...>
 --info                        仅提取 WebFont 信息显示，不压缩与转码
 --ignore <pattern>            忽略的文件配置（可以是字体、CSS、HTML）
 --map <remotePath,localPath>  映射 CSS 内部 HTTP 路径到本地
---debug                       开启调试模式
+--log                       	开启调试模式
 --no-backup                   关闭字体备份功能
---silent                      不显示非关键错误
+--no-error                    不显示非关键错误
 --revert                      恢复被压缩的 WebFont
 ```
 
@@ -93,6 +92,13 @@ font-spider [options] <htmlFile ...>
 
 ## 更新日志
 
+### 0.2.0
+
+* 使用 fontmin 取代字蛛内置的压缩与转码模块，让压缩后的字体更小，并且无需 Perl 环境[#18](https://github.com/aui/font-spider/issues/18)
+* 优化爬虫模块，使用更高效的 cheerio 代替 jsdom 解析 HTML
+* 支持解析远程动态页面，可结合``map``参数映射线上 CSS 与 WebFont 资源到本地
+* 实现对 CSS ``:before``与``:after``定义``content``的支持（不支持继承的字体）
+
 ### 0.1.1
 
 * 修复和最新版 NodeJS 兼容问题 
@@ -107,12 +113,17 @@ font-spider [options] <htmlFile ...>
 
 * 基于 CSS 规则压缩与转码 WebFont
 
-## 贡献者
+## 贡献者 
+
+字蛛诞生离不开这三位小伙伴，他们是：
 
 * [@糖饼](http://www.weibo.com/planeart)
 * [@fufu](http://www.weibo.com/u/1715968673)
 * [@kdd](http://www.weibo.com/kddie)
 
+### 特别鸣谢
+
+字蛛自 v0.2 版本开始，使用了百度前端团队开源作品 —— [fontmin](https://github.com/ecomfe/fontmin) 取代了字蛛内置的字体压缩库。字蛛希望与更多的人或团队一起合作，为中文 WebFont 的发展出一份力！
 
 =============
 
