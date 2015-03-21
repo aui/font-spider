@@ -91,11 +91,7 @@ if (options.info) {
     var backupExtname = FontSpider.BACKUP_EXTNAME;
 
     new FontSpider.Spider(files, options)
-    .then(function (error, data) {
-        if (error) {
-            return;
-        }
-
+    .then(function (data) {
         data.forEach(function (item) {
             item.files.forEach(function (file) {
                 if (fs.existsSync(file + backupExtname)) {

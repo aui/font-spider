@@ -1,5 +1,3 @@
-// 爬虫模块
-
 'use strict';
 
 var fs = require('fs');
@@ -19,7 +17,7 @@ var RE_SERVER = /^(http\:|https\:)/i;
 
 
 var getCssError = function (error) {
-    return error.toString().replace(/^Error:\s*/, '');
+    return error.toString().replace(/^Error:\s*/i, '');
 };
 
 
@@ -62,9 +60,8 @@ var Spider = function (htmlFiles, options) {
 
 
         var list = [];
-        var files = this.fontsCache;
-        var chars = this.charsCache;
-        var that = this;
+        var files = that.fontsCache;
+        var chars = that.charsCache;
 
         function sort (a, b) {
             return a.charCodeAt() - b.charCodeAt();
@@ -120,7 +117,7 @@ var Spider = function (htmlFiles, options) {
         });
 
         return list;
-    }.bind(this))
+    })
 
     .then(null, function (errors) {
         console.error(errors && errors.stack || errors);
@@ -176,7 +173,6 @@ Spider.prototype = {
 
         // 查找页面中的样式内容
         // 如 link 标签与页面内联 style 标签
-
         .then(function (resource) {
             
             var htmlContent = resource.content;
@@ -185,7 +181,7 @@ Spider.prototype = {
             $ = cheerio.load(htmlContent);
 
 
-            // TODO base 标签顺序影响
+            // TODO <base /> 标签顺序会影响解析
             base = $('base[href]').attr('href') || base;
 
 
@@ -250,7 +246,6 @@ Spider.prototype = {
     
 
         // 解析样式表
-
         .then(function (resources) {
 
             var cssInfos = [];
@@ -264,8 +259,7 @@ Spider.prototype = {
         })
 
 
-        // 根据选择器查询 HTML 节点
-
+        // 根据选择器查询 HTML 节点，提取 WebFont 使用的字符
         .then(function (cssInfos) {
 
             var RE_SPURIOUS = /\:(link|visited|hover|active|focus)\b/ig;
@@ -281,16 +275,22 @@ Spider.prototype = {
 
                     that.charsCache[family] = that.charsCache[family] || '';
 
-                    // 剔除状态伪类
-                    rules = rules.replace(RE_SPURIOUS, '');
+                    // 使用 CSS content 属性存放的字符（不支持继承）
+                    that.charsCache[family] += selectors.contents;
 
+
+
+                    // 使用选择器查找节点
                     try {
+                        // 剔除状态伪类
+                        rules = rules.replace(RE_SPURIOUS, '');
                         var elements = $(rules);
                     } catch (e) {
                         // 1. 包含 :before 等不支持的伪类
                         // 2. 非法语句
                         return;
                     }
+
 
                     that.log('[%s]', family, rules);
                     
@@ -508,7 +508,8 @@ Spider.prototype = {
 
                     var selector = {
                         rules: rule.selectors,// 注意：包含伪类选择器
-                        familys: []
+                        familys: [],
+                        contents: ''
                     };
 
 
@@ -538,7 +539,7 @@ Spider.prototype = {
                                 break;
 
                             case 'content':
-                                // TODO
+                                selector.contents += value;
                                 break;
                         }
                     });
