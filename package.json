@@ -31,7 +31,7 @@
   "scripts": {
     "_remove": "rm -rf release",
     "_copy": "mkdir release && cp -R test/* release",
-    "test": "npm run _remove && npm run _copy && node release/test.js"
+    "test": "npm run _remove && npm run _copy && node release/test.js && node release/spider-http.js"
   },
   "dependencies": {
     "cheerio": "^0.18.0",
