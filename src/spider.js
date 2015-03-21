@@ -631,10 +631,11 @@ Spider.prototype = {
             // 远程文件
             if (RE_SERVER.test(file)) {
 
+                that.info('Load', '(' + file + ')');
                 http.get(file, function (res) {
 
                     var size = 0;
-                    var chunks = [];
+                    var chunks = []; 
 
                     res.on('data', function (chunk) {
                         size += chunk.length;
@@ -645,8 +646,7 @@ Spider.prototype = {
                         var buffer = Buffer.concat(chunks, size);
 
                         options.content = buffer.toString();
-
-                        that.info('Load', '<' + file + '>');
+                        
                         resolve(options);
                     });
 
@@ -662,6 +662,7 @@ Spider.prototype = {
             // 本地文件
             } else {
 
+                that.log('Read', '(' + file + ')');
                 fs.readFile(file, 'utf8', function (errors, content) {
 
                     if (errors) {
@@ -672,7 +673,6 @@ Spider.prototype = {
                     } else {
 
                         options.content = content;
-                        that.log('[SUCCEED]', '<read>', file);
                         resolve(options);
                     }
 
