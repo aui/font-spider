@@ -5,7 +5,7 @@ var path = require('path');
 var Fontmin = require('fontmin');
 var Promise = require('promise');
 
-var TEMP = 'FONTSPIDER_TEMP';
+var TEMP = '.FONTSPIDER_TEMP';
 var number = 0;
 
 
