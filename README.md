@@ -1,6 +1,6 @@
 #	字蛛
 
-中文 WebFont 自动化压缩工具，它能自动分析页面使用的 WebFont 并进行按需压缩。
+中文 WebFont 自动化压缩工具，它能自动分析页面使用的 WebFont 进行按需压缩。
 
 官方网站：<http://font-spider.org>
 
