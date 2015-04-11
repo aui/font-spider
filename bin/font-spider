@@ -5,10 +5,15 @@
 var fs = require('fs');
 var path = require('path');
 var FontSpider = require('../');
-var Spider = require('../src/spider');
 var program = require('commander');
-require('../src/color')(String.prototype);
+var colors = require('../src/color');
 
+
+Object.keys(colors).forEach(function (color) {
+    String.prototype.__defineGetter__(color, function () {
+        return colors[color][0] + this + colors[color][1];
+    });
+});
 
 program
     .version(require('../package.json').version)
@@ -16,9 +21,9 @@ program
     .option('--info', 'show only webfont information')
     .option('--ignore <pattern>', 'ignore the files', list)
     .option('--map <remotePath,localPath>', 'mapping the remote path to the local', toMap)
-    .option('--debug', 'enable debug mode')
+    .option('--log', 'enable debug mode')
     .option('--no-backup', 'do not back up fonts')
-    .option('--silent', 'silently fail on parse errors')
+    .option('--no-error', 'silently fail on parse errors')
     .option('--revert', 'revert compressed font file')
     .parse(process.argv);
 
@@ -61,12 +66,8 @@ Object.keys(program).forEach(function (key) {
 // 显示 WebFont 信息
 if (options.info) {
 
-    new Spider(files, options, function (error, data) {
-        if (error) {
-            console.error(String(error).red);
-            return;
-        }
-
+    new FontSpider.Spider(files, options)
+    .then(function (data) {
         data.forEach(function (item) {
             process.stdout.write(
                 [
@@ -89,11 +90,8 @@ if (options.info) {
 
     var backupExtname = FontSpider.BACKUP_EXTNAME;
 
-    new Spider(files, options, function (error, data) {
-        if (error) {
-            return;
-        }
-
+    new FontSpider.Spider(files, options)
+    .then(function (data) {
         data.forEach(function (item) {
             item.files.forEach(function (file) {
                 if (fs.existsSync(file + backupExtname)) {
@@ -110,32 +108,7 @@ if (options.info) {
 } else {
 
 
-    var fontspider = new FontSpider(files, options);
-
-
-    fontspider.onoutput = function (data) {
-        process.stdout.write(
-            [
-                'Font name: ' + (data.fontName).cyan,
-                'Original size: ' + (data.originalSize / 1000 + ' KB').green,
-                'Include chars: ' + data.includeChars,
-                data.output.map(function (item) {
-                    return 'File ' + (item.file).cyan + ' created: ' + (item.size / 1000 + ' kB').green;
-                }).join('\n'),
-                '\n'
-            ].join('\n')
-        );
-    };
-
-    fontspider.onend = function () {};
-    fontspider.onerror = function (e) {
-        console.error((e.message).red);
-        if (e.result) {
-            console.error(e.result);
-        }
-    }
-
-    fontspider.start(); 
+    new FontSpider(files, options);
 }
 
 
