@@ -32,7 +32,7 @@ var Spider = function (htmlFiles, options) {
 
     new ColorConsole(options).mix(this);
 
-    
+
     var that = this;
 
 
@@ -81,13 +81,13 @@ var Spider = function (htmlFiles, options) {
             return ret;
         };
 
-        
+
         Object.keys(chars).forEach(function (familyName) {
-            
+
             var strings = chars[familyName].split('');
 
             // 对字符进行除重操作
-            if (options.unique) { 
+            if (options.unique) {
                 strings = unique(strings);
             }
 
@@ -95,13 +95,13 @@ var Spider = function (htmlFiles, options) {
             if (options.sort) {
                 strings.sort(sort);
             }
-            
+
             strings = strings.join('');
 
             // 删除无效字符
             strings = strings.replace(/[\n\r\t]/g, '');
 
-            
+
             chars[familyName] = strings;
         });
 
@@ -150,31 +150,39 @@ Spider.prototype = {
 
 
     /*
-     * 解析 HTML 
+     * 解析 HTML
      * @param   {String}            文件绝对路径
      * @return  {Promise}
      */
     htmlParser: function (htmlFile) {
 
-        
+
         var $;
+        var pme;
         var that = this;
-        
-        
-        var base = path.dirname(htmlFile);
+        var isBuffer = typeof htmlFile === 'object' && htmlFile.isBuffer();
 
+        var options = {
+            from : 'Node',
+            cache : false
+        };
 
-        return this.resource({
-            file: htmlFile,
-            from: 'Node',
-            cache: false
-        })
-
+        if( isBuffer ){
+            options.file = htmlFile.path;
+            options.content = htmlFile.contents.toString();
+            options.base = path.dirname( htmlFile.path );
+            pme = Promise.resolve( options );
+        }
+        else{
+            options.file = htmlFile;
+            options.base = path.dirname( htmlFile );
+            pme = this.resource( options );
+        }
 
         // 查找页面中的样式内容
         // 如 link 标签与页面内联 style 标签
-        .then(function (resource) {
-            
+        return pme.then(function (resource) {
+
             var htmlContent = resource.content;
             var resources = [];
 
@@ -182,8 +190,7 @@ Spider.prototype = {
 
 
             // TODO <base /> 标签顺序会影响解析
-            base = $('base[href]').attr('href') || base;
-
+            var base = $('base[href]').attr('href') || resource.base;
 
             // 外部样式
             $('link[rel=stylesheet]').each(function (index) {
@@ -239,11 +246,11 @@ Spider.prototype = {
                 }));
 
             });
-            
+
 
             return Promise.all(resources);
         })
-    
+
 
         // 解析样式表
         .then(function (resources) {
@@ -293,7 +300,7 @@ Spider.prototype = {
 
 
                     that.log('[%s]', family, rules);
-                    
+
                     elements.each(function (index, element) {
 
                         // 找到使用了字体的文本
@@ -321,7 +328,7 @@ Spider.prototype = {
 
 
         });
-        
+
     },
 
 
@@ -354,7 +361,7 @@ Spider.prototype = {
 
         var that = this;
         var cache = this.cssParserCache[file];
-        
+
         var imports = [];
 
 
@@ -373,7 +380,7 @@ Spider.prototype = {
             var ast = css.parse(string);
         } catch (e) {
 
-            
+
 
             if (e.line !== undefined) {
                 that.error('[ERROR]', getCssError(e),
@@ -398,10 +405,10 @@ Spider.prototype = {
             switch (rule.type) {
 
                 case 'import':
-                    
-                    
+
+
                     var src = rule['import'];
-                    
+
 
                     // @import url("./g.css?t=2009");
                     // @import "./g.css?t=2009";
@@ -416,11 +423,11 @@ Spider.prototype = {
                         break;
                     }
 
-                    
+
 
                     var target = that._resolve(base, src);
                     var line = position ? position.start.line : null;
-                    
+
                     target = that.map(target);
                     target = that._normalize(target);
 
@@ -465,7 +472,7 @@ Spider.prototype = {
                                 .trim();
 
                                 family.name = value;
-                                
+
                                 break;
 
                             case 'src':
@@ -476,7 +483,7 @@ Spider.prototype = {
 
                                     src = src[1];
                                     src = src.trim().replace(RE_QUOTATION, '');
-                                    
+
                                     src = that._resolve(base, src);
                                     src = that.map(src);
                                     src = that._normalize(src);
@@ -535,7 +542,7 @@ Spider.prototype = {
 
                                     selector.familys.push(val);
                                 });
-                                
+
                                 break;
 
                             case 'content':
@@ -604,7 +611,7 @@ Spider.prototype = {
         var from = options.from;
 
         var that = this;
-        
+
         var cache = this.fileCache[file];
         var ret;
 
@@ -612,7 +619,7 @@ Spider.prototype = {
         if (cache) {
 
             return cache;
-        
+
         }
 
         var error = function (errors) {
@@ -681,7 +688,7 @@ Spider.prototype = {
             }
         });
 
-        
+
 
 
         if (isCache) {
@@ -727,7 +734,7 @@ Spider.prototype = {
             return src;
         } else {
             src = src.replace(RE_QUERY, '');
-            return path.normalize(src); 
+            return path.normalize(src);
         }
     },
 
@@ -783,11 +790,15 @@ Spider.prototype = {
 
     // 筛选路径
     filter: function (srcs) {
-        return this.ignore.filter(srcs);
+        if( Array.isArray(srcs) ){
+            return this.ignore.filter(srcs);
+        }
+        else{
+            return [ srcs ];
+        }
     }
 
 };
 
 
 module.exports = Spider;
-
