@@ -21,27 +21,34 @@ var getCssError = function (error) {
 };
 
 
+// TODO 限定最大层级，避免爬虫陷入死循环
 var Spider = function (htmlFiles, options) {
 
     options = this._getOptions(options);
+    new ColorConsole(options).mix(this);
 
 
     if (typeof htmlFiles === 'string') {
         htmlFiles = [htmlFiles];
     }
 
-    new ColorConsole(options).mix(this);
-
     
     var that = this;
+    var OPTIONS_FUNCTIONS = ['map', 'filter'];
 
+    this.options = options;
 
     this.fontsCache = {};
     this.charsCache = {};
     this.fileCache = {};
     this.cssParserCache = {};
 
-    this.options = options;
+    
+    OPTIONS_FUNCTIONS.forEach(function (key) {
+        if (typeof options[key] === 'function') {
+            that[key] = options[key];
+        }
+    });
 
 
     this.ignore = ignore({
@@ -120,7 +127,7 @@ var Spider = function (htmlFiles, options) {
     })
 
     .then(null, function (errors) {
-        console.error(errors && errors.stack || errors);
+        console.error(errors || '[ERROR]', errors && errors.stack || '');
         return errors;
     });
 
@@ -584,7 +591,7 @@ Spider.prototype = {
 
 
 
-    /*
+    /* TODO 处理网络超时
      * 资源。注意：读取错误的文件会返回空字符串，不会进入错误流程
      * @param   {Object options}          <options.file>, ...
      * @param   {Promise, options}        <options.file>, <options.content>, ...

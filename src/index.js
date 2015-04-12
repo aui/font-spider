@@ -186,7 +186,7 @@ FontSpider.prototype = {
             return Promise.all(result);
         })
         .then(null, function (errors) {
-            that.error('[ERROR]', errors && errors.stack || errors);
+            that.error(errors || '[ERROR]', errors && errors.stack || '');
         });
 
     }
