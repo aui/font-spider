@@ -16,11 +16,6 @@ var ColorConsole = require('./color-console.js');
 var RE_SERVER = /^(http\:|https\:)/i;
 
 
-var getCssError = function (error) {
-    return error.toString().replace(/^Error:\s*/i, '');
-};
-
-
 var Spider = function (htmlFiles, options) {
 
     options = this._getOptions(options);
@@ -370,6 +365,11 @@ Spider.prototype = {
         }
 
 
+        var getCssError = function (error) {
+            return error.reason + ', line: ' + error.line + ', column: ' + error.column;
+        };
+
+
         // 字体文件信息
         var fonts = [];
 
@@ -377,7 +377,10 @@ Spider.prototype = {
         var selectors = [];
 
         try {
-            var ast = css.parse(string);
+            var ast = css.parse(string, {
+                silent: false,
+                source: file
+            });
         } catch (e) {
 
 
