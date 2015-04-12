@@ -28,7 +28,7 @@ var FontSpider = function (src, options) {
 
     if (typeof src === 'string') {
         src = glob.sync(src);
-    } else {
+    } else if( Array.isArray(src) ) {
         var srcs = [];
         src.forEach(function (item) {
             srcs = srcs.concat(glob.sync(item));
@@ -99,7 +99,7 @@ FontSpider.prototype = {
                     if (error) {
                         return;
                     }
-                    
+
                     if (RE_SERVER.test(file)) {
                         error = new Error('Error: does not support the absolute path "' + file + '"');
                         that.error('[ERROR]', error);
@@ -110,8 +110,8 @@ FontSpider.prototype = {
                         return;
                     }
 
-                    if (fs.existsSync(file)) { 
-                        
+                    if (fs.existsSync(file)) {
+
                         if (backup && fs.existsSync(file + BACKUP_EXTNAME)) {
                             // 使用备份的字体
                             src = file + BACKUP_EXTNAME;
@@ -127,8 +127,8 @@ FontSpider.prototype = {
                         error = new Error('"' + file + '" file not found');
                         that.error('[ERROR]', error);
                     }
-                    
-                    
+
+
                 });
 
 
@@ -151,16 +151,16 @@ FontSpider.prototype = {
                 var out = path.join(dirname, basename);
                 var stat = fs.statSync(src);
 
-                
+
                 var destConfig = {};
 
                 item.files.forEach(function (file) {
-                    
+
                     var extname = path.extname(file).toLocaleLowerCase();
                     var type = extname.replace('.', '');
 
                     destConfig[type] = file;
-                    
+
                 });
 
                 result.push(new Font(src, {
