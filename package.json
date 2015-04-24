@@ -37,7 +37,7 @@
     "cheerio": "^0.18.0",
     "commander": "^2.6.0",
     "css": "^2.2.0",
-    "fontmin": "^0.4.8",
+    "fontmin": "^0.7.3",
     "glob": "^4.4.0",
     "ignore": "^2.2.15",
     "promise": "^6.1.0"
