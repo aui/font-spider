@@ -10,6 +10,7 @@ var glob = require('glob');
 var Font = require('./font.js');
 var Spider = require('./spider.js');
 var ColorConsole = require('./color-console.js');
+var version = require('../package.json').version;
 
 // http://font-spider.org/css/style.css
 //var RE_SERVER = /^(\/|http\:|https\:)/i;
@@ -18,8 +19,27 @@ var RE_SERVER = /^(http\:|https\:)/i;
 
 
 var copyFile = function (srcpath, destpath) {
+    var destdir = path.dirname(destpath);
     var contents = fs.readFileSync(srcpath);
+    mkdir(destdir);
     fs.writeFileSync(destpath, contents);
+};
+
+
+// 创建目录，包括子文件夹
+function mkdir (dir) {
+
+    var currPath = dir;
+    var toMakeUpPath = [];
+
+    while (!fs.existsSync(currPath)) {
+        toMakeUpPath.unshift(currPath);
+        currPath = path.dirname(currPath);
+    }
+
+    toMakeUpPath.forEach(function (pathItem) {
+        fs.mkdirSync(pathItem);
+    });
 };
 
 
@@ -54,7 +74,6 @@ var FontSpider = function (src, options) {
 
 FontSpider.Font = Font;
 FontSpider.Spider = Spider;
-FontSpider.BACKUP_EXTNAME = '.backup';
 FontSpider.defaults = Object.create(Spider.defaults);
 FontSpider.defaults.backup = true;
 
@@ -71,9 +90,6 @@ FontSpider.prototype = {
         var options = this.options;
         var backup = options.backup !== false;
 
-        var BACKUP_EXTNAME = FontSpider.BACKUP_EXTNAME;
-
-
         return new Spider(src, options)
         .then(function (data) {
 
@@ -81,8 +97,10 @@ FontSpider.prototype = {
 
             data.forEach(function (item) {
 
-                var chars = item.chars;
+                
                 var error;
+                var source;
+                var chars = item.chars;
 
 
                 // 如果没有使用任何字符，则不处理字体
@@ -90,44 +108,16 @@ FontSpider.prototype = {
                     return;
                 }
 
-
                 // 找到 .ttf 的字体文件
-                var src, dest;
                 item.files.forEach(function (file) {
                     var extname = path.extname(file).toLocaleLowerCase();
 
-                    if (error) {
-                        return;
-                    }
-
                     if (RE_SERVER.test(file)) {
-                        error = new Error('Error: does not support the absolute path "' + file + '"');
+                        error = 'does not support the absolute path "' + file + '"';
                         that.error('[ERROR]', error);
-                        return;
+                    } else if (extname === '.ttf') {
+                        source = file;
                     }
-
-                    if (extname !== '.ttf') {
-                        return;
-                    }
-
-                    if (fs.existsSync(file)) {
-
-                        if (backup && fs.existsSync(file + BACKUP_EXTNAME)) {
-                            // 使用备份的字体
-                            src = file + BACKUP_EXTNAME;
-                        } else {
-                            src = file;
-                            // 备份字体，这样可以反复处理
-                            backup && copyFile(src, src + BACKUP_EXTNAME);
-                        }
-
-                        dest = file;
-                    } else {
-
-                        error = new Error('"' + file + '" file not found');
-                        that.error('[ERROR]', error);
-                    }
-
 
                 });
 
@@ -137,22 +127,51 @@ FontSpider.prototype = {
                 }
 
 
-                if (!src) {
-                    error = new Error('"' + item.name  + '"' + ' did not find turetype fonts');
+                if (!source) {
+                    error = '"' + item.name  + '"' + ' did not find turetype fonts';
                     that.error('[ERROR]', error);
                     return;
                 }
 
 
-                dest = dest || src;
-                var dirname = path.dirname(dest);
-                var extname = path.extname(dest);
-                var basename = path.basename(dest, extname);
-                var out = path.join(dirname, basename);
-                var stat = fs.statSync(src);
+
+                var dirname = path.dirname(source);
+                var basename = path.basename(source);
+                var extname = path.extname(source);
+                var backupFile;
 
 
+                // 备份字体
+                if (backup) {
+
+                    // version < 0.2.1
+                    if (fs.existsSync(source + '.backup')) {
+                        backupFile = source + '.backup';
+                    } else {
+                        backupFile = dirname + '/.font-spider/' + basename;
+                    }
+
+                    if (fs.existsSync(backupFile)) {
+                        copyFile(backupFile, source);
+                    } else {
+                        copyFile(source, backupFile);
+                    }
+
+                }
+
+
+
+                if (!fs.existsSync(source)) {
+                    error = '"' + source + '" file not found';
+                    that.error('[ERROR]', error);
+                    return;
+                }
+
+
+
+                var stat = fs.statSync(source);
                 var destConfig = {};
+
 
                 item.files.forEach(function (file) {
 
@@ -163,7 +182,7 @@ FontSpider.prototype = {
 
                 });
 
-                result.push(new Font(src, {
+                result.push(new Font(source, {
                     dest: destConfig,
                     chars: chars
                 }).then(function () {
@@ -173,8 +192,10 @@ FontSpider.prototype = {
                     that.info('Include chars:', chars);
 
                     item.files.forEach(function (file) {
-                        that.info('File', '(' + path.relative('./', file) + ')',
-                            'created:', '<' + fs.statSync(file).size / 1000 + ' KB>');
+                        if (fs.existsSync(file)) {
+                            that.info('File', '(' + path.relative('./', file) + ')',
+                                'created:', '<' + fs.statSync(file).size / 1000 + ' KB>');    
+                        }
                     });
 
                     that.info('');

@@ -49,9 +49,9 @@ function Font (src, options) {
                     var filename = basename + '.' + key;
 
                     // 特殊逻辑，支持非ttf后缀的turetype字体
-                    if (key === 'ttf') {
-                        filename = basename + extname;
-                    }
+                    // if (key === 'ttf') {
+                    //     filename = basename + extname;
+                    // }
 
                     var file = path.join(temp, filename);
                     var out = dest[key];
