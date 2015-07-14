@@ -1,9 +1,12 @@
 /* global require,Buffer,module */
 
+'use strict';
+
 var fs = require('fs');
 var http = require('http');
 var utils = require('./utils');
-var Promise = typeof Promise === 'function' ? Promise : require('promise');
+var logUtil = require('./log-util');
+var Promise = require('./promise');
 
 /*
  * 资源，支持远程路径与本地路径
@@ -14,7 +17,7 @@ var Promise = typeof Promise === 'function' ? Promise : require('promise');
  */
 function Resource (file, content, options) {
 
-    'use strict';
+    
 
     var data = new Resource.Content(file, content, options);
     var cache = data.options.cache;
@@ -37,11 +40,16 @@ function Resource (file, content, options) {
         // 远程文件
         if (utils.isRemote(file)) {
 
+            logUtil.info('load', file);
+
             http.get(file, function (res) {
 
                 if (res.statusCode !== 200) {
 
-                    reject(new Error(res.statusMessage));
+                    var errors = new Error(res.statusMessage);
+
+                    logUtil.error(errors);
+                    reject(errors);
 
                 } else {
 
@@ -64,17 +72,17 @@ function Resource (file, content, options) {
                 }
 
             })
-            .on('error', function (errors) {
-                reject(errors);
-            });
+            .on('error', logUtil.error);
 
 
         // 本地文件
         } else {
 
+            logUtil.log('load', file);
             fs.readFile(file, 'utf8', function (errors, content) {
 
                 if (errors) {
+                    logUtil.error(errors);
                     reject(errors);
                 } else {
 

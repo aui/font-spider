@@ -76,6 +76,7 @@ FontSpider.Font = Font;
 FontSpider.Spider = Spider;
 FontSpider.defaults = Object.create(Spider.defaults);
 FontSpider.defaults.backup = true;
+FontSpider.on = Spider.on;
 
 
 FontSpider.prototype = {

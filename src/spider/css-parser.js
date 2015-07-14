@@ -4,9 +4,10 @@
 
 var path = require('path');
 var utils = require('./utils');
+var logUtil = require('./log-util');
 var CSSOM = require('cssom');
 var Resource = require('./resource');
-var Promise = typeof Promise === 'function' ? Promise : require('promise');
+var Promise = require('./promise');
 
 
 function CssParser (resource) {
@@ -45,8 +46,7 @@ function CssParser (resource) {
     try {
         ast = CSSOM.parse(content);
     } catch (error) {
-        utils.warn(error);
-        return Promise.reject(error);/////////////////////// TODO
+        return logUtil.error(error);
     }
 
     cssParser = new CssParser.Parser(ast, options);
@@ -102,10 +102,12 @@ CssParser.Parser = function Parser (ast, options) {
         var ret;
 
         if (typeof that[type] === 'function') {
+
             try {
                 ret = that[type](rule);
             } catch (e) {
-                utils.error(type, e.stack);
+                // debug
+                console.error(type, e.stack);
             }
 
             if (ret) {
@@ -115,7 +117,7 @@ CssParser.Parser = function Parser (ast, options) {
     });
 
 
-    return Promise.all(tasks)
+    var promise = Promise.all(tasks)
     .then(function (list) {
         
         var ret = [];
@@ -129,12 +131,17 @@ CssParser.Parser = function Parser (ast, options) {
 
         return ret;
     });
+
+
+    return promise;
 };
 
-CssParser.Parser.prototype = {
 
-    constructor: CssParser.Parser,
 
+utils.mix(CssParser.Parser.prototype, {
+
+
+    // CSS 导入规则
     // @import url("fineprint.css") print;
     // @import url("bluish.css") projection, tv;
     // @import 'custom.css';
@@ -145,6 +152,8 @@ CssParser.Parser.prototype = {
 
         var base = this.base;
         var file = utils.unquotation(rule.href.trim());
+
+        logUtil.log('@import', file);
 
         file = utils.resolve(base, file);
         file = this.filter(file);
@@ -159,23 +168,20 @@ CssParser.Parser.prototype = {
             base: path.dirname(file)
         };
 
-        //utils.log('@import', file);
 
-        return new Resource(file, null, options)
-        .then(function (resource) {
-            return new CssParser(resource);
-        }, function (error) {
-            utils.warn('Warn', '@import', file);
-        });
+        return new CssParser(new Resource(file, null, options));
     },
 
 
+    // webfont 规则
     // @see https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face
     CSSFontFaceRule: function (rule) {
         var base = this.base;
         var files = [];
         var family = utils.unquotation(rule.style['font-family']);
         var extname = '';
+
+        logUtil.log('@font-face', family);
 
         var model = new CssParser.Model('CSSFontFaceRule').mix({
             id: '@' + family,
@@ -213,6 +219,8 @@ CssParser.Parser.prototype = {
         return model;
     },
 
+
+    // 选择器规则
     CSSStyleRule: function (rule) {
 
         var selectorText = rule.selectorText;
@@ -256,14 +264,13 @@ CssParser.Parser.prototype = {
         return model;
     },
 
+
+    // 媒体查询规则
     CSSMediaRule: function (rule) {
         return new this.constructor(rule, this.options);
     }
 
-};
-
-
-
+});
 
 
 module.exports = CssParser;

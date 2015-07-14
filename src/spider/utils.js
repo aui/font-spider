@@ -1,6 +1,9 @@
 var path = require('path');
 var url = require('url');
+var util = require('util')
+var events = require('events');
 var ignore = require('ignore');
+
 
 // url(../font/font.ttf)
 // url("../font/font.ttf")
@@ -72,9 +75,12 @@ function commaToArray (value) {
 
 // 扁平化数组
 function reduce (array) {
-  return array.length ? array.reduce(function (previous, current) {
-        return previous.concat(current);
-    }) : array;
+    var ret = [];
+    array.forEach(function (item) {
+        ret.push.apply(ret, item);
+    });
+
+    return ret;
 }
 
 /*
@@ -101,13 +107,13 @@ function resolve (from, to) {
  * @return  {String}    标准化路径
  */
 function normalize (src) {
-
-    // ../font/font.eot?#font-spider
-    var RE_QUERY = /[#?].*$/g;
-
     if (isRemote(src)) {
-        return src;
+        return src.replace(/#.*$/, '');
     } else {
+        
+        // ../font/font.eot?#font-spider
+        var RE_QUERY = /[#?].*$/g;
+
         src = src.replace(RE_QUERY, '');
         return path.normalize(src);
     }
@@ -188,6 +194,7 @@ function filter (ignoreList) {
 
 
 module.exports = {
+    inherits: util.inherits,
     unquotation: unquotation,
     mix: mix,
     unique: unique,

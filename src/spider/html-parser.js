@@ -5,8 +5,9 @@ var fs = require('fs');
 var path = require('path');
 var cheerio = require('cheerio');
 var utils = require('./utils');
+var logUtil = require('./log-util');
 var Resource = require('./resource');
-var Promise = typeof Promise === 'function' ? Promise : require('promise');
+var Promise = require('./promise');
 
 
 
@@ -25,24 +26,23 @@ function HtmlParser (resource) {
     }
 
 
+
     var file = resource.file;
     var content = resource.content;
     var options = resource.options;
     var $;
 
+
     options.base = options.base || path.dirname(file);
 
-    
 
     try {
         $ = cheerio.load(content);
+        return new HtmlParser.Parser($, options);
     } catch (error) {
-        utils.warn(error);
-        return Promise.reject(error);
+        return logUtil.error(error);
     }
-
-
-    return new HtmlParser.Parser($, options);
+    
 }
 
 
@@ -69,7 +69,13 @@ HtmlParser.Parser = function Parser ($, options) {
     return Promise.resolve(this);
 };
 
+
+
+
+
 HtmlParser.Parser.prototype = {
+
+
     constructor: HtmlParser.Parser,
 
 
@@ -86,19 +92,12 @@ HtmlParser.Parser.prototype = {
         var files = [];
 
 
+        // 这里不会忽略 <link disabled ...>
         $('link[rel=stylesheet]').each(function () {
 
             var $this = $(this);
             var cssFile;
             var href = $this.attr('href');
-
-
-            // 忽略含有有 disabled 属性的
-            if (isDisabled($this)) {
-                files.push(null); // 确保返回的数组 length 正确
-                return;
-            }
-
 
             if (!that.filter([href]).length) {
                 return;
@@ -111,13 +110,6 @@ HtmlParser.Parser.prototype = {
 
             files.push(cssFile);
         });
-
-
-        function isDisabled ($elem) {
-            var disabled = $elem.attr('disabled');
-            return disabled && disabled !== 'false';
-        }
-
 
         return files;
     },
@@ -152,7 +144,7 @@ HtmlParser.Parser.prototype = {
     querySelectorChars: function (selector) {
         var $elem;
         var $ = this.$;
-        var chars = [];
+        var chars = '';
         var RE_SPURIOUS = /\:(link|visited|hover|active|focus)\b/ig;
 
         // 剔除状态伪类
@@ -164,15 +156,15 @@ HtmlParser.Parser.prototype = {
         } catch (e) {
             // 1. 包含 :before 等不支持的伪类
             // 2. 其他非法语句
-            return chars;
+            return [];
         }
 
         // 查找文本节点
         $elem.each(function () {
-            chars.push($(this).text());
+            chars += $(this).text();
         });
 
-        return chars;
+        return chars.split('');
     }
 };
 

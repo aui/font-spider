@@ -6,28 +6,34 @@ var fs = require('fs');
 var path = require('path');
 var cheerio = require('cheerio');
 var utils = require('./utils');
+var logUtil = require('./log-util');
 var Resource = require('./resource');
 var CssParser = require('./css-parser');
 var HtmlParser = require('./html-parser');
-var Promise = typeof Promise === 'function' ? Promise : require('promise');
+var Promise = require('./promise');
 
 
 function Spider (htmlFiles, options) {
 
     options = options || {};
+
+
+    // 支持单个 HTML 地址传入
     if (typeof htmlFiles === 'string') {
         htmlFiles = [htmlFiles];
     }
 
 
+    // 处理多个 HTML，这些 HTML 文件可能会引用相同的 CSS
     return Promise.all(htmlFiles.map(function (htmlFile) {
         return new Spider.Parser(htmlFile, options);
     })).then(function (list) {
 
-        var ret = [];
-        list = utils.reduce(list);
+        function sort (a, b) {
+            return a.charCodeAt() - b.charCodeAt();
+        }
 
-        list.map(function (font) {
+        return utils.reduce(list).map(function (font) {
 
             // 对字符进行除重操作
             font.chars = utils.unique(font.chars);
@@ -37,23 +43,25 @@ function Spider (htmlFiles, options) {
                 font.chars.sort(sort);
             }
 
-            ret.push(new Spider.Model(font.family, font.files, font.chars));
+            return new Spider.Model(
+                font.family,
+                font.files,
+                font.chars.join('').replace(/[\n\r\t]/g, ''),
+                font.selectors
+            );
         });
 
-
-        return ret;
     });
 
-    function sort (a, b) {
-        return a.charCodeAt() - b.charCodeAt();
-    }
+
 }
 
 
-Spider.Model = function (name, files, chars) {
+Spider.Model = function (name, files, chars, selectors) {
     this.name = name;
     this.files = files;
     this.chars = chars;
+    this.selectors = selectors;
 };
 
 
@@ -108,6 +116,8 @@ Spider.Parser = function Parser (htmlFile, options) {
 
 
 Spider.Parser.prototype = {
+
+
     constructor: Spider.Parser,
 
 
@@ -158,9 +168,7 @@ Spider.Parser.prototype = {
         });
 
 
-        return Promise.all(resources.map(function (resource) {
-            return new CssParser(resource);
-        }))
+        return Promise.all(resources.map(CssParser))
 
         // 对二维数组扁平化处理
         .then(utils.reduce);
@@ -217,5 +225,18 @@ Spider.Parser.prototype = {
         return fontFaces;
     }
 };
+
+// TODO
+Spider.defaults = {
+    sort: true,         // 是否将查询到的文本按字体中字符的顺序排列
+    unique: true,       // 是否去除重复字符
+    ignore: [],         // 忽略的文件配置
+    map: []             // 文件映射配置
+};
+
+
+Spider.on = logUtil.on;
+
+
 
 module.exports = Spider;

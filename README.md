@@ -6,10 +6,11 @@
 
 ## 特性
 
+相对于图片，WebFont 拥有更好的体验。它支持选中、搜索、翻译、朗读、缩放等，而字蛛作为一个 WebFont 压缩转码工具，拥有如下特性：
+
 1. 按需压缩：数 MB 的中文字体可被压成几十 KB
 2. 简单可靠：完全基于 CSS 规则，无需 js 与服务端辅助
 3. 自动转码：支持 IE 与标准化的浏览器
-4. 良好体验：摆脱图片文本，支持选中、搜索、翻译、朗读、缩放
 
 ##	安装
 
@@ -43,9 +44,7 @@ npm install font-spider -g
 }
 ```
 
-> 1. ``@font-face``中的``src``定义的 .ttf 文件必须存在，其余的格式将由工具自动生成
-> 2. 不支持动态插入的 CSS 规则与字符
-> 3. CSS ``content``属性插入的字符需要定义``font-family``，不支持继承
+> 特别说明： `@font-face` 中的 `src` 定义的 .ttf 文件必须存在，其余的格式将由工具自动生成
 
 ###	二、压缩 WebFont
 
@@ -53,7 +52,7 @@ npm install font-spider -g
 font-spider [options] <htmlFile ...>
 ```
 
-> 支持通配符，例如：``font-spider dest/*.html``
+> 支持通配符，例如：`font-spider dest/*.html`
 
 #### options
 
@@ -69,23 +68,35 @@ font-spider [options] <htmlFile ...>
 --revert                      恢复被压缩的 WebFont
 ```
 
-## 构建插件 
+## 前端构建工具集成
 
 * [grunt-font-spider](https://github.com/aui/grunt-font-spider)
 * [gulp-font-spider](https://github.com/aui/gulp-font-spider)
 
-##	字体兼容性参考
+## 字蛛限制
+
+* 不支持元素行内样式（只支持 `<link>` 与 `<style>` 标签声明的样式）
+* CSS `content` 属性插入的字符需要定义 `font-family`，不支持继承
+* 不支持 javascript 动态插入的样式与元素节点
+* 不支持 .otf 格式的字体
+
+## 字体兼容性参考
 
 格式 | IE | Firefox | Chrome | Safari | Opera | iOS Safari | Android Browser | Chrome for Android 
 ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | -----
-``.eot`` | 6  | -- | -- | -- | -- | -- | -- | --
-``.woff`` | 9 | 3.6 | 5 | 5.1 | 11.1 | 5.1 | 4.4 | 36 
-``.ttf`` | --  | 3.5 | 4 | 3.1 | 10.1 | 4.3 | 2.2 | 36
-``.svg`` | -- | -- | 4 | 3.2 | 9.6 | 3.2 | 3 | 36
+`.eot` | 6  | -- | -- | -- | -- | -- | -- | --
+`.woff` | 9 | 3.6 | 5 | 5.1 | 11.1 | 5.1 | 4.4 | 36 
+`.ttf` | --  | 3.5 | 4 | 3.1 | 10.1 | 4.3 | 2.2 | 36
+`.svg` | -- | -- | 4 | 3.2 | 9.6 | 3.2 | 3 | 36
 
 来源：<http://caniuse.com/#feat=fontface>
 
 ## 更新日志
+
+### 0.3.0
+
+* 重构爬虫模块，解决压缩后的 CSS 解析失败的问题
+* 优化错误流程：HTML、CSS 加载与解析错误都会进入错误流程
 
 ### 0.2.1
 
@@ -96,18 +107,18 @@ font-spider [options] <htmlFile ...>
 
 * 使用 fontmin 取代字蛛内置的压缩与转码模块，让压缩后的字体更小，并且无需 Perl 环境 [#18](https://github.com/aui/font-spider/issues/18)
 * 优化爬虫模块，使用更高效的 cheerio 代替 jsdom 解析 HTML
-* 支持解析远程动态页面，可结合``map``参数映射线上 CSS 与 WebFont 资源到本地
-* 实现对 CSS ``:before``与``:after``定义``content``的支持（不支持继承的字体）
+* 支持解析远程动态页面，可结合`map`参数映射线上 CSS 与 WebFont 资源到本地
+* 实现对 CSS `:before`与`:after`定义`content`的支持（不支持继承的字体）
 
 ### 0.1.1
 
-* 修复和最新版 NodeJS 兼容问题 
+* 修复和最新版 NodeJS 兼容问题
 
 ### 0.1.0
 
 * 优化错误信息显示
-* 支持``map``配置映射 CSS 文件中的 http 路径到本地目录
-* 支持``ignore``配置忽略字体、CSS、HTML 文件
+* 支持`map`配置映射 CSS 文件中的 http 路径到本地目录
+* 支持`ignore`配置忽略字体、CSS、HTML 文件
   
 ### 0.0.1
 
@@ -117,9 +128,9 @@ font-spider [options] <htmlFile ...>
 
 字蛛诞生离不开这三位小伙伴，他们是：
 
-* [@糖饼](http://www.weibo.com/planeart)
-* [@fufu](http://www.weibo.com/u/1715968673)
-* [@kdd](http://www.weibo.com/kddie)
+* [@糖饼](https://github.com/aui) [微博](http://www.weibo.com/planeart)
+* @fufu [微博](http://www.weibo.com/u/1715968673)
+* @kdd [微博](http://www.weibo.com/kddie)
 
 ### 特别鸣谢
 
