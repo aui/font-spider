@@ -1,0 +1,29 @@
+@font-face {
+    font-family: 'aui';
+    src: url('../font/aui.eot');
+    src:
+        local("Helvetica Neue Bold"),
+        local("HelveticaNeue-Bold"),
+        url('../font/aui.eot?#font-spider') format('embedded-opentype'),
+        url('../font/aui.woff') format('woff'),
+        url('../font/aui.ttf') format('truetype'),
+        url('../font/aui.svg') format('svg');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: aui;
+    src: url(../font/aui-normal.eot);
+    src:
+        local("Helvetica Neue Bold"),
+        local("HelveticaNeue-Bold"),
+        url(../font/aui-normal.eot?#font-spider) format('embedded-opentype'),
+        url(../font/aui-normal.woff) format('woff'),
+        url('../font/aui-normal.ttf') format('truetype'),
+        url('../font/aui-normal.svg') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@import "./inc/font-face2-import.css";

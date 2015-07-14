@@ -1,0 +1,10 @@
+@font-face {
+    font-family:     'test';
+    src:
+        url( ../font/test.eot?#font-spider ) format('embedded-opentype'),
+        url( ../font/test.woff ) format('woff'),
+        url(  '../font/test.ttf'  ) format('truetype'),
+        url( '../font/test.svg') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
