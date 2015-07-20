@@ -6,14 +6,7 @@ var fs = require('fs');
 var path = require('path');
 var FontSpider = require('../');
 var program = require('commander');
-var colors = require('../src/color');
-
-
-Object.keys(colors).forEach(function (color) {
-    String.prototype.__defineGetter__(color, function () {
-        return colors[color][0] + this + colors[color][1];
-    });
-});
+var color = require('../src/color');
 
 program
     .version(require('../package.json').version)
@@ -24,7 +17,6 @@ program
     .option('--log', 'enable debug mode')
     .option('--no-backup', 'do not back up fonts')
     .option('--no-error', 'silently fail on parse errors')
-    .option('--revert', 'revert compressed font file')
     .parse(process.argv);
 
 
@@ -66,41 +58,32 @@ Object.keys(program).forEach(function (key) {
 // 显示 WebFont 信息
 if (options.info) {
 
+    writeln('loading ..');
+    options.onload = function (file) {
+        writeln('Load:', color('cyan', file));
+    };
+
     new FontSpider.Spider(files, options)
     .then(function (data) {
+        writeln('');
         data.forEach(function (item) {
             process.stdout.write(
                 [
-                    'Font name: ' + (item.name).cyan,
+                    'Font name: ' + color('cyan', item.name),
                     'Include chars: ' + item.chars,
                     'Font File: \n' +
                         item.files
                         .map(function (val) {
-                            return (path.relative('./', val)).cyan;
+                            return color('cyan', path.relative('./', val));
                         }).join('\n'),
                     '\n'
                 ].join('\n')
             );
         });
 
-    });
-
-// 恢复备份的字体
-} else if (options.revert) {
-
-    var backupExtname = FontSpider.BACKUP_EXTNAME;
-
-    new FontSpider.Spider(files, options)
-    .then(function (data) {
-        data.forEach(function (item) {
-            item.files.forEach(function (file) {
-                if (fs.existsSync(file + backupExtname)) {
-                    fs.renameSync(file + backupExtname, file);
-                    process.stdout.write('File ' + (path.relative('./', file)).cyan + ' revert\n');
-                }
-            });
-        });
-
+    }, function (errors) {
+        writeln('');
+        process.stderr.write(color('red', errors.message), '\n', errors.stack, '\n');
     });
 
 
@@ -111,5 +94,18 @@ if (options.info) {
     new FontSpider(files, options);
 }
 
+
+
+function writeln () {
+    var stream = process.stdout;
+
+    if (!stream.isTTY) {
+        return;
+    }
+
+    stream.clearLine();
+    stream.cursorTo(0);
+    stream.write(Array.prototype.join.call(arguments, ' '));
+}
 
 
