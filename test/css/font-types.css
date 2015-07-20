@@ -1,0 +1,52 @@
+@font-face {
+    src: url('../font/normal.woff') format('woff');
+    font-family: 'test';
+    font-variant: normal;
+    font-stretch: normal;
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    src: url('../font/variant-small-caps.woff') format('woff');
+    font-family: 'test';
+    font-variant: small-caps;
+    font-stretch: normal;
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    src: url('../font/stretch-expanded.woff') format('woff');
+    font-family: 'test';
+    font-variant: normal;
+    font-stretch: expanded;
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    src: url('../font/weight-bold.woff') format('woff');
+    font-family: 'test';
+    font-variant: normal;
+    font-stretch: normal;
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    src: url('../font/style-italic.woff') format('woff');
+    font-family: 'test';
+    font-variant: normal;
+    font-stretch: normal;
+    font-weight: normal;
+    font-style: italic;
+}
+
+#test {
+    font-family: 'test';
+    font-variant: normal;
+    font-stretch: normal;
+    font-weight: normal;
+    font-style: normal;
+}

@@ -3,15 +3,10 @@ var path = require('path');
 
 var Spider = require('../src/spider/main');
 var utils = require('../src/spider/utils');
-var logUtil = require('../src/spider/log-util');
 var Resource = require('../src/spider/resource');
 var CssParser = require('../src/spider/css-parser');
 var HtmlParser = require('../src/spider/html-parser');
 
-
-logUtil.on('log', console.log);
-logUtil.on('warn', console.warn);
-logUtil.on('error', console.error);
 
 
 describe('Utils', function () {
@@ -355,11 +350,11 @@ describe('CssParser', function () {
                         return done('family error');
                     }
 
-                    if (item['font-weight'] !== 'bold') {
+                    if (item.options['font-weight'] !== 'bold') {
                         return done('font-weight error');
                     }
 
-                    if (item['font-style'] !== 'normal') {
+                    if (item.options['font-style'] !== 'normal') {
                         return done('font-style error');
                     }
 
@@ -406,7 +401,7 @@ describe('CssParser', function () {
                         return done('#1 family error');
                     }
 
-                    if (item['font-weight'] !== 'bold') {
+                    if (item.options['font-weight'] !== 'bold') {
                         return done('#1 font-weight error');
                     }
 
@@ -432,7 +427,7 @@ describe('CssParser', function () {
                         return done('#2 family error');
                     }
 
-                    if (item['font-weight'] !== 'normal') {
+                    if (item.options['font-weight'] !== 'normal') {
                         return done('#2 font-weight error');
                     }
 
@@ -457,7 +452,7 @@ describe('CssParser', function () {
                         return done('#3 family error');
                     }
 
-                    if (item['font-weight'] !== 'normal') {
+                    if (item.options['font-weight'] !== 'normal') {
                         return done('#3 font-weight error');
                     }
 
@@ -468,6 +463,17 @@ describe('CssParser', function () {
             }, function (error) {
                 done(error);
             });
+        });
+    });
+
+    
+    describe('#error', function () {
+        it('死循环', function (done) {
+
+            new CssParser(new Resource(__dirname + '/css/loop.css')).then(null, function (errors) {
+                done();
+            });
+
         });
     });
 
