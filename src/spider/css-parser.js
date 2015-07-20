@@ -3,11 +3,12 @@
 'use strict';
 
 var path = require('path');
+var crypto = require('crypto');
 var utils = require('./utils');
-var logUtil = require('./log-util');
 var CSSOM = require('cssom');
 var Resource = require('./resource');
 var Promise = require('./promise');
+var VError = require('verror');
 
 
 function CssParser (resource) {
@@ -19,8 +20,8 @@ function CssParser (resource) {
     }
 
 
-    if (!(resource instanceof Resource.Content)) {
-        throw new Error('require `Resource.Content`');
+    if (!(resource instanceof Resource.Model)) {
+        throw new Error('require `Resource.Model`');
     }
 
 
@@ -31,25 +32,28 @@ function CssParser (resource) {
     var cssParser;
 
 
-    options.base = options.base || path.dirname(file);
-
-
     if (cache) {
         cssParser = CssParser.cache[file];
         if (cssParser) {
-            return cssParser;
+            // 深拷贝缓存
+            return cssParser.then(utils.copy);
         }
     }
 
     var ast;
 
+    // CSSOM BUG?
+    content = content.replace(/@charset\b.+;/g, '');
+
     try {
         ast = CSSOM.parse(content);
-    } catch (error) {
-        return logUtil.error(error);
+    } catch (errors) {
+        
+        errors = new VError(errors, 'parse "%s" failed', file);
+        return Promise.reject(errors);
     }
 
-    cssParser = new CssParser.Parser(ast, options);
+    cssParser = new CssParser.Parser(ast, file, options);
 
     if (cache) {
         CssParser.cache[file] = cssParser;
@@ -58,20 +62,35 @@ function CssParser (resource) {
     return cssParser;
 }
 
+
+
+
+
 CssParser.Model = function (type) {
+
+    // {String} 类型：CSSFontFaceRule | CSSStyleRule
     this.type = type;
-    this.mix(CssParser.Model.defaults);
+
+    // {String, Array} 字体 ID
+    this.id = null;
+
+    // {String, Array} 字体名
+    this.family = null;
+
+    // {String} 字体绝对路径
+    this.files = null;
+
+    // {Array} 使用了改字体的选择器信息
+    this.selectors = null;
+
+    // {Array} 字体使用的字符（包括 content 属性）
+    this.chars = null;
+
+    // {Object} 字体相关选项 @see getFontId.keys
+    this.options = null;
+
 };
 
-CssParser.Model.defaults = {
-    // unicode-range TODO
-    'font-variant': 'normal',
-    'font-stretch': 'normal',
-    'font-weight': 'normal',
-    'font-style': 'normal'
-};
-
-CssParser.Model.defaultsKeys = Object.keys(CssParser.Model.defaults);
 CssParser.Model.prototype.mix = function (object) {
     utils.mix(this, object);
     return this;
@@ -82,12 +101,15 @@ CssParser.cache = {};
 
 
 
-CssParser.Parser = function Parser (ast, options) {
+
+
+CssParser.Parser = function Parser (ast, file, options) {
     var that = this;
     var tasks = [];
 
     this.options = options;
-    this.base = options.base;
+    this.base = path.dirname(file);
+    this.file = file;
 
 
     // 忽略文件
@@ -105,9 +127,9 @@ CssParser.Parser = function Parser (ast, options) {
 
             try {
                 ret = that[type](rule);
-            } catch (e) {
+            } catch (errors) {
                 // debug
-                console.error(type, e.stack);
+                console.error('DEBUG', type, errors.stack);
             }
 
             if (ret) {
@@ -141,6 +163,10 @@ CssParser.Parser = function Parser (ast, options) {
 utils.mix(CssParser.Parser.prototype, {
 
 
+    // 最大 @import 文件数量限制
+    maxFilesLength: 15,
+
+
     // CSS 导入规则
     // @import url("fineprint.css") print;
     // @import url("bluish.css") projection, tv;
@@ -150,26 +176,45 @@ utils.mix(CssParser.Parser.prototype, {
     // @import url('landscape.css') screen and (orientation:landscape);
     CSSImportRule: function (rule) {
 
+        var that = this;
         var base = this.base;
-        var file = utils.unquotation(rule.href.trim());
+        var options = this.options;
+        var url = utils.unquotation(rule.href.trim());
 
-        logUtil.log('@import', file);
+        url = utils.resolve(base, url);
+        url = this.filter(url);
+        url = this.map(url);
+        url = utils.normalize(url);
 
-        file = utils.resolve(base, file);
-        file = this.filter(file);
-        file = this.map(file);
-        file = utils.normalize(file);
 
-        if (!file) {
+        if (!url) {
             return;
         }
 
-        var options = {
-            base: path.dirname(file)
-        };
+
+        if (typeof options._maxFilesLength !== 'number') {
+            options._maxFilesLength = 0;
+        }
 
 
-        return new CssParser(new Resource(file, null, options));
+        options._maxFilesLength ++;
+
+
+        // 限制导入的样式数量，避免让爬虫进入死循环陷阱
+        if (options._maxFilesLength > this.maxFilesLength) {
+            var errors = new Error('the number of files imported exceeds the maximum limit');
+            errors = new VError(errors, 'parse "%s" failed', that.file);
+            return Promise.reject(errors);
+        }
+
+
+        return new CssParser(
+            new Resource(url, null, options)
+            .catch(function (errors) {
+                errors = new VError(errors, 'parse "%s" failed', that.file);
+                return Promise.reject(errors);
+            }
+        ));
     },
 
 
@@ -179,30 +224,29 @@ utils.mix(CssParser.Parser.prototype, {
         var base = this.base;
         var files = [];
         var family = utils.unquotation(rule.style['font-family']);
-        var extname = '';
-
-        logUtil.log('@font-face', family);
 
         var model = new CssParser.Model('CSSFontFaceRule').mix({
-            id: '@' + family,
+            id: null,
             family: family,
             files: files,
             selectors: [],
-            chars: []
+            chars: [],
+            options: {}
         });
 
 
         // 复制 font 相关规则
-        CssParser.Model.defaultsKeys.forEach(function (key) {
+        getFontId.keys.forEach(function (key, index) {
             var value = rule.style[key];
-            if (typeof value === 'string') {
-                model[key] = value;
+
+            if (typeof value !== 'string') {
+                value = getFontId.values[index];
             }
 
-            extname += model[key];
+            model.options[key] = value;
         });
 
-        model.id += extname;
+        model.id = getFontId(family, model.options);
 
         
         var urls = utils.urlToArray(rule.style.src);
@@ -226,37 +270,37 @@ utils.mix(CssParser.Parser.prototype, {
         var selectorText = rule.selectorText;
         var fontFamily = rule.style['font-family'];
         var content = utils.unquotation(rule.style.content || '');
-        var ids = [];
-        var extname = '';
 
         if (!fontFamily) {
             return;
         }
 
-        // 将字体拆分成数组
-        var familys = utils.commaToArray(fontFamily).map(utils.unquotation);
         var model = new CssParser.Model('CSSStyleRule').mix({
-            ids: ids,
+            id: [],
             selectors: utils.commaToArray(selectorText),
-            familys: familys,
-            chars: content.split('')
+            family: utils.commaToArray(fontFamily).map(utils.unquotation),
+            chars: content.split(''),
+            options: {}
         });
 
 
-        // 复制 font 相关规则
-        CssParser.Model.defaultsKeys.forEach(function (key) {
+        // 获取字体配置
+        getFontId.keys.forEach(function (key, index) {
             var value = rule.style[key];
-            if (typeof value === 'string') {
-                model[key] = value;
+
+            if (typeof value !== 'string') {
+                value = getFontId.values[index];
             }
 
-            extname += model[key];
+            model.options[key] = value;
         });
 
 
-        // 生成对应的字体 ID 列表
-        familys.forEach(function (family) {
-            ids.push('@' + family + extname);
+
+        // 生成匹配的字体 ID 列表
+        model.family.forEach(function (family) {
+            var id = getFontId(family, model.options);
+            model.id.push(id);
         });
 
 
@@ -267,10 +311,41 @@ utils.mix(CssParser.Parser.prototype, {
 
     // 媒体查询规则
     CSSMediaRule: function (rule) {
-        return new this.constructor(rule, this.options);
+        // CssParser.Parser
+        return new this.constructor(rule, this.file, this.options);
     }
 
 });
+
+
+// 用来给字体指定唯一标识
+// 字体的 ID 根据 font-family 以及其他 font-* 属性来生成
+// @see https://github.com/aui/font-spider/issues/32
+function getFontId (name, options) {
+
+    var values = getFontId.keys.map(function (key, index) {
+        var value = options[key];
+        if (typeof value !== 'string') {
+            value = getFontId.values[index];
+        }
+        return value;
+    });
+
+    values.unshift(name);
+
+    var id = values.join('-');
+    id = getMd5(id);
+
+    return id;
+}
+
+getFontId.keys = ['font-variant', 'font-stretch', 'font-weight', 'font-style'];
+getFontId.values = ['normal', 'normal', 'normal', 'normal'];
+
+
+function getMd5 (text) {
+    return crypto.createHash('md5').update(text).digest('hex');
+};
 
 
 module.exports = CssParser;

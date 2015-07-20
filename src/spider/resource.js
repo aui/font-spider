@@ -5,51 +5,67 @@
 var fs = require('fs');
 var http = require('http');
 var utils = require('./utils');
-var logUtil = require('./log-util');
 var Promise = require('./promise');
+var VError = require('verror');
+
+
+
 
 /*
  * 资源，支持远程路径与本地路径
- * @param   {String}    路径
+ * @param   {String}    绝对路径
  * @param   {String}    内容。可选，如果为 String 则直接返回 Promise 对象  
- * @param   {Object}    选项。options.cache: 是否缓存
+ * @param   {Object}    选项。options.cache, options.onload 
  * @return  {Promise}
  */
 function Resource (file, content, options) {
 
     
-
-    var data = new Resource.Content(file, content, options);
+    var data = new Resource.Model(file, content, options);
     var cache = data.options.cache;
+    var onload = data.options.onload || function () {};
     var resource;
 
 
     if (cache) {
         resource = Resource.cache[file];
         if (resource) {
-            return resource;
+            return resource.then(function (data) {
+
+                onload(file);
+
+                // 深拷贝缓存
+                return new Resource.Model(
+                    data.file,
+                    data.content,
+                    utils.copy(data.options)
+                );
+            });
         }
     }
+
 
     if (typeof content === 'string') {
         return Promise.resolve(data);
     }
 
+
     resource = new Promise(function (resolve, reject) {
+
+        
 
         // 远程文件
         if (utils.isRemote(file)) {
 
-            logUtil.info('load', file);
-
-            http.get(file, function (res) {
+            var request = http.get(file, function (res) {
 
                 if (res.statusCode !== 200) {
 
                     var errors = new Error(res.statusMessage);
+                    errors = new VError(errors, 'ENOENT, load "%s" failed', file);
 
-                    logUtil.error(errors);
                     reject(errors);
+                    request.end();
 
                 } else {
 
@@ -62,30 +78,35 @@ function Resource (file, content, options) {
                     });
 
                     res.on('end', function () {
+
+                        onload(file);
                         
                         var buffer = Buffer.concat(chunks, size);
                         data.content = buffer.toString();
                         
                         resolve(data);
+
                     });
 
                 }
 
             })
-            .on('error', logUtil.error);
+            .on('error', function (errors) {
+                errors = new VError(errors, 'ENOENT, load "%s" failed', file);
+                reject(errors);
+            });
 
 
         // 本地文件
         } else {
 
-            logUtil.log('load', file);
+            
             fs.readFile(file, 'utf8', function (errors, content) {
 
                 if (errors) {
-                    logUtil.error(errors);
                     reject(errors);
                 } else {
-
+                    onload(file);
                     data.content = content;
                     resolve(data);
                 }
@@ -105,11 +126,12 @@ function Resource (file, content, options) {
 
 Resource.cache = {};
 
-Resource.Content = function Content (file, content, options) {
+Resource.Model = function (file, content, options) {
     this.file = file;
     this.content = content || '';
     this.options = options || {};
 };
+
 
 
 

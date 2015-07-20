@@ -31,7 +31,8 @@
   "scripts": {
     "_remove": "rm -rf release",
     "_copy": "mkdir release && cp -R demo/* release",
-    "demo": "npm run _remove && npm run _copy && node release/demo.js && node release/spider-http.js",
+    "_http": "node release/spider-http.js",
+    "demo": "npm run _remove && npm run _copy && node bin/font-spider release/*.html",
     "test": "mocha test/test.js"
   },
   "dependencies": {
@@ -41,7 +42,8 @@
     "fontmin": "^0.7.3",
     "glob": "^4.4.0",
     "ignore": "^2.2.15",
-    "promise": "^6.1.0"
+    "promise": "^6.1.0",
+    "verror": "^1.6.0"
   },
   "keywords": [
     "font",

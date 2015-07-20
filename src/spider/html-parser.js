@@ -5,9 +5,9 @@ var fs = require('fs');
 var path = require('path');
 var cheerio = require('cheerio');
 var utils = require('./utils');
-var logUtil = require('./log-util');
 var Resource = require('./resource');
 var Promise = require('./promise');
+var VError = require('verror');
 
 
 
@@ -21,8 +21,8 @@ function HtmlParser (resource) {
     }
 
 
-    if (!(resource instanceof Resource.Content)) {
-        throw new Error('require `Resource.Content`');
+    if (!(resource instanceof Resource.Model)) {
+        throw new Error('require `Resource.Model`');
     }
 
 
@@ -33,27 +33,33 @@ function HtmlParser (resource) {
     var $;
 
 
-    options.base = options.base || path.dirname(file);
-
-
     try {
         $ = cheerio.load(content);
-        return new HtmlParser.Parser($, options);
-    } catch (error) {
-        return logUtil.error(error);
+        return new HtmlParser.Parser($, file, options);
+    } catch (errors) {
+
+        errors = new VError(errors, 'parse "%s" failed', file);
+
+        return Promise.reject(errors);
     }
     
 }
 
 
 
-HtmlParser.Parser = function Parser ($, options) {
+/*
+ * @param   {Object}
+ * @param   {Object}    Options: ignore | map
+ */
+HtmlParser.Parser = function Parser ($, file, options) {
 
     var that = this;
 
     this.$ = $;
 
     this.options = options;
+
+    this.file = file;
 
     // 忽略文件
     this.filter = utils.filter(options.ignore);
@@ -62,7 +68,7 @@ HtmlParser.Parser = function Parser ($, options) {
     this.map = utils.map(options.map);
 
     // TODO <base /> 标签顺序会影响解析
-    this.base = $('base[href]').attr('href') || options.base;
+    this.base = $('base[href]').attr('href') || path.dirname(file);
 
     this.file = options.file;
 
@@ -92,7 +98,6 @@ HtmlParser.Parser.prototype = {
         var files = [];
 
 
-        // 这里不会忽略 <link disabled ...>
         $('link[rel=stylesheet]').each(function () {
 
             var $this = $(this);
@@ -142,27 +147,46 @@ HtmlParser.Parser.prototype = {
      * @return  {Array}     字符数组
      */
     querySelectorChars: function (selector) {
+
+        var chars = '';
+        var that = this;
+
+
+        // 将多个语句拆开进行查询，避免其中有失败导致所有规则失效
+        if (selector.indexOf(',') !== -1) {
+            
+            selector.split(',').forEach(function (selector) {
+                chars += that.querySelectorChars(selector).join('');
+            });
+
+            return chars.split('');
+        }
+
+
         var $elem;
         var $ = this.$;
-        var chars = '';
         var RE_SPURIOUS = /\:(link|visited|hover|active|focus)\b/ig;
+
 
         // 剔除状态伪类
         selector = selector.replace(RE_SPURIOUS, '');
+
 
         // 使用选择器查找节点
         try {
             $elem = $(selector);
         } catch (e) {
-            // 1. 包含 :before 等不支持的伪类
-            // 2. 其他非法语句
+            // 1. 包含 :before \ :after 等不支持的伪类
+            // 2. 非法语句
             return [];
         }
+
 
         // 查找文本节点
         $elem.each(function () {
             chars += $(this).text();
         });
+
 
         return chars.split('');
     }

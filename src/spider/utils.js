@@ -1,6 +1,9 @@
+/* global require,module */
+'use strict';
+
 var path = require('path');
 var url = require('url');
-var util = require('util')
+var util = require('util');
 var events = require('events');
 var ignore = require('ignore');
 
@@ -24,7 +27,7 @@ var RE_SERVER = /^https?\:\/\//i;
 // 去除收尾双、单引号
 function unquotation (string) {
     return string.replace(RE_QUOTATION, '');
-};
+}
 
 
 // 混合
@@ -33,7 +36,7 @@ function mix (target, object) {
         target[key] = object[key];
     });
     return target;
-};
+}
 
 
 // 数组除重复
@@ -48,6 +51,29 @@ function unique (array) {
 
     return ret;
 }
+
+
+// 深度拷贝对象
+function copy (data) {
+    if (typeof data === 'object' && data !== null) {
+        if (Array.isArray(data)) {
+            var array = [];
+            data.forEach(function (item, index) {
+                array[index] = copy(item);
+            });
+            return array;
+        } else {
+            var object = Object.create(data);
+            Object.keys(data).forEach(function (key) {
+                object[key] = copy(data[key]);
+            });
+            return object;
+        }
+    } else {
+        return data;
+    }
+}
+
 
 // 提取 CSS URL 列表
 function urlToArray (value) {
@@ -73,7 +99,7 @@ function commaToArray (value) {
 }
 
 
-// 扁平化数组
+// 扁平化二维数组
 function reduce (array) {
     var ret = [];
     array.forEach(function (item) {
@@ -108,13 +134,11 @@ function resolve (from, to) {
  */
 function normalize (src) {
     if (isRemote(src)) {
+        // http://font/font?name=xxx#x
         return src.replace(/#.*$/, '');
     } else {
-        
         // ../font/font.eot?#font-spider
-        var RE_QUERY = /[#?].*$/g;
-
-        src = src.replace(RE_QUERY, '');
+        src = src.replace(/[#?].*$/g, '');
         return path.normalize(src);
     }
 }
@@ -127,7 +151,7 @@ function normalize (src) {
  */
 function isRemote (path) {
     return RE_SERVER.test(path);
-};
+}
 
 
 /*
@@ -186,7 +210,7 @@ function filter (ignoreList) {
         } else {
             return fn.filter([src])[0];
         }
-    }
+    };
 }
 
 
@@ -197,6 +221,7 @@ module.exports = {
     inherits: util.inherits,
     unquotation: unquotation,
     mix: mix,
+    copy: copy,
     unique: unique,
     urlToArray: urlToArray,
     commaToArray: commaToArray,
@@ -205,8 +230,5 @@ module.exports = {
     normalize: normalize,
     isRemote: isRemote,
     filter: filter,
-    map: filter
+    map: map
 };
-
-
-mix(module.exports, console);

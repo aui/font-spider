@@ -6,16 +6,16 @@ var fs = require('fs');
 var path = require('path');
 var cheerio = require('cheerio');
 var utils = require('./utils');
-var logUtil = require('./log-util');
 var Resource = require('./resource');
 var CssParser = require('./css-parser');
 var HtmlParser = require('./html-parser');
 var Promise = require('./promise');
+var VError = require('verror');
 
 
 function Spider (htmlFiles, options) {
 
-    options = options || {};
+    options = utils.mix(Object.create(Spider.defaults), options || {});
 
 
     // 支持单个 HTML 地址传入
@@ -29,11 +29,40 @@ function Spider (htmlFiles, options) {
         return new Spider.Parser(htmlFile, options);
     })).then(function (list) {
 
-        function sort (a, b) {
-            return a.charCodeAt() - b.charCodeAt();
-        }
 
-        return utils.reduce(list).map(function (font) {
+        var ret = [];
+        var chars = {};
+        var unique = {};
+
+
+        utils.reduce(list).forEach(function (font) {
+            var charsCache = chars[font.id];
+
+            if (charsCache) {
+
+                // 合并多个页面查询到的字符
+                charsCache.push.apply(charsCache, font.chars);
+
+            } else if (!unique[font.id]) {
+
+                unique[font.id] = true;
+                chars[font.id] = font.chars;
+
+                ret.push(new Spider.Model(
+                    font.id,
+                    font.family,
+                    font.files,
+                    font.chars,
+                    font.selectors
+                ));
+            }
+
+        });
+
+        ret.forEach(function (font) {
+
+            //console.log(font);
+            font.chars = chars[font.id];
 
             // 对字符进行除重操作
             font.chars = utils.unique(font.chars);
@@ -43,13 +72,16 @@ function Spider (htmlFiles, options) {
                 font.chars.sort(sort);
             }
 
-            return new Spider.Model(
-                font.family,
-                font.files,
-                font.chars.join('').replace(/[\n\r\t]/g, ''),
-                font.selectors
-            );
+            // 将数组转成字符串并删除无用字符
+            font.chars = font.chars.join('').replace(/[\n\r\t]/g, '');
         });
+
+
+        return ret;
+
+        function sort (a, b) {
+            return a.charCodeAt() - b.charCodeAt();
+        }
 
     });
 
@@ -57,7 +89,8 @@ function Spider (htmlFiles, options) {
 }
 
 
-Spider.Model = function (name, files, chars, selectors) {
+Spider.Model = function (id, name, files, chars, selectors) {
+    this.id = id;
     this.name = name;
     this.files = files;
     this.chars = chars;
@@ -72,11 +105,6 @@ Spider.Model = function (name, files, chars, selectors) {
  */
 Spider.Parser = function Parser (htmlFile, options) {
 
-    options = utils.mix({
-        from: 'Node',
-        cache: false
-    }, (options || {}));
-
     var $;
     var resource;
     var that = this;
@@ -85,22 +113,29 @@ Spider.Parser = function Parser (htmlFile, options) {
 
     if (isBuffer) {
 
-        resource = Promise.resolve(new Resource.Content(
+        resource = Promise.resolve(new Resource.Model(
             htmlFile.path,
             htmlFile.contents.toString(),
-            utils.mix(options, {
-                base: path.dirname(htmlFile.path)
+            utils.mix(Object.create(options), {
+                from: 'Node',
+                cache: false
             })
         ));
 
     } else {
 
-        utils.mix(options, {
-            base: path.dirname(htmlFile)
-        });
-
-        resource = new Resource(htmlFile, null, options);
+        resource = new Resource(
+            htmlFile,
+            null,
+            utils.mix(Object.create(options), {
+                from: 'Node',
+                cache: false
+            }
+        ));
     }
+
+
+    this.options = options;
 
 
     return new HtmlParser(resource)
@@ -129,6 +164,7 @@ Spider.Parser.prototype = {
 
         var htmlFile = this.htmlFile;
         var htmlParser = this.htmlParser;
+        var options = this.options;
         var resources = [];
 
         // 获取外链样式资源
@@ -145,11 +181,19 @@ Spider.Parser.prototype = {
             }
 
             var line = index + 1;
-            var form = htmlFile + '#<link:nth-of-type(' + line + ')>';
-            resources.push(new Resource(cssFile, null, {
-                cache: true,
-                form: form
-            }));
+            var from = 'link:nth-of-type(' + line + ')';
+
+            resources.push(
+                new Resource(
+                    cssFile,
+                    null,
+                    utils.mix(Object.create(options), {
+                        cache: true,
+                        from: from
+                    })
+                )
+            );
+
         });
 
 
@@ -160,15 +204,27 @@ Spider.Parser.prototype = {
             }
 
             var line = index + 1;
-            var form = htmlFile + '#<style:nth-of-type(' + line + ')>';
-            resources.push(new Resource(form, content, {
-                cache: true,
-                form: form
-            }));
+            var from = 'style:nth-of-type(' + line + ')';
+            var cssFile = htmlFile + '#' + from;
+            resources.push(
+                new Resource(
+                    cssFile,
+                    content,
+                    utils.mix(Object.create(options), {
+                        cache: false,
+                        from: from
+                    })
+                )
+            );
         });
 
 
-        return Promise.all(resources.map(CssParser))
+        return Promise.all(resources.map(function (resource) {
+            return new CssParser(resource).catch(function (errors) {
+                errors = new VError(errors, 'parse "%s" failed', resource.file);
+                return errors;
+            });
+        }))
 
         // 对二维数组扁平化处理
         .then(utils.reduce);
@@ -190,7 +246,6 @@ Spider.Parser.prototype = {
             } else if (item.type === 'CSSStyleRule') {
                 styleRules.push(item);
             }
-
         });
 
 
@@ -198,10 +253,13 @@ Spider.Parser.prototype = {
         fontFaces.forEach(function (fontFace) {
             styleRules.forEach(function (styleRule) {
 
-                if (styleRule.ids.indexOf(fontFace.id) !== -1) {
+                if (styleRule.id.indexOf(fontFace.id) !== -1) {
     
-                    fontFace.selectors = fontFace.selectors.concat(styleRule.selectors);
-                    fontFace.chars = fontFace.chars.concat(styleRule.chars);
+                    fontFace.selectors.push.apply(fontFace.selectors, styleRule.selectors);
+                    fontFace.selectors = utils.unique(fontFace.selectors);
+
+                    // css content 属性收集的字符
+                    fontFace.chars.push.apply(fontFace.chars, styleRule.chars);
 
                 }
 
@@ -219,23 +277,23 @@ Spider.Parser.prototype = {
             var $elem;
             var selector = fontFace.selectors.join(', ');
             var chars = that.htmlParser.querySelectorChars(selector);
-            fontFace.chars = fontFace.chars.concat(chars);
+            fontFace.chars.push.apply(fontFace.chars, chars);
+
         });
 
         return fontFaces;
     }
 };
 
-// TODO
+
+
 Spider.defaults = {
+    onload: null,       // 资源加载成功事件
     sort: true,         // 是否将查询到的文本按字体中字符的顺序排列
     unique: true,       // 是否去除重复字符
     ignore: [],         // 忽略的文件配置
     map: []             // 文件映射配置
 };
-
-
-Spider.on = logUtil.on;
 
 
 
