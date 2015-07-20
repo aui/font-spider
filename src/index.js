@@ -1,3 +1,4 @@
+/* global require,module,process,console */
 'use strict';
 
 var fs = require('fs');
@@ -7,40 +8,14 @@ var events = require('events');
 
 var Promise = require('promise');
 var glob = require('glob');
-var Font = require('./font.js');
-var Spider = require('./spider.js');
-var ColorConsole = require('./color-console.js');
+var Font = require('./font');
+var Spider = require('./spider');
 var version = require('../package.json').version;
+var color = require('./color');
 
 // http://font-spider.org/css/style.css
 //var RE_SERVER = /^(\/|http\:|https\:)/i;
 var RE_SERVER = /^(http\:|https\:)/i;
-
-
-
-var copyFile = function (srcpath, destpath) {
-    var destdir = path.dirname(destpath);
-    var contents = fs.readFileSync(srcpath);
-    mkdir(destdir);
-    fs.writeFileSync(destpath, contents);
-};
-
-
-// 创建目录，包括子文件夹
-function mkdir (dir) {
-
-    var currPath = dir;
-    var toMakeUpPath = [];
-
-    while (!fs.existsSync(currPath)) {
-        toMakeUpPath.unshift(currPath);
-        currPath = path.dirname(currPath);
-    }
-
-    toMakeUpPath.forEach(function (pathItem) {
-        fs.mkdirSync(pathItem);
-    });
-};
 
 
 
@@ -66,8 +41,6 @@ var FontSpider = function (src, options) {
     this.src = src;
     this.options = options;
 
-    new ColorConsole(options).mix(this);
-
     return this._start();
 };
 
@@ -76,7 +49,6 @@ FontSpider.Font = Font;
 FontSpider.Spider = Spider;
 FontSpider.defaults = Object.create(Spider.defaults);
 FontSpider.defaults.backup = true;
-FontSpider.on = Spider.on;
 
 
 FontSpider.prototype = {
@@ -91,15 +63,22 @@ FontSpider.prototype = {
         var options = this.options;
         var backup = options.backup !== false;
 
+        writeln('loading ..');
+
+        if (typeof options.onload !== 'function') {
+            
+            options.onload = function (file) {
+                writeln('load:', file);
+            };
+        }
+
+
         return new Spider(src, options)
         .then(function (data) {
 
-            var result = [];
+            writeln('loading ..');
+            var result = data.map(function (item) {
 
-            data.forEach(function (item) {
-
-                
-                var error;
                 var source;
                 var chars = item.chars;
 
@@ -109,13 +88,13 @@ FontSpider.prototype = {
                     return;
                 }
 
-                // 找到 .ttf 的字体文件
+
+                // 找 .ttf 的字体文件
                 item.files.forEach(function (file) {
                     var extname = path.extname(file).toLocaleLowerCase();
 
                     if (RE_SERVER.test(file)) {
-                        error = 'does not support the absolute path "' + file + '"';
-                        that.error('[ERROR]', error);
+                        throw new Error('does not support the absolute path "' + file + '"'); 
                     } else if (extname === '.ttf') {
                         source = file;
                     }
@@ -123,15 +102,9 @@ FontSpider.prototype = {
                 });
 
 
-                if (error) {
-                    return;
-                }
-
-
+                // 必须有 TTF 字体
                 if (!source) {
-                    error = '"' + item.name  + '"' + ' did not find turetype fonts';
-                    that.error('[ERROR]', error);
-                    return;
+                    throw new Error('"' + item.name  + '"' + ' did not find turetype fonts');
                 }
 
 
@@ -163,11 +136,8 @@ FontSpider.prototype = {
 
 
                 if (!fs.existsSync(source)) {
-                    error = '"' + source + '" file not found';
-                    that.error('[ERROR]', error);
-                    return;
+                    throw new Error('"' + source + '" file not found');
                 }
-
 
 
                 var stat = fs.statSync(source);
@@ -183,36 +153,94 @@ FontSpider.prototype = {
 
                 });
 
-                result.push(new Font(source, {
+
+
+                return new Font(source, {
                     dest: destConfig,
                     chars: chars
-                }).then(function () {
+                }).then(function (data) {
 
-                    that.info('Font name:', '(' + item.name + ')');
-                    that.info('Original size:', '<' + stat.size / 100 + ' KB>');
-                    that.info('Include chars:', chars);
+                    writeln('');
+
+                    write('Font name:', color('cyan', item.name));
+                    write('Original size:', color('green', stat.size / 100 + ' KB'));
+                    write('Include chars:', chars);
 
                     item.files.forEach(function (file) {
                         if (fs.existsSync(file)) {
-                            that.info('File', '(' + path.relative('./', file) + ')',
-                                'created:', '<' + fs.statSync(file).size / 1000 + ' KB>');    
+                            write('File', color('cyan', path.relative('./', file)),
+                                'created:', color('cyan', + fs.statSync(file).size / 1000 + ' KB>'));
                         }
                     });
 
-                    that.info('');
+                    write('');
 
-                }));
+                    return data;
+                });
 
             });
 
+
             return Promise.all(result);
         })
-        .then(null, function (errors) {
-            that.error('[ERROR]', errors && errors.stack || errors);
+        .catch(function (errors) {
+            writeln('');
+            return Promise.reject(errors);
         });
 
     }
 };
+
+
+
+function copyFile (srcpath, destpath) {
+    var destdir = path.dirname(destpath);
+    var contents = fs.readFileSync(srcpath);
+    mkdir(destdir);
+    fs.writeFileSync(destpath, contents);
+}
+
+
+// 创建目录，包括子文件夹
+function mkdir (dir) {
+
+    var currPath = dir;
+    var toMakeUpPath = [];
+
+    while (!fs.existsSync(currPath)) {
+        toMakeUpPath.unshift(currPath);
+        currPath = path.dirname(currPath);
+    }
+
+    toMakeUpPath.forEach(function (pathItem) {
+        fs.mkdirSync(pathItem);
+    });
+}
+
+
+function writeln () {
+    var stream = process.stdout;
+
+    if (!stream.isTTY) {
+        return;
+    }
+
+    stream.clearLine();
+    stream.cursorTo(0);
+    stream.write(Array.prototype.join.call(arguments, ' '));
+}
+
+
+
+function write () {
+    var stream = process.stdout;
+
+    if (!stream.isTTY) {
+        return;
+    }
+
+    stream.write(Array.prototype.join.call(arguments, ' ') + '\n');
+}
 
 
 module.exports = FontSpider;

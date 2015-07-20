@@ -1,4 +1,17 @@
-module.exports = {
+/* global module */
+'use strict';
+
+
+function color (name, string) {
+    var c = color.colors[name];
+    if (c) {
+        return c[0] + string + c[1];
+    } else {
+        return string;
+    }
+}
+
+color.colors = {
     // styles
     'bold'      : ['\x1B[1m',  '\x1B[22m'],
     'italic'    : ['\x1B[3m',  '\x1B[23m'],
@@ -15,3 +28,5 @@ module.exports = {
     'red'       : ['\x1B[31m', '\x1B[39m'],
     'yellow'    : ['\x1B[33m', '\x1B[39m']
 };
+
+module.exports = color;
