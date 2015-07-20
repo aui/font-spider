@@ -65,7 +65,6 @@ font-spider [options] <htmlFile ...>
 --log                         开启调试模式
 --no-backup                   关闭字体备份功能
 --no-error                    不显示非关键错误
---revert                      恢复被压缩的 WebFont
 ```
 
 ## 前端构建工具集成
@@ -96,7 +95,8 @@ font-spider [options] <htmlFile ...>
 ### 0.3.0
 
 * 重构爬虫模块，解决压缩后的 CSS 解析失败的问题
-* 优化错误流程：HTML、CSS 加载与解析错误都会进入错误流程
+* 同名字体支持 [#32](https://github.com/aui/font-spider/issues/32)
+* 改进错误流程处理：HTML、CSS 加载与解析错误都会进入错误流程
 
 ### 0.2.1
 
