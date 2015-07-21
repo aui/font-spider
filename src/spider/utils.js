@@ -185,7 +185,8 @@ function resolve (from, to) {
 function normalize (src) {
     if (isRemote(src)) {
         // http://font/font?name=xxx#x
-        return src.replace(/#.*$/, '');
+        // http://font/font?
+        return src.replace(/#.*$/, '').replace(/\?$/, '');
     } else {
         // ../font/font.eot?#font-spider
         src = src.replace(/[#?].*$/g, '');

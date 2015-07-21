@@ -176,6 +176,15 @@ describe('Utils', function () {
             assert.equal('../font.eot', file);
         });
 
+        it('标准化路径2', function () {
+            var file = utils.normalize('http://font-spider.org/font.eot?1245442#iefix#');
+            assert.equal('http://font-spider.org/font.eot?1245442', file);
+        });
+
+        it('标准化路径3', function () {
+            var file = utils.normalize('http://font-spider.org/font.eot?#iefix#');
+            assert.equal('http://font-spider.org/font.eot', file);
+        });
     });
 
 
