@@ -101,9 +101,69 @@ describe('Utils', function () {
             assert.equal('/User/test.css', file);
         });
 
+        it('本地路径2', function () {
+            var file = utils.resolve('/User/doc', './test.css');
+            assert.equal('/User/doc/test.css', file);
+        });
+
+        it('本地路径3', function () {
+            var file = utils.resolve('/User/doc', 'test.css');
+            assert.equal('/User/doc/test.css', file);
+        });
+
+        it('本地路径4', function () {
+            var file = utils.resolve('/User/doc/', 'test.css');
+            assert.equal('/User/doc/test.css', file);
+        });
+
+        it('本地路径5', function () {
+            var file = utils.resolve('/User/doc/', '../test.css');
+            assert.equal('/User/test.css', file);
+        });
+
         it('远程路径', function () {
             var file = utils.resolve('http://qq.com/User/doc', '../test.css');
-            assert.equal('http://qq.com/test.css', file);
+            assert.equal('http://qq.com/User/test.css', file);
+        });
+
+        it('远程路径2', function () {
+            var file = utils.resolve('http://qq.com/User/doc', 'http://font-spider.org/test.css');
+            assert.equal('http://font-spider.org/test.css', file);
+        });
+
+        it('远程路径3', function () {
+            var file = utils.resolve('http://qq.com/User/doc', 'test.css');
+            assert.equal('http://qq.com/User/doc/test.css', file);
+        });
+
+        it('远程路径4', function () {
+            var file = utils.resolve('http://qq.com/User/doc/', 'test.css');
+            assert.equal('http://qq.com/User/doc/test.css', file);
+        });
+
+        it('远程路径5', function () {
+            var file = utils.resolve('http://qq.com/User/doc', './test.css');
+            assert.equal('http://qq.com/User/doc/test.css', file);
+        });
+
+    });
+
+
+    describe('#dirname', function () {
+
+        it('远程目录', function () {
+            var file = utils.dirname('http://font-spider.org');
+            assert.equal('http://font-spider.org', file);
+        });
+
+        it('远程目录2', function () {
+            var file = utils.dirname('http://font-spider.org/');
+            assert.equal('http://font-spider.org', file);
+        });
+
+        it('远程目录3', function () {
+            var file = utils.dirname('http://font-spider.org/t.html');
+            assert.equal('http://font-spider.org', file);
         });
 
     });
