@@ -55,7 +55,7 @@ function mix (target, object) {
 function copy (data) {
     if (typeof data === 'object' && data !== null) {
         if (Array.isArray(data)) {
-            
+
             var array = [];
             data.forEach(function (item, index) {
                 array[index] = copy(item);
@@ -78,6 +78,8 @@ function copy (data) {
 }
 
 
+
+
 /*
  * 混合配置
  * @param   {Object}    默认配置
@@ -86,6 +88,7 @@ function copy (data) {
 function options (defaults, config) {
     return mix(Object.create(defaults), config || {});
 }
+
 
 
 
@@ -148,6 +151,8 @@ function reduce (array) {
 
     return ret;
 }
+
+
 
 /*
  * 转换到绝对路径，支持 HTTP 形式

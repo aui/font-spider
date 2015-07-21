@@ -3,15 +3,15 @@
 
 var fs = require('fs');
 var path = require('path');
-var util = require('util');
-var events = require('events');
 
 var Promise = require('promise');
 var glob = require('glob');
 var Font = require('./font');
 var Spider = require('./spider');
 var version = require('../package.json').version;
-var color = require('./color');
+
+var utils = require('./utils');
+var color = utils.color;
 
 // http://font-spider.org/css/style.css
 //var RE_SERVER = /^(\/|http\:|https\:)/i;
@@ -32,6 +32,7 @@ var FontSpider = function (src, options) {
     }
 
     options = options || {};
+    
     for (var key in FontSpider.defaults) {
         if (options[key] === undefined) {
             options[key] = FontSpider.defaults[key];
@@ -45,18 +46,16 @@ var FontSpider = function (src, options) {
 };
 
 
+
 FontSpider.Font = Font;
 FontSpider.Spider = Spider;
-FontSpider.defaults = Object.create(Spider.defaults);
-FontSpider.defaults.backup = true;
 
-FontSpider.defaults.resourceBeforeLoad = function (file) {
-    writeln('Loading ..', color('cyan', file));
+
+FontSpider.defaults = {
+    backup: true
 };
 
-FontSpider.defaults.resourceError = function (file) {
-    writeln('');
-};
+
 
 FontSpider.prototype = {
 
@@ -70,13 +69,9 @@ FontSpider.prototype = {
         var options = this.options;
         var backup = options.backup !== false;
 
-        writeln('Loading ..');
 
+        return new Spider(src, options).then(function (data) {
 
-        return new Spider(src, options)
-        .then(function (data) {
-
-            writeln('Loading ..');
             var result = data.map(function (item) {
 
                 var source;
@@ -126,9 +121,9 @@ FontSpider.prototype = {
                     }
 
                     if (fs.existsSync(backupFile)) {
-                        copyFile(backupFile, source);
+                        utils.copyFile(backupFile, source);
                     } else {
-                        copyFile(source, backupFile);
+                        utils.copyFile(source, backupFile);
                     }
 
                 }
@@ -140,7 +135,7 @@ FontSpider.prototype = {
                 }
 
 
-                var stat = fs.statSync(source);
+                var originalSize = fs.statSync(source).size;
                 var destConfig = {};
 
 
@@ -153,95 +148,28 @@ FontSpider.prototype = {
 
                 });
 
+                
+                // 记录原始文件大小
+                item.originalSize = originalSize;
 
 
+                // 压缩字体
                 return new Font(source, {
                     dest: destConfig,
                     chars: chars
-                }).then(function (data) {
-
-                    writeln('');
-
-                    write('Font name:', color('cyan', item.name));
-                    write('Original size:', color('green', stat.size / 100 + ' KB'));
-                    write('Include chars:', chars);
-
-                    item.files.forEach(function (file) {
-                        if (fs.existsSync(file)) {
-                            write('File', color('cyan', path.relative('./', file)),
-                                'created:', color('cyan', + fs.statSync(file).size / 1000 + ' KB'));
-                        }
-                    });
-
-                    write('');
-
-                    return data;
+                }).then(function () {
+                    return item;
                 });
 
             });
 
 
             return Promise.all(result);
-        })
-        .catch(function (errors) {
-            writeln('');
-            write(color('red', errors.stack.toString()));
-            return Promise.reject(errors);
         });
 
     }
 };
 
-
-
-function copyFile (srcpath, destpath) {
-    var destdir = path.dirname(destpath);
-    var contents = fs.readFileSync(srcpath);
-    mkdir(destdir);
-    fs.writeFileSync(destpath, contents);
-}
-
-
-// 创建目录，包括子文件夹
-function mkdir (dir) {
-
-    var currPath = dir;
-    var toMakeUpPath = [];
-
-    while (!fs.existsSync(currPath)) {
-        toMakeUpPath.unshift(currPath);
-        currPath = path.dirname(currPath);
-    }
-
-    toMakeUpPath.forEach(function (pathItem) {
-        fs.mkdirSync(pathItem);
-    });
-}
-
-
-function writeln () {
-    var stream = process.stdout;
-
-    if (!stream.isTTY) {
-        return;
-    }
-
-    stream.clearLine();
-    stream.cursorTo(0);
-    stream.write(Array.prototype.join.call(arguments, ' '));
-}
-
-
-
-function write () {
-    var stream = process.stdout;
-
-    if (!stream.isTTY) {
-        return;
-    }
-
-    stream.write(Array.prototype.join.call(arguments, ' ') + '\n');
-}
 
 
 module.exports = FontSpider;
