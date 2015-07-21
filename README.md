@@ -62,9 +62,7 @@ font-spider [options] <htmlFile ...>
 --info                        仅提取 WebFont 信息显示，不压缩与转码
 --ignore <pattern>            忽略的文件配置（可以是字体、CSS、HTML）
 --map <remotePath,localPath>  映射 CSS 内部 HTTP 路径到本地
---log                         开启调试模式
 --no-backup                   关闭字体备份功能
---no-error                    不显示非关键错误
 ```
 
 ## 前端构建工具集成
