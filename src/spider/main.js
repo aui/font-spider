@@ -11,11 +11,15 @@ var CssParser = require('./css-parser');
 var HtmlParser = require('./html-parser');
 var Promise = require('./promise');
 var VError = require('verror');
+var push = Array.prototype.push;
+
+
+
 
 
 function Spider (htmlFiles, options) {
 
-    options = utils.mix(Object.create(Spider.defaults), options || {});
+    options = utils.options(Spider.defaults, options);
 
 
     // 支持单个 HTML 地址传入
@@ -41,7 +45,7 @@ function Spider (htmlFiles, options) {
             if (charsCache) {
 
                 // 合并多个页面查询到的字符
-                charsCache.push.apply(charsCache, font.chars);
+                push.apply(charsCache, font.chars);
 
             } else if (!unique[font.id]) {
 
@@ -65,7 +69,10 @@ function Spider (htmlFiles, options) {
             font.chars = chars[font.id];
 
             // 对字符进行除重操作
-            font.chars = utils.unique(font.chars);
+            if (options.unique) {
+                font.chars = utils.unique(font.chars);
+            }
+            
 
             // 对字符按照编码进行排序
             if (options.sort) {
@@ -116,7 +123,7 @@ Spider.Parser = function Parser (htmlFile, options) {
         resource = Promise.resolve(new Resource.Model(
             htmlFile.path,
             htmlFile.contents.toString(),
-            utils.mix(Object.create(options), {
+            utils.options(options, {
                 from: 'Node',
                 cache: false
             })
@@ -127,7 +134,7 @@ Spider.Parser = function Parser (htmlFile, options) {
         resource = new Resource(
             htmlFile,
             null,
-            utils.mix(Object.create(options), {
+            utils.options(options, {
                 from: 'Node',
                 cache: false
             }
@@ -187,7 +194,7 @@ Spider.Parser.prototype = {
                 new Resource(
                     cssFile,
                     null,
-                    utils.mix(Object.create(options), {
+                    utils.options(options, {
                         cache: true,
                         from: from
                     })
@@ -210,7 +217,7 @@ Spider.Parser.prototype = {
                 new Resource(
                     cssFile,
                     content,
-                    utils.mix(Object.create(options), {
+                    utils.options(options, {
                         cache: false,
                         from: from
                     })
@@ -219,10 +226,11 @@ Spider.Parser.prototype = {
         });
 
 
+
         return Promise.all(resources.map(function (resource) {
             return new CssParser(resource).catch(function (errors) {
-                errors = new VError(errors, 'parse "%s" failed', resource.file);
-                return errors;
+                //errors = new VError(errors, 'parse "%s" failed', resource.file);
+                return Promise.reject(errors);
             });
         }))
 
@@ -255,11 +263,11 @@ Spider.Parser.prototype = {
 
                 if (styleRule.id.indexOf(fontFace.id) !== -1) {
     
-                    fontFace.selectors.push.apply(fontFace.selectors, styleRule.selectors);
+                    push.apply(fontFace.selectors, styleRule.selectors);
                     fontFace.selectors = utils.unique(fontFace.selectors);
 
                     // css content 属性收集的字符
-                    fontFace.chars.push.apply(fontFace.chars, styleRule.chars);
+                    push.apply(fontFace.chars, styleRule.chars);
 
                 }
 
@@ -277,7 +285,7 @@ Spider.Parser.prototype = {
             var $elem;
             var selector = fontFace.selectors.join(', ');
             var chars = that.htmlParser.querySelectorChars(selector);
-            fontFace.chars.push.apply(fontFace.chars, chars);
+            push.apply(fontFace.chars, chars);
 
         });
 
@@ -287,12 +295,18 @@ Spider.Parser.prototype = {
 
 
 
+/*
+ * 默认选项
+ */
 Spider.defaults = {
-    onload: null,       // 资源加载成功事件
-    sort: true,         // 是否将查询到的文本按字体中字符的顺序排列
-    unique: true,       // 是否去除重复字符
-    ignore: [],         // 忽略的文件配置
-    map: []             // 文件映射配置
+    // ignore: [],
+    // map: [],
+    // resourceLoad: function () {},
+    // resourceBeforeLoad: function () {},
+    // resourceError: function () {}
+    debug: false,
+    sort: true,        // 是否将查询到的文本按字体中字符的顺序排列
+    unique: true       // 是否去除重复字符
 };
 
 

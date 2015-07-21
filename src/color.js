@@ -4,7 +4,7 @@
 
 function color (name, string) {
     var c = color.colors[name];
-    if (c) {
+    if (c && typeof string === 'string') {
         return c[0] + string + c[1];
     } else {
         return string;

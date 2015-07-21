@@ -1,4 +1,4 @@
-/* global require,module */
+/* global require,module,console */
 
 'use strict';
 
@@ -9,6 +9,8 @@ var CSSOM = require('cssom');
 var Resource = require('./resource');
 var Promise = require('./promise');
 var VError = require('verror');
+
+
 
 
 function CssParser (resource) {
@@ -97,13 +99,30 @@ CssParser.Model.prototype.mix = function (object) {
 };
 
 
+
+
+
 CssParser.cache = {};
+
+
+
+/*
+ * 默认选项
+ */
+CssParser.defaults = {
+    cache: true,        // 缓存开关
+    ignore: [],         // 忽略的文件配置
+    map: []             // 文件映射配置
+};
 
 
 
 
 
 CssParser.Parser = function Parser (ast, file, options) {
+
+    options = utils.options(CssParser.defaults, options);
+
     var that = this;
     var tasks = [];
 
@@ -160,6 +179,8 @@ CssParser.Parser = function Parser (ast, file, options) {
 
 
 
+
+
 utils.mix(CssParser.Parser.prototype, {
 
 
@@ -180,7 +201,6 @@ utils.mix(CssParser.Parser.prototype, {
         var base = this.base;
         var options = this.options;
         var url = utils.unquotation(rule.href.trim());
-
         url = utils.resolve(base, url);
         url = this.filter(url);
         url = this.map(url);
@@ -318,15 +338,23 @@ utils.mix(CssParser.Parser.prototype, {
 });
 
 
+
+
+
+
 // 用来给字体指定唯一标识
 // 字体的 ID 根据 font-family 以及其他 font-* 属性来生成
 // @see https://github.com/aui/font-spider/issues/32
 function getFontId (name, options) {
 
     var values = getFontId.keys.map(function (key, index) {
+
         var value = options[key];
+
         if (typeof value !== 'string') {
             value = getFontId.values[index];
+        } else if (getFontId.alias[key]) {
+            value = value.replace.apply(value, getFontId.alias[key]);
         }
         return value;
     });
@@ -339,13 +367,18 @@ function getFontId (name, options) {
     return id;
 }
 
+
 getFontId.keys = ['font-variant', 'font-stretch', 'font-weight', 'font-style'];
 getFontId.values = ['normal', 'normal', 'normal', 'normal'];
+getFontId.alias = {
+    'font-weight': ['400', 'normal'],
+};
+
 
 
 function getMd5 (text) {
     return crypto.createHash('md5').update(text).digest('hex');
-};
+}
 
 
 module.exports = CssParser;

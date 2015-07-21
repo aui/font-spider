@@ -58,20 +58,28 @@ Object.keys(program).forEach(function (key) {
 // 显示 WebFont 信息
 if (options.info) {
 
-    writeln('loading ..');
-    options.onload = function (file) {
-        writeln('Load:', color('cyan', file));
+    writeln('Loading ..');
+
+    options.resourceBeforeLoad = function (file) {
+        writeln('Loading ..', color('cyan', file));
+    };
+
+    options.resourceError = function (file) {
+        writeln('');
     };
 
     new FontSpider.Spider(files, options)
     .then(function (data) {
+
         writeln('');
         data.forEach(function (item) {
             process.stdout.write(
                 [
+                    'Font id: ' + color('cyan', item.id),
                     'Font name: ' + color('cyan', item.name),
                     'Include chars: ' + item.chars,
-                    'Font File: \n' +
+                    'CSS selector: ' + item.selectors.join(', '),
+                    'Font files: \n' +
                         item.files
                         .map(function (val) {
                             return color('cyan', path.relative('./', val));
@@ -83,15 +91,17 @@ if (options.info) {
 
     }, function (errors) {
         writeln('');
-        process.stderr.write(color('red', errors.message), '\n', errors.stack, '\n');
+        process.stderr.write(color('red', errors.message) + '\n');
     });
 
 
 // 处理 WebFont
 } else {
 
-
-    new FontSpider(files, options);
+    new FontSpider(files, options).catch(function (errors) {
+        writeln('');
+        process.stderr.write(color('red', errors.message), '\n', errors.stack, '\n');
+    });
 }
 
 

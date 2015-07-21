@@ -1,3 +1,4 @@
+/* global require,module,process,console */
 'use strict';
 
 var fs = require('fs');
@@ -66,7 +67,7 @@ function Font (src, options) {
             }
         });
     });
-};
+}
 
 
 // 重命名文件或文件夹
@@ -76,7 +77,7 @@ function rename (src, target) {
         mkdir(dir);
         fs.renameSync(src, target);
     }
-};
+}
 
 
 // 创建目录，包括子文件夹
@@ -93,7 +94,7 @@ function mkdir (dir) {
     toMakeUpPath.forEach(function (pathItem) {
         fs.mkdirSync(pathItem);
     });
-};
+}
 
 
 // 删除文件夹，包括子文件夹
@@ -125,7 +126,7 @@ function rmdir (dir) {
     };
 
     walk(dir);
-};
+}
 
 
 module.exports = Font;

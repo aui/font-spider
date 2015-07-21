@@ -50,6 +50,13 @@ FontSpider.Spider = Spider;
 FontSpider.defaults = Object.create(Spider.defaults);
 FontSpider.defaults.backup = true;
 
+FontSpider.defaults.resourceBeforeLoad = function (file) {
+    writeln('Loading ..', color('cyan', file));
+};
+
+FontSpider.defaults.resourceError = function (file) {
+    writeln('');
+};
 
 FontSpider.prototype = {
 
@@ -63,20 +70,13 @@ FontSpider.prototype = {
         var options = this.options;
         var backup = options.backup !== false;
 
-        writeln('loading ..');
-
-        if (typeof options.onload !== 'function') {
-            
-            options.onload = function (file) {
-                writeln('load:', file);
-            };
-        }
+        writeln('Loading ..');
 
 
         return new Spider(src, options)
         .then(function (data) {
 
-            writeln('loading ..');
+            writeln('Loading ..');
             var result = data.map(function (item) {
 
                 var source;
@@ -169,7 +169,7 @@ FontSpider.prototype = {
                     item.files.forEach(function (file) {
                         if (fs.existsSync(file)) {
                             write('File', color('cyan', path.relative('./', file)),
-                                'created:', color('cyan', + fs.statSync(file).size / 1000 + ' KB>'));
+                                'created:', color('cyan', + fs.statSync(file).size / 1000 + ' KB'));
                         }
                     });
 
@@ -185,6 +185,7 @@ FontSpider.prototype = {
         })
         .catch(function (errors) {
             writeln('');
+            write(color('red', errors.stack.toString()));
             return Promise.reject(errors);
         });
 

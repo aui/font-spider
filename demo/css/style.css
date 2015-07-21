@@ -1,4 +1,5 @@
 @charset "UTF-8";
+
 /*
  * Project:Font-spider
  * Comments:首页
@@ -12,7 +13,7 @@
     url('../font/anjingchen.eot?#font-spider') format('embedded-opentype'),
     url('../font/anjingchen.woff') format('woff'),
     url('../font/anjingchen.ttf') format('truetype'),
-    url('../font/anjingchen.svg') format('svg');
+    url('/font/anjingchen.svg') format('svg');
   font-weight: normal;
   font-style: normal;
 }

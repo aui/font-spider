@@ -48,10 +48,23 @@ function HtmlParser (resource) {
 
 
 /*
+ * 默认选项
+ */
+HtmlParser.defaults = {
+    cache: true,        // 缓存开关
+    ignore: [],         // 忽略的文件配置
+    map: []             // 文件映射配置
+};
+
+
+
+/*
  * @param   {Object}
  * @param   {Object}    Options: ignore | map
  */
 HtmlParser.Parser = function Parser ($, file, options) {
+
+    options = utils.options(HtmlParser.defaults, options);
 
     var that = this;
 
@@ -68,9 +81,10 @@ HtmlParser.Parser = function Parser ($, file, options) {
     this.map = utils.map(options.map);
 
     // TODO <base /> 标签顺序会影响解析
-    this.base = $('base[href]').attr('href') || path.dirname(file);
-
-    this.file = options.file;
+    // /Users/aui/test.html >> /Users/aui
+    // http://font-spider.org >>> http://font-spider.org
+    // http://font-spider.org/html/test.html >>> http://font-spider.org/html
+    this.base = $('base[href]').attr('href') || utils.dirname(file);
 
     return Promise.resolve(this);
 };
@@ -94,7 +108,6 @@ HtmlParser.Parser.prototype = {
         var that = this;
         var base = this.base;
         var $ = this.$;
-        var htmlFile = this.file;
         var files = [];
 
 
@@ -128,7 +141,6 @@ HtmlParser.Parser.prototype = {
     getCssContents: function () {
         var that = this;
         var $ = this.$;
-        var htmlFile = this.file;
         var contents = [];
 
         $('style').each(function () {
