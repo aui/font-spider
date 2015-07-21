@@ -6,7 +6,8 @@ var fs = require('fs');
 var path = require('path');
 var FontSpider = require('../');
 var program = require('commander');
-var color = require('../src/color');
+var utils = require('../src/utils');
+var color = utils.color;
 
 program
     .version(require('../package.json').version)
@@ -14,9 +15,7 @@ program
     .option('--info', 'show only webfont information')
     .option('--ignore <pattern>', 'ignore the files', list)
     .option('--map <remotePath,localPath>', 'mapping the remote path to the local', toMap)
-    .option('--log', 'enable debug mode')
     .option('--no-backup', 'do not back up fonts')
-    .option('--no-error', 'silently fail on parse errors')
     .parse(process.argv);
 
 
@@ -42,7 +41,19 @@ function toMap(args) {
 
 
 var files = program.args;
-var options = {};
+var options = {
+    resourceLoad: function (file) {
+        writeln('Load:', color('cyan', file), color('green', '<OK>'));
+    },
+
+    resourceError: function (file) {
+        writeln('');
+    },
+
+    spiderLoad: function (file) {
+        writeln('Loading ..');
+    }
+};
 
 if (!files.length) {
     program.help();
@@ -55,28 +66,31 @@ Object.keys(program).forEach(function (key) {
     }
 });
 
+
+
+writeln('Loading ..');
+
+
 // 显示 WebFont 信息
 if (options.info) {
 
-    writeln('Loading ..');
 
-    options.resourceBeforeLoad = function (file) {
-        writeln('Loading ..', color('cyan', file));
-    };
-
-    options.resourceError = function (file) {
-        writeln('');
-    };
 
     new FontSpider.Spider(files, options)
     .then(function (data) {
 
         writeln('');
+
+        if (data.length === 0) {
+            write('web font not found');
+            return;
+        }
+
         data.forEach(function (item) {
-            process.stdout.write(
+            write(
                 [
-                    'Font id: ' + color('cyan', item.id),
                     'Font name: ' + color('cyan', item.name),
+                    'Font id: ' + color('cyan', item.id),
                     'Include chars: ' + item.chars,
                     'CSS selector: ' + item.selectors.join(', '),
                     'Font files: \n' +
@@ -89,21 +103,67 @@ if (options.info) {
             );
         });
 
-    }, function (errors) {
-        writeln('');
-        process.stderr.write(color('red', errors.message) + '\n');
-    });
+    })
+    .catch(onerror);
 
 
 // 处理 WebFont
 } else {
 
-    new FontSpider(files, options).catch(function (errors) {
+    new FontSpider(files, options)
+    .then(function (data) {
+
         writeln('');
-        process.stderr.write(color('red', errors.message), '\n', errors.stack, '\n');
-    });
+
+        if (data.length === 0) {
+            write('web font not found');
+            return;
+        }
+
+        data.forEach(function (item) {
+            
+            write('Font name:', color('cyan', item.name));
+            write('Font id:', color('cyan', item.id));
+            write('Original size:', color('green', item.originalSize / 1000 + ' KB'));
+            write('Include chars:', item.chars);
+
+            item.files.forEach(function (file) {
+                if (fs.existsSync(file)) {
+                    write('File', color('cyan', path.relative('./', file)),
+                        'created:', color('cyan', + fs.statSync(file).size / 1000 + ' KB'));
+                } else {
+                    write(color('red', 'File ' + path.relative('./', file) + ' not created'));
+                }
+            });
+
+            write('');
+        });
+
+    })
+    .catch(onerror);
 }
 
+
+
+
+function onerror (errors) {
+    writeln('');
+    process.stderr.write(color('red', 'Error: ' + errors.message) + '\n');
+
+    // 可能有异步任务运行，强制中断
+    process.exit(1);
+}
+
+
+function write () {
+    var stream = process.stdout;
+
+    if (!stream.isTTY) {
+        return;
+    }
+
+    stream.write(Array.prototype.join.call(arguments, ' ') + '\n');
+}
 
 
 function writeln () {
