@@ -30,16 +30,70 @@ function unquotation (string) {
 }
 
 
-// 混合
+
+/*
+ * 浅拷贝（包括原型属性）
+ * @param   {Object}    目标对象
+ * @param   {Object}    混合进来的对象
+ */
 function mix (target, object) {
-    Object.keys(object).forEach(function (key) {
+    for (var key in object) {
         target[key] = object[key];
-    });
+    }
     return target;
 }
 
 
-// 数组除重复
+
+
+
+/*
+ * 深度拷贝对象
+ * @param   {Object}    目标对象
+ * @return  {Object}    复制后的新对象
+ */
+function copy (data) {
+    if (typeof data === 'object' && data !== null) {
+        if (Array.isArray(data)) {
+            
+            var array = [];
+            data.forEach(function (item, index) {
+                array[index] = copy(item);
+            });
+
+            return array;
+
+        } else {
+
+            var object = Object.create(data); // 保证 instanceof 操作
+            Object.keys(data).forEach(function (key) {
+                object[key] = data[key];
+            });
+
+            return object;
+        }
+    } else {
+        return data;
+    }
+}
+
+
+/*
+ * 混合配置
+ * @param   {Object}    默认配置
+ * @param   {Object}    被加入的配置
+ */
+function options (defaults, config) {
+    return mix(Object.create(defaults), config || {});
+}
+
+
+
+/*
+ * 数组除重复
+ * @param   {Array}     目标数组
+ * @return  {Array}     新数组
+ */
 function unique (array) {
     var ret = [];
 
@@ -53,29 +107,14 @@ function unique (array) {
 }
 
 
-// 深度拷贝对象
-function copy (data) {
-    if (typeof data === 'object' && data !== null) {
-        if (Array.isArray(data)) {
-            var array = [];
-            data.forEach(function (item, index) {
-                array[index] = copy(item);
-            });
-            return array;
-        } else {
-            var object = Object.create(data);
-            Object.keys(data).forEach(function (key) {
-                object[key] = copy(data[key]);
-            });
-            return object;
-        }
-    } else {
-        return data;
-    }
-}
 
 
-// 提取 CSS URL 列表
+
+/*
+ * 提取 CSS URL 列表
+ * @param   {String}    url("../test.css"), url(file.css)
+ * @return  {Array}
+ */
 function urlToArray (value) {
     var list = [];
     var src;
@@ -92,6 +131,7 @@ function urlToArray (value) {
 
     return list;
 }
+
 
 // 根据逗号转成数组
 function commaToArray (value) {
@@ -111,13 +151,18 @@ function reduce (array) {
 
 /*
  * 转换到绝对路径，支持 HTTP 形式
- * @param   {String}    来源路径
+ * @param   {String}    来源目录（请保证是目录，否则远程路径转换可能出错）
  * @param   {String}    子路径
  * @return  {String}    绝对路径
  */
 function resolve (from, to) {
 
     if (isRemote(from)) {
+
+        if (!/\/$/.test(from)) {
+            from += '/';
+        }
+
         return url.resolve(from, to);
     } else if (isRemote(to)) {
         return to;
@@ -149,9 +194,36 @@ function normalize (src) {
  * @param   {String}     路径
  * @return  {Boolean}
  */
-function isRemote (path) {
-    return RE_SERVER.test(path);
+function isRemote (src) {
+    return RE_SERVER.test(src);
 }
+
+
+
+/*
+ * 获取目录名
+ * @param   {String}    路径
+ */
+function dirname (src) {
+    
+    if (isRemote(src)) {
+
+        // http://www.huanleguang.com/////
+        src = src.replace(/\/+$/, '');
+
+        // path.dirname('http://www.huanleguang.com') === 'http:/'
+        if (url.parse(src).path === '/') {
+            return src;
+        } else {
+            return path.dirname(src);
+        }
+
+    } else {
+        return path.dirname(src);
+    }
+}
+
+
 
 
 /*
@@ -222,12 +294,14 @@ module.exports = {
     unquotation: unquotation,
     mix: mix,
     copy: copy,
+    options: options,
     unique: unique,
     urlToArray: urlToArray,
     commaToArray: commaToArray,
     reduce: reduce,
     resolve: resolve,
     normalize: normalize,
+    dirname: dirname,
     isRemote: isRemote,
     filter: filter,
     map: map
