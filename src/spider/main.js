@@ -129,6 +129,8 @@ Spider.Parser = function Parser (htmlFile, options) {
             })
         ));
 
+        htmlFile = htmlFile.path;
+
     } else {
 
         resource = new Resource(
@@ -143,7 +145,11 @@ Spider.Parser = function Parser (htmlFile, options) {
 
 
     this.options = options;
+    var spiderBeforeLoad = options.spiderBeforeLoad;
+    var spiderLoad = options.spiderLoad;
+    var spiderError = options.spiderError;
 
+    spiderBeforeLoad(htmlFile);
 
     return new HtmlParser(resource)
     .then(function (htmlParser) {
@@ -153,7 +159,15 @@ Spider.Parser = function Parser (htmlFile, options) {
     }.bind(this))
     .then(that.getCssInfo.bind(this))
     .then(this.getFontInfo.bind(this))
-    .then(this.getCharsInfo.bind(this));
+    .then(this.getCharsInfo.bind(this))
+    .then(function (data) {
+        spiderLoad(htmlFile)
+        return data;
+    })
+    .catch(function (errors) {
+        spiderError(htmlFile, errors);
+        return Promise.reject(errors);
+    });
 };
 
 
@@ -304,6 +318,9 @@ Spider.defaults = {
     // resourceLoad: function () {},
     // resourceBeforeLoad: function () {},
     // resourceError: function () {}
+    spiderBeforeLoad: function () {},
+    spiderLoad: function () {},
+    spiderError: function () {},
     debug: false,
     sort: true,        // 是否将查询到的文本按字体中字符的顺序排列
     unique: true       // 是否去除重复字符
