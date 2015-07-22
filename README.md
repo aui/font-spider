@@ -70,9 +70,9 @@ font-spider [options] <htmlFile ...>
 * [grunt-font-spider](https://github.com/aui/grunt-font-spider)
 * [gulp-font-spider](https://github.com/aui/gulp-font-spider)
 
-## 字蛛限制
+## 使用场景限制
 
-* 不支持元素行内样式（只支持 `<link>` 与 `<style>` 标签声明的样式）
+* 不支持元素行内样式（仅支持 `<link>` 与 `<style>` 标签声明的样式）
 * CSS `content` 属性插入的字符需要定义 `font-family`，不支持继承
 * 不支持 javascript 动态插入的样式与元素节点
 * 不支持 .otf 格式的字体
@@ -96,35 +96,9 @@ font-spider [options] <htmlFile ...>
 * 同名字体支持 [#32](https://github.com/aui/font-spider/issues/32)
 * 改进错误流程处理：HTML、CSS 加载与解析错误都会进入错误流程
 
-### 0.2.1
-
-* 避免部分字体转码失败导致程序崩溃的问题 [#28](https://github.com/aui/font-spider/issues/28)
-* 使用隐藏目录`.font-spider`备份字体
-
-### 0.2.0
-
-* 使用 fontmin 取代字蛛内置的压缩与转码模块，让压缩后的字体更小，并且无需 Perl 环境 [#18](https://github.com/aui/font-spider/issues/18)
-* 优化爬虫模块，使用更高效的 cheerio 代替 jsdom 解析 HTML
-* 支持解析远程动态页面，可结合`map`参数映射线上 CSS 与 WebFont 资源到本地
-* 实现对 CSS `:before`与`:after`定义`content`的支持（不支持继承的字体）
-
-### 0.1.1
-
-* 修复和最新版 NodeJS 兼容问题
-
-### 0.1.0
-
-* 优化错误信息显示
-* 支持`map`配置映射 CSS 文件中的 http 路径到本地目录
-* 支持`ignore`配置忽略字体、CSS、HTML 文件
-  
-### 0.0.1
-
-* 基于 CSS 规则压缩与转码 WebFont
+[更多](./CHANGELOG.md)
 
 ## 贡献者 
-
-字蛛诞生离不开这三位小伙伴，他们是：
 
 * [@糖饼](https://github.com/aui) [微博](http://www.weibo.com/planeart)
 * @fufu [微博](http://www.weibo.com/u/1715968673)
