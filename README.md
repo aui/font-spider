@@ -106,7 +106,9 @@ font-spider [options] <htmlFile ...>
 
 ### 特别鸣谢
 
-字蛛自 v0.2 版本开始，使用了百度前端团队开源作品 —— [fontmin](https://github.com/ecomfe/fontmin) 取代了字蛛内置的字体压缩库。字蛛希望与更多的人或团队一起合作，为中文 WebFont 的发展出一份力！
+字蛛自 v0.2 版本开始，使用了百度前端团队开源作品 —— [fontmin](https://github.com/ecomfe/fontmin) 取代了字蛛内置的字体压缩库。
+
+字蛛希望与更多的人或团队一起合作，推动中文 WebFont 发展。
 
 =============
 
