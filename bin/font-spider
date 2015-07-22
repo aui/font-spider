@@ -72,6 +72,7 @@ writeln('Loading ..');
 function onerror (errors) {
     writeln('');
     process.stderr.write(color('red', 'Error: ' + errors.message) + '\n');
+    process.stderr.write(color('grey', errors.stack.toString() + '\n'));
 
     // 可能有异步任务运行，强制中断
     process.exit(1);
