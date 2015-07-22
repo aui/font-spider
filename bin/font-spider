@@ -6,8 +6,6 @@ var fs = require('fs');
 var path = require('path');
 var FontSpider = require('../');
 var program = require('commander');
-var utils = require('../src/utils');
-var color = utils.color;
 
 program
     .version(require('../package.json').version)
@@ -21,7 +19,7 @@ program
 
 function list(args) {
     return args.split(',');
-};
+}
 
 function toMap(args) {
     args = list(args);
@@ -37,7 +35,7 @@ function toMap(args) {
     }
 
     return map;
-};
+}
 
 
 var files = program.args;
@@ -46,11 +44,11 @@ var options = {
         writeln('Load:', color('cyan', file), color('green', '<OK>'));
     },
 
-    resourceError: function (file) {
+    resourceError: function () {
         writeln('');
     },
 
-    spiderLoad: function (file) {
+    spiderLoad: function () {
         writeln('Loading ..');
     }
 };
@@ -69,6 +67,15 @@ Object.keys(program).forEach(function (key) {
 
 
 writeln('Loading ..');
+
+
+function onerror (errors) {
+    writeln('');
+    process.stderr.write(color('red', 'Error: ' + errors.message) + '\n');
+
+    // 可能有异步任务运行，强制中断
+    process.exit(1);
+}
 
 
 // 显示 WebFont 信息
@@ -130,7 +137,7 @@ if (options.info) {
             item.files.forEach(function (file) {
                 if (fs.existsSync(file)) {
                     write('File', color('cyan', path.relative('./', file)),
-                        'created:', color('cyan', + fs.statSync(file).size / 1000 + ' KB'));
+                        'created:', color('green', + fs.statSync(file).size / 1000 + ' KB'));
                 } else {
                     write(color('red', 'File ' + path.relative('./', file) + ' not created'));
                 }
@@ -143,16 +150,6 @@ if (options.info) {
     .catch(onerror);
 }
 
-
-
-
-function onerror (errors) {
-    writeln('');
-    process.stderr.write(color('red', 'Error: ' + errors.message) + '\n');
-
-    // 可能有异步任务运行，强制中断
-    process.exit(1);
-}
 
 
 function write () {
@@ -177,5 +174,33 @@ function writeln () {
     stream.cursorTo(0);
     stream.write(Array.prototype.join.call(arguments, ' '));
 }
+
+
+function color (name, string) {
+    var c = color.colors[name];
+    if (c && typeof string === 'string') {
+        return c[0] + string + c[1];
+    } else {
+        return string;
+    }
+}
+
+color.colors = {
+    // styles
+    'bold'      : ['\x1B[1m',  '\x1B[22m'],
+    'italic'    : ['\x1B[3m',  '\x1B[23m'],
+    'underline' : ['\x1B[4m',  '\x1B[24m'],
+    'inverse'   : ['\x1B[7m',  '\x1B[27m'],
+    // colors
+    'white'     : ['\x1B[37m', '\x1B[39m'],
+    'grey'      : ['\x1B[90m', '\x1B[39m'],
+    'black'     : ['\x1B[30m', '\x1B[39m'],
+    'blue'      : ['\x1B[34m', '\x1B[39m'],
+    'cyan'      : ['\x1B[36m', '\x1B[39m'],
+    'green'     : ['\x1B[32m', '\x1B[39m'],
+    'magenta'   : ['\x1B[35m', '\x1B[39m'],
+    'red'       : ['\x1B[31m', '\x1B[39m'],
+    'yellow'    : ['\x1B[33m', '\x1B[39m']
+};
 
 

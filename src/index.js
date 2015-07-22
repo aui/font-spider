@@ -1,4 +1,5 @@
-/* global require,module,process,console */
+/* global require,module */
+
 'use strict';
 
 var fs = require('fs');
@@ -8,10 +9,8 @@ var Promise = require('promise');
 var glob = require('glob');
 var Font = require('./font');
 var Spider = require('./spider');
-var version = require('../package.json').version;
+var fsUtils = require('./fs-utils');
 
-var utils = require('./utils');
-var color = utils.color;
 
 // http://font-spider.org/css/style.css
 //var RE_SERVER = /^(\/|http\:|https\:)/i;
@@ -32,7 +31,7 @@ var FontSpider = function (src, options) {
     }
 
     options = options || {};
-    
+
     for (var key in FontSpider.defaults) {
         if (options[key] === undefined) {
             options[key] = FontSpider.defaults[key];
@@ -64,7 +63,6 @@ FontSpider.prototype = {
 
     _start: function () {
 
-        var that = this;
         var src = this.src;
         var options = this.options;
         var backup = options.backup !== false;
@@ -106,7 +104,6 @@ FontSpider.prototype = {
 
                 var dirname = path.dirname(source);
                 var basename = path.basename(source);
-                var extname = path.extname(source);
                 var backupFile;
 
 
@@ -121,9 +118,9 @@ FontSpider.prototype = {
                     }
 
                     if (fs.existsSync(backupFile)) {
-                        utils.copyFile(backupFile, source);
+                        fsUtils.cp(backupFile, source);
                     } else {
-                        utils.copyFile(source, backupFile);
+                        fsUtils.cp(source, backupFile);
                     }
 
                 }

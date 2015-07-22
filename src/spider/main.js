@@ -2,15 +2,12 @@
 
 'use strict';
 
-var fs = require('fs');
-var path = require('path');
-var cheerio = require('cheerio');
+
 var utils = require('./utils');
 var Resource = require('./resource');
 var CssParser = require('./css-parser');
 var HtmlParser = require('./html-parser');
 var Promise = require('./promise');
-var VError = require('verror');
 var push = Array.prototype.push;
 
 
@@ -112,7 +109,6 @@ Spider.Model = function (id, name, files, chars, selectors) {
  */
 Spider.Parser = function Parser (htmlFile, options) {
 
-    var $;
     var resource;
     var that = this;
     var isBuffer = typeof htmlFile === 'object' && htmlFile.isBuffer();
@@ -161,7 +157,7 @@ Spider.Parser = function Parser (htmlFile, options) {
     .then(this.getFontInfo.bind(this))
     .then(this.getCharsInfo.bind(this))
     .then(function (data) {
-        spiderLoad(htmlFile)
+        spiderLoad(htmlFile);
         return data;
     })
     .catch(function (errors) {
@@ -243,7 +239,6 @@ Spider.Parser.prototype = {
 
         return Promise.all(resources.map(function (resource) {
             return new CssParser(resource).catch(function (errors) {
-                //errors = new VError(errors, 'parse "%s" failed', resource.file);
                 return Promise.reject(errors);
             });
         }))
@@ -296,7 +291,6 @@ Spider.Parser.prototype = {
     getCharsInfo: function (fontFaces) {
         var that = this;
         fontFaces.forEach(function (fontFace) {
-            var $elem;
             var selector = fontFace.selectors.join(', ');
             var chars = that.htmlParser.querySelectorChars(selector);
             push.apply(fontFace.chars, chars);

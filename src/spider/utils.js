@@ -4,7 +4,6 @@
 var path = require('path');
 var url = require('url');
 var util = require('util');
-var events = require('events');
 var ignore = require('ignore');
 
 

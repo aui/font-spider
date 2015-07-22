@@ -1,13 +1,13 @@
-/* global require,module,process,console */
+/* global require,module */
+
 'use strict';
 
-var fs = require('fs');
 var path = require('path');
 var Fontmin = require('fontmin');
 var Promise = require('promise');
-var utils = require('./utils');
+var fsUtils = require('./fs-utils');
 
-var TEMP = '.FONTSPIDER_TEMP';
+var TEMP = '.FONT_SPIDER_TEMP';
 var number = 0;
 
 
@@ -20,10 +20,11 @@ function Font (src, options) {
     var chars = options.chars;
     var dirname = path.dirname(src);
     var extname = path.extname(src);
-    var basename = path.basename(src, extname);
-    var temp = path.join(dirname, TEMP + number);
 
     dest.ttf = dest.ttf || src;
+
+    var basename = path.basename(dest.ttf, extname);
+    var temp = path.join(dirname, TEMP + number);
 
     if (options.chars) {
         fontmin.use(Fontmin.glyph({
@@ -51,28 +52,20 @@ function Font (src, options) {
 
                     var filename = basename + '.' + key;
 
-                    // 特殊逻辑，支持非ttf后缀的turetype字体
-                    // if (key === 'ttf') {
-                    //     filename = basename + extname;
-                    // }
-
                     var file = path.join(temp, filename);
                     var out = dest[key];
 
                     file = path.resolve(file);
-                    utils.rename(file, out);
+                    fsUtils.rename(file, out);
                 });
 
 
-                utils.rmdir(temp);
+                fsUtils.rmdir(temp);
                 resolve(files);
             }
         });
     });
 }
-
-
-
 
 
 module.exports = Font;

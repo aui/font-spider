@@ -12,7 +12,6 @@ var VError = require('verror');
 
 
 
-
 function CssParser (resource) {
 
     if (resource instanceof Promise) {
@@ -51,8 +50,9 @@ function CssParser (resource) {
         ast = CSSOM.parse(content);
     } catch (errors) {
         
-        errors = new VError(errors, 'parse "%s" failed', file);
-        return Promise.reject(errors);
+        return Promise.reject(
+            new VError(errors, 'parse "%s" failed', file)
+        );
     }
 
     cssParser = new CssParser.Parser(ast, file, options);

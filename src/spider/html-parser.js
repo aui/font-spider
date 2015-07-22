@@ -1,8 +1,7 @@
-/* global require,Buffer,module */
+/* global require,module */
+
 'use strict';
 
-var fs = require('fs');
-var path = require('path');
 var cheerio = require('cheerio');
 var utils = require('./utils');
 var Resource = require('./resource');
@@ -36,9 +35,9 @@ function HtmlParser (resource) {
     try {
         $ = cheerio.load(content);
         return new HtmlParser.Parser($, file, options);
-    } catch (errors) {
+    } catch (error) {
 
-        errors = new VError(errors, 'parse "%s" failed', file);
+        var errors = new VError(error, 'parse "%s" failed', file);
 
         return Promise.reject(errors);
     }
@@ -65,8 +64,6 @@ HtmlParser.defaults = {
 HtmlParser.Parser = function Parser ($, file, options) {
 
     options = utils.options(HtmlParser.defaults, options);
-
-    var that = this;
 
     this.$ = $;
 
@@ -139,7 +136,7 @@ HtmlParser.Parser.prototype = {
      * @return  {Array}
      */
     getCssContents: function () {
-        var that = this;
+
         var $ = this.$;
         var contents = [];
 
