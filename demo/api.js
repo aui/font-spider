@@ -6,13 +6,13 @@ var fs = require('fs');
 var path = require('path');
 var FontSpider = require('../');// require('font-spider');
 
-new FontSpider.Spider([
+new FontSpider
+
+// 分析 WebFont
+.Spider([
         'http://font-spider.org/index.html',
         'http://font-spider.org/install.html'
     ], {
-    
-    // CSS @import 语法导入的文件数量限制，避免爬虫陷入死循环陷阱
-    maxImportCss: 16,
     
     // 忽略的文件规则。语法 @see https://github.com/kaelzhang/node-ignore
     ignore: ['*.eot', 'icons.css', 'font?name=*'],
@@ -23,9 +23,12 @@ new FontSpider.Spider([
         ['http://font-spider.org/css', __dirname + '/../release/css']
     ],
 
+    // CSS @import 语法导入的文件数量限制，避免爬虫陷入死循环陷阱
+    maxImportCss: 16,
+
     // 资源加载前事件
     resourceBeforeLoad: function (file) {
-        var RE_SERVER = /^https?\:\/\//i
+        var RE_SERVER = /^https?\:\/\//i;
         var REG_DOMAIN = /^https?\:\/\/(?:\w+\.)?font-spider\.org/;
 
         if (RE_SERVER.test(file)) {
@@ -35,11 +38,9 @@ new FontSpider.Spider([
         } else {
             var base = path.resolve(__dirname + '/../release');
             if (file.indexOf(base) !== 0) {
-                throw new Error('资源访问超出目录限制');
+                throw new Error('禁止访问上层目录');
             }
         }
-
-
     },
 
     // 资源加载成功事件
@@ -59,28 +60,32 @@ new FontSpider.Spider([
     // 爬虫解析错误事件
     spiderError: function (htmlFile) {}
 })
-.then(function (data) {
+
+// 压缩字体
+.then(function (webFonts) {
     return Promise
-    .all(data.map(function (item) {
-        return new FontSpider.Compress(item, {
+    .all(webFonts.map(function (webFont) {
+        return new FontSpider.Compress(webFont, {
             // 是否备份原始字体
             backup: true
         });
     }));
 })
-.then(function (data) {
-    if (data.length === 0) {
+
+// 显示压缩结果
+.then(function (webFonts) {
+    if (webFonts.length === 0) {
         console.log('web font not found');
         return;
     }
 
-    data.forEach(function (item) {
-        console.log('Font name:', item.name);
-        console.log('Font id:', item.id);
-        console.log('Original size:', item.originalSize / 1000, 'KB');
-        console.log('Include chars:', item.chars);
+    webFonts.forEach(function (webFont) {
+        console.log('Font name:', webFont.name);
+        console.log('Font id:', webFont.id);
+        console.log('Original size:', webFont.originalSize / 1000, 'KB');
+        console.log('Include chars:', webFont.chars);
 
-        item.files.forEach(function (file) {
+        webFont.files.forEach(function (file) {
             if (fs.existsSync(file)) {
                 console.log('File', path.relative('./', file),
                     'created:', fs.statSync(file).size / 1000, 'KB');
