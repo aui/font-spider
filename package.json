@@ -32,7 +32,7 @@
     "_remove": "rm -rf release",
     "_copy": "mkdir release && cp -R demo/* release",
     "_http": "node release/spider-http.js",
-    "demo": "npm run _remove && npm run _copy && node bin/font-spider release/*.html",
+    "demo": "npm run _remove && npm run _copy && node bin/font-spider release/*.html --no-backup",
     "test": "mocha test/test.js"
   },
   "dependencies": {
