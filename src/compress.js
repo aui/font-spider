@@ -18,13 +18,14 @@ var number = 0;
 
 
 
-function Font (data, options) {
+function Compress (data, options) {
 
     number ++;
+    options = getOptions(options);
 
     var files = {};
     var source;
-
+    
 
     data.files.forEach(function (file) {
         var extname = path.extname(file).toLocaleLowerCase();
@@ -74,7 +75,12 @@ function Font (data, options) {
 }
 
 
-Font.prototype = {
+Compress.defaults = {
+    backup: true
+};
+
+
+Compress.prototype = {
 
     // 字体恢复与备份
     backup: function () {
@@ -162,4 +168,14 @@ Font.prototype = {
 };
 
 
-module.exports = Font;
+
+function getOptions (options) {
+    var config = Object.create(Compress.defaults);
+    for (var key in options) {
+        config[key] = options[key];
+    }
+    return config;
+}
+
+
+module.exports = Compress;
