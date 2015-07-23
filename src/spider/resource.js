@@ -1,5 +1,7 @@
 /* global require,Buffer,module */
 
+// TODO 超时配置参数
+
 'use strict';
 
 var fs = require('fs');
@@ -169,7 +171,7 @@ Resource.defaults = {
  * @param   {Object}    额外的数据
  * @return  {Object}    .file, .content, .options
  */
-Resource.Model = function (file, content, options) {
+Resource.Model = function ResourceData (file, content, options) {
     this.file = file;
     this.content = content || '';
     this.options = options || {};

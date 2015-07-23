@@ -7,23 +7,23 @@ var Promise = require('promise');
 var Spider = require('./spider');
 var Compress = require('./compress');
 
-var FontSpider = function (src, options) {
+var FontSpider = function (htmlFiles, options) {
 
-    if (typeof src === 'string') {
-        src = glob.sync(src);
-    } else if (Array.isArray(src)) {
+    if (typeof htmlFiles === 'string') {
+        htmlFiles = glob.sync(htmlFiles);
+    } else if (Array.isArray(htmlFiles)) {
         var srcs = [];
-        src.forEach(function (item) {
+        htmlFiles.forEach(function (item) {
             srcs = srcs.concat(glob.sync(item));
         });
-        src = srcs;
+        htmlFiles = srcs;
     }
 
-    return new FontSpider.Spider(src, options)
-    .then(function (data) {
+    return new FontSpider.Spider(htmlFiles, options)
+    .then(function (webFonts) {
         return Promise
-        .all(data.map(function (item) {
-            return new FontSpider.Compress(item, options);
+        .all(webFonts.map(function (webFont) {
+            return new FontSpider.Compress(webFont, options);
         }));
     });
 };
