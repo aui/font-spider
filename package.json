@@ -33,7 +33,7 @@
     "_copy": "mkdir release && cp -R demo/* release",
     "_http": "node release/spider-http.js",
     "demo": "npm run _remove && npm run _copy && node bin/font-spider release/*.html --no-backup",
-    "test": "mocha test/test.js"
+    "test": "mocha test/test.js && npm run demo"
   },
   "dependencies": {
     "cheerio": "^0.18.0",
