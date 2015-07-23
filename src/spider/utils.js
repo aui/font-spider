@@ -246,10 +246,14 @@ function map (params) {
         regs.push(params);
     });
 
-    return function (src) {
+    return regs.length ? function map (src) {
 
-        if (!src || !regs || !regs.length) {
+        if (!src) {
             return src;
+        }
+
+        if (Array.isArray(src)) {
+            return src.map(map);
         }
 
         if (!Array.isArray(regs[0])) {
@@ -260,6 +264,9 @@ function map (params) {
             src = src.replace.apply(src, reg);
         });
 
+        return src;
+
+    } : function (src) {
         return src;
     };
 }
@@ -276,7 +283,7 @@ function filter (ignoreList) {
         ignore: ignoreList || []
     });
 
-    return function (src) {
+    return ignoreList.length ? function (src) {
 
         if (!src) {
             return;
@@ -287,6 +294,9 @@ function filter (ignoreList) {
         } else {
             return fn.filter([src])[0];
         }
+
+    } : function (src) {
+        return src;
     };
 }
 
