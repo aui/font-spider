@@ -1,13 +1,13 @@
 var assert = require("assert");
 var path = require('path');
 
-var Spider = require('../src/spider/main');
+var Spider = require('../src/spider/index');
 var utils = require('../src/spider/utils');
 var Resource = require('../src/spider/resource');
 var CssParser = require('../src/spider/css-parser');
 var HtmlParser = require('../src/spider/html-parser');
 
-
+// TODO 大小写路径测试
 
 describe('Utils', function () {
 
