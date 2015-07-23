@@ -72,7 +72,7 @@ font-spider [options] <htmlFile ...>
 
 ## API
 
-使用 font-spider 的 API，可以实现在线动态字体压缩服务。
+使用 font-spider 的 API，可以构建在线动态字体压缩服务。
 
 文档参见：[DOCS.md](./DOCS.md)
 
@@ -107,17 +107,21 @@ font-spider [options] <htmlFile ...>
 
 ## 贡献者
 
-- [@糖饼](https://github.com/aui) [微博](http://www.weibo.com/planeart)
-- @fufu [微博](http://www.weibo.com/u/1715968673)
-- @kdd [微博](http://www.weibo.com/kddie)
+- [@糖饼](https://github.com/aui) - [微博](http://www.weibo.com/planeart)
+- @fufu  - [微博](http://www.weibo.com/u/1715968673)
+- @kdd - [微博](http://www.weibo.com/kddie)
 
-### 特别鸣谢
+### 鸣谢
 
-字蛛自 v0.2 版本开始，使用了百度前端团队开源作品 —— [fontmin](https://github.com/ecomfe/fontmin) 取代了字蛛内置的字体压缩库。
+字蛛的发展离不开以下开源项目的支持：
 
-字蛛希望与更多的人或团队一起合作，推动中文 WebFont 发展。
+- [fontmin](https://github.com/ecomfe/fontmin) 来自百度前端团队的字体压缩库*（字蛛 v0.2 版本使用它取代了内置的字体压缩库 [#18](https://github.com/aui/font-spider/issues/18)）*
+- [cssom](https://github.com/NV/CSSOM) 标准化的 CSS 解析库*（字蛛 v0.3 版本使用它取代了 [css](https://github.com/reworkcss/css)）*
+- [cheerio](https://github.com/cheeriojs/cheerio) 轻量的 HTML 解析库*（字蛛 v0.2 版本使用它取代了 [jsdom](https://github.com/tmpvar/jsdom)）*
 
 ==========
+
+字蛛愿以开放的心态和开源社区一起推动中文 WebFont 发展。
 
 *字体受版权保护，若在网页中使用商业字体，请联系相关字体厂商购买授权*
 
