@@ -32,7 +32,7 @@ font-spider 有两个主要方法：
 
 #### 返回
 
-`Promise` 接收 webFont 描述信息
+`Promise` 接收 webFont 描述信息列表
 
 #### 选项
 
@@ -129,10 +129,10 @@ new FontSpider
         'http://font-spider.org/index.html',
         'http://font-spider.org/install.html'
     ], {
-    
+
     // 忽略的文件规则。语法 @see https://github.com/kaelzhang/node-ignore
     ignore: ['*.eot', 'icons.css', 'font?name=*'],
-    
+
     // 路径映射规则。映射远程路径到本地（远程字体文件必须映射到本地才能压缩）
     map: [
         ['http://font-spider.org/font', __dirname + '/../release/font'],
@@ -216,4 +216,3 @@ new FontSpider
     process.exit(1);
 });
 ```
-
