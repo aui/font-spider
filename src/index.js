@@ -2,10 +2,10 @@
 
 'use strict';
 
-var Promise = require('promise');
 var glob = require('glob');
-var Font = require('./font');
+var Promise = require('promise');
 var Spider = require('./spider');
+var Compress = require('./compress');
 
 var FontSpider = function (src, options) {
 
@@ -19,30 +19,20 @@ var FontSpider = function (src, options) {
         src = srcs;
     }
 
-    options = options || {};
-
-    for (var key in FontSpider.defaults) {
-        if (options[key] === undefined) {
-            options[key] = FontSpider.defaults[key];
-        }
-    }
-
-    return new Spider(src, options)
+    return new FontSpider.Spider(src, options)
     .then(function (data) {
         return Promise
         .all(data.map(function (item) {
-            return new Font(item, options);
+            return new FontSpider.Compress(item, options);
         }));
     });
 };
 
 
 
-FontSpider.Font = Font;
+FontSpider.Compress = Compress;
 FontSpider.Spider = Spider;
-FontSpider.defaults = {
-    backup: true
-};
+
 
 
 module.exports = FontSpider;

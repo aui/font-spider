@@ -1,1 +1,1 @@
-module.exports = require('./spider/main');
+module.exports = require('./spider/index');
