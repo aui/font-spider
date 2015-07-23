@@ -82,13 +82,13 @@ new FontSpider.Spider([
         'http://font-spider.org/index.html',
         'http://font-spider.org/install.html'
     ], {
-    
+
     // CSS @import 语法导入的文件数量限制
-    maxImportFiles: 16,
-    
+    maxImportCss: 16,
+
     // 忽略的文件规则。语法 @see https://github.com/kaelzhang/node-ignore
     ignore: ['*.eot', 'icons.css', 'font?name=*'],
-    
+
     // 路径映射规则。映射远程路径到本地（远程字体文件必须映射到本地才能处理）
     map: [
         ['http://font-spider.org/font', __dirname + '/../release/font'],
@@ -193,8 +193,9 @@ new FontSpider.Spider([
 - 重构爬虫模块，解决压缩后的 CSS 解析失败的问题
 - 同名字体支持 [#32](https://github.com/aui/font-spider/issues/32)
 - 改进错误流程处理：HTML、CSS 加载与解析错误都会进入错误流程
+- 提供接口
 
-[更多](./CHANGELOG.md)
+[更多日志](./CHANGELOG.md)
 
 ## 贡献者
 

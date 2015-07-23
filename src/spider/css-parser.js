@@ -12,11 +12,13 @@ var VError = require('verror');
 
 
 
-function CssParser (resource) {
+function CssParser (resource /*,importLength*/) {
+
+    var importLength = arguments[1] || 0;
 
     if (resource instanceof Promise) {
         return resource.then(function (resource) {
-            return new CssParser(resource);
+            return new CssParser(resource, importLength);
         });
     }
 
@@ -55,7 +57,7 @@ function CssParser (resource) {
         );
     }
 
-    cssParser = new CssParser.Parser(ast, file, options);
+    cssParser = new CssParser.Parser(ast, file, options, importLength);
 
     if (cache) {
         CssParser.cache[file] = cssParser;
@@ -111,7 +113,7 @@ CssParser.cache = {};
  */
 CssParser.defaults = {
     cache: true,        // 缓存开关
-    maxImportFiles: 16, // CSS @import 语法导入的文件数量限制
+    maxImportCss: 16, // CSS @import 语法导入的文件数量限制
     ignore: [],         // 忽略的文件配置
     map: []             // 文件映射配置
 };
@@ -120,7 +122,7 @@ CssParser.defaults = {
 
 
 
-CssParser.Parser = function Parser (ast, file, options) {
+CssParser.Parser = function Parser (ast, file, options, importLength) {
 
     options = utils.options(CssParser.defaults, options);
 
@@ -130,6 +132,7 @@ CssParser.Parser = function Parser (ast, file, options) {
     this.options = options;
     this.base = path.dirname(file);
     this.file = file;
+    this.importLength = importLength;
 
 
     // 忽略文件
@@ -196,6 +199,7 @@ utils.mix(CssParser.Parser.prototype, {
         var that = this;
         var base = this.base;
         var options = this.options;
+        
         var url = utils.unquotation(rule.href.trim());
         url = utils.resolve(base, url);
         url = this.filter(url);
@@ -208,29 +212,24 @@ utils.mix(CssParser.Parser.prototype, {
         }
 
 
-        if (typeof options.__filesNumber !== 'number') {
-            options.__filesNumber = 0;
-        }
-
-
-        options.__filesNumber ++;
-
+        this.importLength ++;   
 
         // 限制导入的样式数量，避免让爬虫进入死循环陷阱
-        if (options.__filesNumber > options.maxImportFiles) {
+        if (this.importLength > options.maxImportCss) {
             var errors = new Error('the number of files imported exceeds the maximum limit');
             errors = new VError(errors, 'parse "%s" failed', that.file);
             return Promise.reject(errors);
         }
 
 
-        return new CssParser(
-            new Resource(url, null, options)
-            .catch(function (errors) {
-                errors = new VError(errors, 'parse "%s" failed', that.file);
-                return Promise.reject(errors);
-            }
-        ));
+        var resource = new Resource(url, null, options)
+        .catch(function (errors) {
+            errors = new VError(errors, 'parse "%s" failed', that.file);
+            return Promise.reject(errors);
+        });
+
+
+        return new CssParser(resource, this.importLength);
     },
 
 
@@ -327,8 +326,12 @@ utils.mix(CssParser.Parser.prototype, {
 
     // 媒体查询规则
     CSSMediaRule: function (rule) {
-        // CssParser.Parser
-        return new this.constructor(rule, this.file, this.options);
+        return new CssParser.Parser(
+            rule,
+            this.file,
+            this.options,
+            this.importLength
+        );
     }
 
 });

@@ -12,7 +12,7 @@ new FontSpider.Spider([
     ], {
     
     // CSS @import 语法导入的文件数量限制
-    maxImportFiles: 16,
+    maxImportCss: 16,
     
     // 忽略的文件规则。语法 @see https://github.com/kaelzhang/node-ignore
     ignore: ['*.eot', 'icons.css', 'font?name=*'],
