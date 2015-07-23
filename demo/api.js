@@ -11,7 +11,7 @@ new FontSpider.Spider([
         'http://font-spider.org/install.html'
     ], {
     
-    // CSS @import 语法导入的文件数量限制
+    // CSS @import 语法导入的文件数量限制，避免爬虫陷入死循环陷阱
     maxImportCss: 16,
     
     // 忽略的文件规则。语法 @see https://github.com/kaelzhang/node-ignore

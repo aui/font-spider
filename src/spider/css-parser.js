@@ -16,6 +16,7 @@ function CssParser (resource /*,importLength*/) {
 
     var importLength = arguments[1] || 0;
 
+
     if (resource instanceof Promise) {
         return resource.then(function (resource) {
             return new CssParser(resource, importLength);
@@ -57,10 +58,20 @@ function CssParser (resource /*,importLength*/) {
         );
     }
 
-    cssParser = new CssParser.Parser(ast, file, options, importLength);
+    cssParser = new CssParser
+    .Parser(ast, file, options, importLength);
 
     if (cache) {
         CssParser.cache[file] = cssParser;
+    }
+
+    if (options.debug) {
+        cssParser.then(function (data) {
+            console.log('');
+            console.log('[DEBUG]', 'CssParser', file);
+            console.log(data);
+            return data;
+        });
     }
 
     return cssParser;
@@ -113,7 +124,8 @@ CssParser.cache = {};
  */
 CssParser.defaults = {
     cache: true,        // 缓存开关
-    maxImportCss: 16, // CSS @import 语法导入的文件数量限制
+    debug: false,       // 调试开关
+    maxImportCss: 16,   // CSS @import 语法导入的文件数量限制
     ignore: [],         // 忽略的文件配置
     map: []             // 文件映射配置
 };
@@ -164,7 +176,7 @@ CssParser.Parser = function Parser (ast, file, options, importLength) {
 
     var promise = Promise.all(tasks)
     .then(function (list) {
-        
+
         var ret = [];
         list.forEach(function (item) {
             if (Array.isArray(item)) {

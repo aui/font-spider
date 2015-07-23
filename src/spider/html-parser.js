@@ -1,4 +1,4 @@
-/* global require,module */
+/* global require,module,console */
 
 'use strict';
 
@@ -51,6 +51,7 @@ function HtmlParser (resource) {
  */
 HtmlParser.defaults = {
     cache: true,        // 缓存开关
+    debug: false,       // 调试开关
     ignore: [],         // 忽略的文件配置
     map: []             // 文件映射配置
 };
@@ -126,6 +127,14 @@ HtmlParser.Parser.prototype = {
             files.push(cssFile);
         });
 
+
+        if (this.options.debug) {
+            console.log('');
+            console.log('[DEBUG]', 'HtmlParser#getCssFiles', this.file);
+            console.log(files);
+        }
+
+
         return files;
     },
 
@@ -145,6 +154,12 @@ HtmlParser.Parser.prototype = {
             var content = $this.text();
             contents.push(content);
         });
+
+        if (this.options.debug) {
+            console.log('');
+            console.log('[DEBUG]', 'HtmlParser#getCssContents', this.file);
+            console.log(contents);
+        }
 
         return contents;
     },
@@ -197,7 +212,17 @@ HtmlParser.Parser.prototype = {
         });
 
 
-        return chars.split('');
+        chars = chars.split('');
+
+
+        if (this.options.debug) {
+            console.log('');
+            console.log('[DEBUG]', 'HtmlParser#querySelectorChars', selector, this.file);
+            console.log(chars.join(''));
+        }
+
+
+        return chars;
     }
 };
 

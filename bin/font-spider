@@ -14,6 +14,7 @@ program
     .option('--ignore <pattern>', 'ignore the files', list)
     .option('--map <remotePath,localPath>', 'mapping the remote path to the local', toMap)
     .option('--no-backup', 'do not back up fonts')
+    .option('--debug', 'enable debug mode')
     .parse(process.argv);
 
 

@@ -213,10 +213,10 @@ function dirname (src) {
     
     if (isRemote(src)) {
 
-        // http://www.huanleguang.com/////
+        // http://www.font-spider.org/////
         src = src.replace(/\/+$/, '');
 
-        // path.dirname('http://www.huanleguang.com') === 'http:/'
+        // path.dirname('http://www.font-spider.org') === 'http:/'
         if (url.parse(src).path === '/') {
             return src;
         } else {
@@ -233,10 +233,14 @@ function dirname (src) {
 
 /*
  * 映射器工厂
- * @param   {Array}     映射规则
+ * @param   {Array, Function}     映射规则
  * @return  {Function}
  */
 function map (params) {
+
+    if (typeof params === 'function') {
+        return params;
+    }
 
     var regs = [];
     (params || []).forEach(function (params) {
@@ -275,10 +279,15 @@ function map (params) {
 
 /*
  * 筛选器工厂
- * @param   {Array}     规则
+ * @param   {Array, Function}     规则
  * @return  {Function}
  */
 function filter (ignoreList) {
+
+    if (typeof ignoreList === 'function') {
+        return ignoreList;
+    }
+
     var fn = ignore({
         ignore: ignoreList || []
     });
