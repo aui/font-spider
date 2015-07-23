@@ -18,7 +18,7 @@ var number = 0;
 
 
 
-function Compress (data, options) {
+function Compress (webFont, options) {
 
     number ++;
     options = getOptions(options);
@@ -27,7 +27,7 @@ function Compress (data, options) {
     var source;
     
 
-    data.files.forEach(function (file) {
+    webFont.files.forEach(function (file) {
         var extname = path.extname(file).toLocaleLowerCase();
         var type = extname.replace('.', '');
 
@@ -46,13 +46,13 @@ function Compress (data, options) {
 
     // 必须有 TTF 字体
     if (!source) {
-        throw new Error('"' + data.name + '"' + ' did not find turetype fonts');
+        throw new Error('"' + webFont.name + '"' + ' did not find turetype fonts');
     }
 
 
 
     this.source = source;
-    this.data = data;
+    this.webFont = webFont;
     this.options = options;
     this.files = files;
     this.dirname = path.dirname(source);
@@ -107,7 +107,7 @@ Compress.prototype = {
 
     min: function () {
 
-        var data = this.data;
+        var webFont = this.webFont;
         var files = this.files;
         var source = this.source;
         var dirname = this.dirname;
@@ -118,9 +118,9 @@ Compress.prototype = {
         var temp = path.join(dirname, TEMP + number);
 
 
-        if (data.chars) {
+        if (webFont.chars) {
             fontmin.use(Fontmin.glyph({
-                text: data.chars
+                text: webFont.chars
             }));
         }
 
@@ -158,9 +158,9 @@ Compress.prototype = {
                     fsUtils.rmdir(temp);
 
                     // 添加新字段：记录原始文件大小
-                    data.originalSize = originalSize;
+                    webFont.originalSize = originalSize;
 
-                    resolve(data);
+                    resolve(webFont);
                 }
             });
         });

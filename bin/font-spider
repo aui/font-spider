@@ -86,24 +86,24 @@ if (options.info) {
 
 
     new FontSpider.Spider(files, options)
-    .then(function (data) {
+    .then(function (webFonts) {
 
         writeln('');
 
-        if (data.length === 0) {
+        if (webFonts.length === 0) {
             write('web font not found');
             return;
         }
 
-        data.forEach(function (item) {
+        webFonts.forEach(function (webFont) {
             write(
                 [
-                    'Font name: ' + color('cyan', item.name),
-                    'Font id: ' + color('cyan', item.id),
-                    'Include chars: ' + item.chars,
-                    'CSS selector: ' + item.selectors.join(', '),
+                    'Font name: ' + color('cyan', webFont.name),
+                    'Font id: ' + color('cyan', webFont.id),
+                    'Include chars: ' + webFont.chars,
+                    'CSS selector: ' + webFont.selectors.join(', '),
                     'Font files: \n' +
-                        item.files
+                        webFont.files
                         .map(function (val) {
                             return color('cyan', path.relative('./', val));
                         }).join('\n'),
@@ -120,23 +120,23 @@ if (options.info) {
 } else {
 
     new FontSpider(files, options)
-    .then(function (data) {
+    .then(function (webFonts) {
 
         writeln('');
 
-        if (data.length === 0) {
+        if (webFonts.length === 0) {
             write('web font not found');
             return;
         }
 
-        data.forEach(function (item) {
+        webFonts.forEach(function (webFont) {
             
-            write('Font name:', color('cyan', item.name));
-            write('Font id:', color('cyan', item.id));
-            write('Original size:', color('green', item.originalSize / 1000 + ' KB'));
-            write('Include chars:', item.chars);
+            write('Font name:', color('cyan', webFont.name));
+            write('Font id:', color('cyan', webFont.id));
+            write('Original size:', color('green', webFont.originalSize / 1000 + ' KB'));
+            write('Include chars:', webFont.chars);
 
-            item.files.forEach(function (file) {
+            webFont.files.forEach(function (file) {
                 if (fs.existsSync(file)) {
                     write('File', color('cyan', path.relative('./', file)),
                         'created:', color('green', + fs.statSync(file).size / 1000 + ' KB'));

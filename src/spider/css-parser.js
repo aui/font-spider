@@ -81,7 +81,7 @@ function CssParser (resource /*,importLength*/) {
 
 
 
-CssParser.Model = function (type) {
+CssParser.Model = function CssInfo (type) {
 
     // {String} 类型：CSSFontFaceRule | CSSStyleRule
     this.type = type;
@@ -134,7 +134,7 @@ CssParser.defaults = {
 
 
 
-CssParser.Parser = function Parser (ast, file, options, importLength) {
+CssParser.Parser = function (ast, file, options, importLength) {
 
     options = utils.options(CssParser.defaults, options);
 
@@ -197,7 +197,10 @@ CssParser.Parser = function Parser (ast, file, options, importLength) {
 
 
 
-utils.mix(CssParser.Parser.prototype, {
+CssParser.Parser.prototype = {
+
+    constructor: CssParser.Parser,
+
 
     // CSS 导入规则
     // @import url("fineprint.css") print;
@@ -346,7 +349,7 @@ utils.mix(CssParser.Parser.prototype, {
         );
     }
 
-});
+};
 
 
 

@@ -62,7 +62,7 @@ HtmlParser.defaults = {
  * @param   {Object}
  * @param   {Object}    Options: ignore | map
  */
-HtmlParser.Parser = function Parser ($, file, options) {
+HtmlParser.Parser = function ($, file, options) {
 
     options = utils.options(HtmlParser.defaults, options);
 

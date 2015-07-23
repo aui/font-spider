@@ -93,7 +93,8 @@ function Spider (htmlFiles, options) {
 }
 
 
-Spider.Model = function (id, name, files, chars, selectors) {
+
+Spider.Model = function WebFont (id, name, files, chars, selectors) {
     this.id = id;
     this.name = name;
     this.files = files;
@@ -107,7 +108,7 @@ Spider.Model = function (id, name, files, chars, selectors) {
  * @param   {String}            文件绝对路径
  * @return  {Promise}
  */
-Spider.Parser = function Parser (htmlFile, options) {
+Spider.Parser = function (htmlFile, options) {
 
     var resource;
     var that = this;
@@ -156,9 +157,9 @@ Spider.Parser = function Parser (htmlFile, options) {
     .then(that.getCssInfo.bind(this))
     .then(this.getFontInfo.bind(this))
     .then(this.getCharsInfo.bind(this))
-    .then(function (data) {
+    .then(function (webFonts) {
         spiderLoad(htmlFile);
-        return data;
+        return webFonts;
     })
     .catch(function (errors) {
         spiderError(htmlFile, errors);
@@ -238,9 +239,7 @@ Spider.Parser.prototype = {
 
 
         return Promise.all(resources.map(function (resource) {
-            return new CssParser(resource).catch(function (errors) {
-                return Promise.reject(errors);
-            });
+            return new CssParser(resource);
         }))
 
         // 对二维数组扁平化处理
@@ -253,13 +252,13 @@ Spider.Parser.prototype = {
      */
     getFontInfo: function (cssInfo) {
 
-        var fontFaces = [];
+        var webFonts = [];
         var styleRules = [];
 
         // 分离 @font-face 数据与选择器数据
         cssInfo.forEach(function (item) {
             if (item.type === 'CSSFontFaceRule') {
-                fontFaces.push(item);
+                webFonts.push(item);
             } else if (item.type === 'CSSStyleRule') {
                 styleRules.push(item);
             }
@@ -267,7 +266,7 @@ Spider.Parser.prototype = {
 
 
         // 匹配选择器与 @font-face 定义的字体
-        fontFaces.forEach(function (fontFace) {
+        webFonts.forEach(function (fontFace) {
             styleRules.forEach(function (styleRule) {
 
                 if (styleRule.id.indexOf(fontFace.id) !== -1) {
@@ -284,20 +283,20 @@ Spider.Parser.prototype = {
         });
 
 
-        return fontFaces;
+        return webFonts;
     },
 
 
-    getCharsInfo: function (fontFaces) {
+    getCharsInfo: function (webFonts) {
         var that = this;
-        fontFaces.forEach(function (fontFace) {
+        webFonts.forEach(function (fontFace) {
             var selector = fontFace.selectors.join(', ');
             var chars = that.htmlParser.querySelectorChars(selector);
             push.apply(fontFace.chars, chars);
 
         });
 
-        return fontFaces;
+        return webFonts;
     }
 };
 
