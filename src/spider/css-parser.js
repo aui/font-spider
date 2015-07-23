@@ -111,6 +111,7 @@ CssParser.cache = {};
  */
 CssParser.defaults = {
     cache: true,        // 缓存开关
+    maxImportFiles: 16, // CSS @import 语法导入的文件数量限制
     ignore: [],         // 忽略的文件配置
     map: []             // 文件映射配置
 };
@@ -183,11 +184,6 @@ CssParser.Parser = function Parser (ast, file, options) {
 
 utils.mix(CssParser.Parser.prototype, {
 
-
-    // 最大 @import 文件数量限制
-    maxFilesLength: 15,
-
-
     // CSS 导入规则
     // @import url("fineprint.css") print;
     // @import url("bluish.css") projection, tv;
@@ -212,16 +208,16 @@ utils.mix(CssParser.Parser.prototype, {
         }
 
 
-        if (typeof options._maxFilesLength !== 'number') {
-            options._maxFilesLength = 0;
+        if (typeof options.__filesNumber !== 'number') {
+            options.__filesNumber = 0;
         }
 
 
-        options._maxFilesLength ++;
+        options.__filesNumber ++;
 
 
         // 限制导入的样式数量，避免让爬虫进入死循环陷阱
-        if (options._maxFilesLength > this.maxFilesLength) {
+        if (options.__filesNumber > options.maxImportFiles) {
             var errors = new Error('the number of files imported exceeds the maximum limit');
             errors = new VError(errors, 'parse "%s" failed', that.file);
             return Promise.reject(errors);
