@@ -23,7 +23,7 @@ font-spider 有两个主要方法：
 
 ### new FontSpider.Spider(htmlFiles, options)
 
-> 爬虫模块。负责解析 HTML 中的 WebFont
+爬虫模块
 
 #### 参数
 
@@ -32,7 +32,7 @@ font-spider 有两个主要方法：
 
 #### 返回
 
-`Promise`
+`Promise` 接收 webFont 描述信息
 
 #### 选项
 
@@ -80,7 +80,7 @@ new FontSpider.Spider([
 
 ### new FontSpider.Compress(webFont, options)
 
-> 压缩与转码模块
+压缩与转码模块
 
 #### 参数
 

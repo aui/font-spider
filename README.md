@@ -56,7 +56,7 @@ font-spider [options] <htmlFile ...>
 
 #### options
 
-``` 
+``` shell
 -h, --help                    输出帮助信息
 -V, --version                 输出当前版本号
 --info                        仅提取 WebFont 信息显示，不压缩与转码
