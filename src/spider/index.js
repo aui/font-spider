@@ -31,7 +31,7 @@ function Spider (htmlFiles, options) {
     })).then(function (list) {
 
 
-        var ret = [];
+        var webFonts = [];
         var chars = {};
         var unique = {};
 
@@ -49,7 +49,7 @@ function Spider (htmlFiles, options) {
                 unique[font.id] = true;
                 chars[font.id] = font.chars;
 
-                ret.push(new Spider.Model(
+                webFonts.push(new Spider.Model(
                     font.id,
                     font.family,
                     font.files,
@@ -60,7 +60,7 @@ function Spider (htmlFiles, options) {
 
         });
 
-        ret.forEach(function (font) {
+        webFonts.forEach(function (font) {
 
             //console.log(font);
             font.chars = chars[font.id];
@@ -81,7 +81,7 @@ function Spider (htmlFiles, options) {
         });
 
 
-        return ret;
+        return webFonts;
 
         function sort (a, b) {
             return a.charCodeAt() - b.charCodeAt();
