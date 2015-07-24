@@ -8,6 +8,9 @@ var CssParser = require('../src/spider/css-parser');
 var HtmlParser = require('../src/spider/html-parser');
 
 // TODO 大小写路径测试
+// TODO css font 属性缩写测试
+// TODO scan 配置测试
+// TODO map、ignore 配置测试
 
 describe('Utils', function () {
 

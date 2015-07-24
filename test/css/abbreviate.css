@@ -1,0 +1,8 @@
+@font-face {
+    font:italic small-caps bold 12px/1.5em test;
+    src:
+        url('../font/aui.eot?#font-spider') format('embedded-opentype'),
+        url('../font/aui.woff') format('woff'),
+        url('../font/aui.ttf') format('truetype'),
+        url('../font/aui.svg') format('svg');
+}
