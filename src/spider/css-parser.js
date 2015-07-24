@@ -123,11 +123,12 @@ CssParser.cache = {};
  * 默认选项
  */
 CssParser.defaults = {
-    cache: true,        // 缓存开关
-    debug: false,       // 调试开关
-    maxImportCss: 16,   // CSS @import 语法导入的文件数量限制
-    ignore: [],         // 忽略的文件配置
-    map: []             // 文件映射配置
+    cache: true,            // 缓存开关
+    debug: false,           // 调试开关
+    maxImportCss: 16,       // CSS @import 语法导入的文件数量限制
+    ignore: [],             // 忽略的文件配置
+    map: [],                // 文件映射配置
+    scan: function () {}    // 安全检查
 };
 
 
@@ -148,7 +149,7 @@ CssParser.Parser = function (ast, file, options, importLength) {
 
 
     // 忽略文件
-    this.filter = utils.filter(options.ignore);
+    this.ignore = utils.ignore(options.ignore);
 
     // 对文件地址进行映射
     this.map = utils.map(options.map);
@@ -217,7 +218,7 @@ CssParser.Parser.prototype = {
         
         var url = utils.unquotation(rule.href.trim());
         url = utils.resolve(base, url);
-        url = this.filter(url);
+        url = this.ignore(url);
         url = this.map(url);
         url = utils.normalize(url);
 
@@ -285,8 +286,11 @@ CssParser.Parser.prototype = {
             return utils.normalize(file);
         });
 
-        urls = this.filter(urls);
+        urls = this.ignore(urls);
         urls = this.map(urls);
+
+        // 对路径进行安全扫描
+        urls.forEach(this.options.scan);
 
         files.push.apply(files, urls);
 

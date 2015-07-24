@@ -73,7 +73,7 @@ HtmlParser.Parser = function ($, file, options) {
     this.file = file;
 
     // 忽略文件
-    this.filter = utils.filter(options.ignore);
+    this.ignore = utils.ignore(options.ignore);
 
     // 对文件地址进行映射
     this.map = utils.map(options.map);
@@ -115,15 +115,12 @@ HtmlParser.Parser.prototype = {
             var cssFile;
             var href = $this.attr('href');
 
-            if (!that.filter([href]).length) {
-                return;
-            }
-
             cssFile = utils.resolve(base, href);
-            cssFile = that.filter(cssFile);
+            cssFile = that.ignore(cssFile);
             cssFile = that.map(cssFile);
             cssFile = utils.normalize(cssFile);
 
+            // 注意：为空也得放进去，保持与 link 标签一一对应
             files.push(cssFile);
         });
 

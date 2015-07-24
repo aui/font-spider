@@ -236,7 +236,7 @@ function dirname (src) {
  * @param   {Array, Function}     映射规则
  * @return  {Function}
  */
-function map (params) {
+function mapFactory (params) {
 
     if (typeof params === 'function') {
         return params;
@@ -282,7 +282,7 @@ function map (params) {
  * @param   {Array, Function}     规则
  * @return  {Function}
  */
-function filter (ignoreList) {
+function ignoreFactory (ignoreList) {
 
     if (typeof ignoreList === 'function') {
         return ignoreList;
@@ -327,6 +327,6 @@ module.exports = {
     normalize: normalize,
     dirname: dirname,
     isRemote: isRemote,
-    filter: filter,
-    map: map
+    ignore: ignoreFactory,
+    map: mapFactory
 };

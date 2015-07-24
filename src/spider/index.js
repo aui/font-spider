@@ -310,7 +310,7 @@ Spider.defaults = {
     // map: [],
     // resourceLoad: function () {},
     // resourceBeforeLoad: function () {},
-    // resourceError: function () {}
+    // resourceError: function () {},
     spiderBeforeLoad: function () {},
     spiderLoad: function () {},
     spiderError: function () {},

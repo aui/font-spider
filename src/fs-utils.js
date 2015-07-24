@@ -15,6 +15,7 @@ function cp (srcpath, destpath) {
 }
 
 
+
 // 重命名文件或文件夹
 function rename (src, target) {
     if (fs.existsSync(src)) {
@@ -23,6 +24,7 @@ function rename (src, target) {
         fs.renameSync(src, target);
     }
 }
+
 
 
 // 创建目录，包括子文件夹
@@ -40,6 +42,7 @@ function mkdir (dir) {
         fs.mkdirSync(pathItem);
     });
 }
+
 
 
 // 删除文件夹，包括子文件夹

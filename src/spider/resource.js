@@ -28,10 +28,12 @@ function Resource (file, content, options) {
     var data = new Resource.Model(file, content, options);
 
     var cache = options.cache;
+    var scan = options.scan;
     var resourceBeforeLoad = options.resourceBeforeLoad;
     var resourceLoad = options.resourceLoad;
     var resourceError = options.resourceError;
     
+    scan(file);
     resourceBeforeLoad(file);
 
     if (cache) {
@@ -156,6 +158,7 @@ Resource.cache = {};
  */
 Resource.defaults = {
     cache: false,
+    scan: function () {},
     resourceLoad: function () {},
     resourceBeforeLoad: function () {},
     resourceError: function () {}
