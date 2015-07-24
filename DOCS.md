@@ -1,12 +1,6 @@
 # font-spider
 
-font-spider 的接口基于 `Promise` 。
-
-## 安装
-
-``` shell
-npm install font-spider --save
-```
+font-spider 由爬虫模块与压缩模块组成，其接口基于 `Promise`  实现。
 
 ## API
 
@@ -15,11 +9,6 @@ npm install font-spider --save
 ``` javascript
 var FontSpider = require('font-spider');
 ```
-
-font-spider 有两个主要方法：
-
-- `Spider` 爬虫模块
-- `Compress` 压缩模块
 
 ### new FontSpider.Spider(htmlFiles, options)
 
@@ -34,11 +23,32 @@ font-spider 有两个主要方法：
 
 `Promise` 接收 webFont 描述信息列表
 
+#### 示例
+
+``` javascript
+var FontSpider = require('font-spider');
+new FontSpider.Spider([__dirname + '/index.html'])
+.then(function (webFonts) {
+    console.log(webFonts);
+})
+.catch(function (errors) {
+    console.log('Error:', errors.stack.toString());
+    process.exit(1);
+});
+```
+
 #### 选项
 
 - `ignore` 忽略列表，用来忽略路径或文件。[语法示例](https://github.com/kaelzhang/node-ignore)
+  - 类型：`Array` `Function`
+  - 示例：`['icon.css', '*.eot']`
 - `map` 映射规则，支持映射远程路径到本地（远程字体需要映射到本地才能压缩）
+  - 类型：`Array` `Function`
+  - 示例：`[['http://font-spider.org/css', __dirname + '/css'], [...]]`
 - `maxImportCss` CSS `@import` 语法导入的文件数量限制，避免爬虫陷入死循环陷阱
+  - 类型：`Number`
+  - 默认：`16`
+- `scan` 路径检查函数，非法路径可直接 `throw new Error(message)`
 - `resourceBeforeLoad` 资源准备加载的事件
 - `resourceLoad` 资源加载成功的事件
 - `resourceError` 资源加载失败的事件
@@ -46,37 +56,7 @@ font-spider 有两个主要方法：
 - `spiderLoad` 爬虫解析成功后的事件
 - `spiderError` 爬虫解析失败后的事件
 
-> 注意：事件后续考虑使用 `on(type, callback)` 方法来支持
-
-#### 示例
-
-``` javascript
-var FontSpider = require('font-spider');
-new FontSpider.Spider([
-        'http://font-spider.org/index.html'
-    ], {
-    ignore: ['*.eot', 'icons.css', 'font?name=*'],
-    map: [
-        ['http://font-spider.org/css', __dirname + '/../release/css']
-    ],
-    resourceLoad: function (file) {
-        console.log('Load', file);
-    }
-})
-.then(function (webFonts) {
-    return Promise
-    .all(webFonts.map(function (webFont) {
-        console.log('Font name:', webFont.name);
-        console.log('Font id:', webFont.id);
-        console.log('Include chars:', webFont.chars);
-        console.log('Font files:', webFont.files)
-    }));
-})
-.catch(function (errors) {
-    console.log('Error:', errors.stack.toString());
-    process.exit(1);
-});
-```
+> 事件第一个参数可以获取文件路径
 
 ### new FontSpider.Compress(webFont, options)
 
@@ -91,25 +71,27 @@ new FontSpider.Spider([
 
 webFont 描述信息
 
-#### 选项
-
-- `backup` 是否开启备份功能（开启备份功能后支持反复压缩字体）
-
 #### 示例
 
 ``` javascript
 var FontSpider = require('font-spider');
-new FontSpider.Spider([
-    'http://font-spider.org/index.html',
-]).then(function (webFonts) {
-    return Promise
-    .all(webFonts.map(function (item) {
+new FontSpider.Spider([__dirname + '/index.html'])
+.then(function (webFonts) {
+    return Promise.all(webFonts.map(function (item) {
         return new FontSpider.Compress(item, {
             backup: true
         });
     }));
+})
+.catch(function (errors) {
+    console.log('Error:', errors.stack.toString());
+    process.exit(1);
 });
 ```
+
+#### 选项
+
+- `backup` 是否开启备份功能（开启备份功能后支持反复压缩字体）
 
 ## 完整示例
 
@@ -135,15 +117,11 @@ new FontSpider
 
     // 路径映射规则。映射远程路径到本地（远程字体文件必须映射到本地才能压缩）
     map: [
-        ['http://font-spider.org/font', __dirname + '/../release/font'],
-        ['http://font-spider.org/css', __dirname + '/../release/css']
+        ['http://font-spider.org/font', __dirname + '/../release/font']
     ],
 
-    // CSS @import 语法导入的文件数量限制，避免爬虫陷入死循环陷阱
-    maxImportCss: 16,
-
-    // 资源加载前事件
-    resourceBeforeLoad: function (file) {
+    // 文件合法性检查
+    scan: function (file) {
         var RE_SERVER = /^https?\:\/\//i;
         var REG_DOMAIN = /^https?\:\/\/(?:\w+\.)?font-spider\.org/;
 
@@ -154,7 +132,7 @@ new FontSpider
         } else {
             var base = path.resolve(__dirname + '/../release');
             if (file.indexOf(base) !== 0) {
-                throw new Error('禁止访问上层目录');
+                throw new Error('禁止读取上层目录的内容');
             }
         }
     },
@@ -162,19 +140,7 @@ new FontSpider
     // 资源加载成功事件
     resourceLoad: function (file) {
         console.log('Load', file);
-    },
-
-    // 资源加载失败事件
-    resourceError: function (file) {},
-
-    // 爬虫爬行页面前事件
-    spiderBeforeLoad: function (htmlFile) {},
-
-    // 爬虫解析页面完成事件
-    spiderLoad: function (htmlFile) {},
-
-    // 爬虫解析错误事件
-    spiderError: function (htmlFile) {}
+    }
 })
 
 // 压缩字体
@@ -216,3 +182,5 @@ new FontSpider
     process.exit(1);
 });
 ```
+
+> font-spider v0.3 或更高版本才可以使用此接口
