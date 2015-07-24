@@ -8,6 +8,7 @@ var utils = require('./utils');
 var CSSOM = require('cssom');
 var Resource = require('./resource');
 var Promise = require('./promise');
+var fontValueParse = require('./css-parser-font');
 var VError = require('verror');
 
 
@@ -53,8 +54,10 @@ function CssParser (resource /*,importLength*/) {
         ast = CSSOM.parse(content);
     } catch (errors) {
         
+        var code = content.split('\n')[errors.line - 1] || '';
+        console.log('code', code)
         return Promise.reject(
-            new VError(errors, 'parse "%s" failed', file)
+            new VError(errors, 'parse "%s" failed', file, code)
         );
     }
 
@@ -161,13 +164,7 @@ CssParser.Parser = function (ast, file, options, importLength) {
 
         if (typeof that[type] === 'function') {
 
-            try {
-                ret = that[type](rule);
-            } catch (errors) {
-                // debug
-                console.error('DEBUG', type, errors.stack);
-            }
-
+            ret = that[type](rule);
             if (ret) {
                 tasks.push(ret);
             }
@@ -254,33 +251,56 @@ CssParser.Parser.prototype = {
     CSSFontFaceRule: function (rule) {
         var base = this.base;
         var files = [];
-        var family = utils.unquotation(rule.style['font-family']);
+        var style = rule.style;
 
-        var model = new CssParser.Model('CSSFontFaceRule').mix({
-            id: null,
-            family: family,
+        var model = new CssParser
+        .Model('CSSFontFaceRule')
+        .mix({
+            id: '',
+            family: '',
             files: files,
             selectors: [],
             chars: [],
             options: {}
         });
 
+        
+        // 解析 font 相关属性
+        Array.prototype.forEach.call(style, function (key) {
 
-        // 复制 font 相关规则
-        getFontId.keys.forEach(function (key, index) {
-            var value = rule.style[key];
+            if (key === 'font-family') {
 
-            if (typeof value !== 'string') {
-                value = getFontId.values[index];
-            }
+                model.family = utils.unquotation(style['font-family']);
 
-            model.options[key] = value;
+            } else if (key === 'font') {
+
+                model.options = fontValueParse(style.font) || {};
+                model.family = model.options['font-family'];
+
+                if (Array.isArray(model.family)) {
+                    model.family = model.family[0];
+                }
+
+                delete model.options['font-family'];
+
+            } else if (getFontId.keys.indexOf(key) !== -1) {
+
+                model.options[key] = style[key];
+            } 
         });
 
-        model.id = getFontId(family, model.options);
+
+
+        if (!model.family) {
+            return;
+        }
+
+
+        model.id = getFontId(model.family, model.options);
 
         
-        var urls = utils.urlToArray(rule.style.src);
+        // 解析字体地址
+        var urls = utils.urlToArray(style.src);
         urls = urls.map(function (file) {
             file = utils.resolve(base, file);
             return utils.normalize(file);
@@ -288,6 +308,8 @@ CssParser.Parser.prototype = {
 
         urls = this.ignore(urls);
         urls = this.map(urls);
+
+
 
         // 对路径进行安全扫描
         urls.forEach(this.options.scan);
@@ -301,34 +323,53 @@ CssParser.Parser.prototype = {
     // 选择器规则
     CSSStyleRule: function (rule) {
 
-        var selectorText = rule.selectorText;
-        var fontFamily = rule.style['font-family'];
-        var content = utils.unquotation(rule.style.content || '');
-
-        if (!fontFamily) {
+        var style = rule.style;
+        
+        if (!style['font-family'] && !style.font) {
             return;
         }
 
-        var model = new CssParser.Model('CSSStyleRule').mix({
+
+        var selectorText = rule.selectorText;
+        var content = utils.unquotation(style.content || '');
+
+        var model = new CssParser
+        .Model('CSSStyleRule')
+        .mix({
             id: [],
+            family: [],
+            files: [],
             selectors: utils.commaToArray(selectorText),
-            family: utils.commaToArray(fontFamily).map(utils.unquotation),
             chars: content.split(''),
             options: {}
         });
 
 
-        // 获取字体配置
-        getFontId.keys.forEach(function (key, index) {
-            var value = rule.style[key];
+        // 解析 font 相关属性
+        Array.prototype.forEach.call(style, function (key) {
 
-            if (typeof value !== 'string') {
-                value = getFontId.values[index];
-            }
+            if (key === 'font-family') {
 
-            model.options[key] = value;
+                model.family = utils
+                .commaToArray(style['font-family'])
+                .map(utils.unquotation);
+
+            } else if (key === 'font') {
+
+                model.options = fontValueParse(style.font) || {};
+                model.family = model.options['font-family'];
+                delete model.options['font-family'];
+
+            } else if (getFontId.keys.indexOf(key) !== -1) {
+
+                model.options[key] = style[key];
+            } 
         });
 
+
+        if (!model.family || !model.family.length) {
+            return;
+        }
 
 
         // 生成匹配的字体 ID 列表
@@ -367,20 +408,21 @@ function getFontId (name, options) {
 
     var values = getFontId.keys.map(function (key, index) {
 
-        var value = options[key];
+        var value = options[key] || getFontId.values[index];
 
         if (typeof value !== 'string') {
             value = getFontId.values[index];
         } else if (getFontId.alias[key]) {
             value = value.replace.apply(value, getFontId.alias[key]);
         }
+
         return value;
     });
 
     values.unshift(name);
 
     var id = values.join('-');
-    id = getMd5(id);
+    id = crypto.createHash('md5').update(id).digest('hex');
 
     return id;
 }
@@ -394,9 +436,9 @@ getFontId.alias = {
 
 
 
-function getMd5 (text) {
-    return crypto.createHash('md5').update(text).digest('hex');
-}
+
+
+
 
 
 module.exports = CssParser;
