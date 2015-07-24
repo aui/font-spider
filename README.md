@@ -99,9 +99,9 @@ font-spider [options] <htmlFile ...>
 ### 0.3.0
 
 - 重构爬虫模块，解决压缩后的 CSS 解析失败的问题
-- 同名字体支持 [#32](https://github.com/aui/font-spider/issues/32)
+- `font` 属性缩写支持、多个`@font-face`同名字体支持 [#32](https://github.com/aui/font-spider/issues/32)
 - 改进错误流程处理：HTML、CSS 加载与解析错误都会进入错误流程
-- 提供接口
+- 提供对外接口
 
 [更多日志](./CHANGELOG.md)
 
