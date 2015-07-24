@@ -1,4 +1,5 @@
 /* global require,module */
+// TODO 路径安全检查
 
 'use strict';
 
@@ -28,14 +29,14 @@ function Compress (webFont, options) {
     
 
     webFont.files.forEach(function (file) {
-        var extname = path.extname(file).toLocaleLowerCase();
+        var extname = path.extname(file);
         var type = extname.replace('.', '');
 
         if (RE_SERVER.test(file)) {
             throw new Error('does not support the absolute path "' + file + '"'); 
         }
 
-        if (type === 'ttf') {
+        if (type.toLocaleLowerCase() === 'ttf') {
             source = file;
         }
 
@@ -127,6 +128,7 @@ Compress.prototype = {
 
 
         Object.keys(files).forEach(function (key) {
+            key = key.toLocaleLowerCase();
             if (typeof Fontmin['ttf2' + key] === 'function') {
                 fontmin.use(Fontmin['ttf2' + key]({clone: true}));
             }
@@ -142,7 +144,7 @@ Compress.prototype = {
                 if (errors) {
                     reject(errors);
                 } else {
-
+                    
                     Object.keys(files).forEach(function (key) {
 
                         var filename = basename + '.' + key;
