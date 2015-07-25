@@ -28,12 +28,10 @@ function Resource (file, content, options) {
     var data = new Resource.Model(file, content, options);
 
     var cache = options.cache;
-    var scan = options.scan;
     var resourceBeforeLoad = options.resourceBeforeLoad;
     var resourceLoad = options.resourceLoad;
     var resourceError = options.resourceError;
     
-    scan(file);
     resourceBeforeLoad(file);
 
     if (cache) {
@@ -69,7 +67,7 @@ function Resource (file, content, options) {
         
 
         // 远程文件
-        if (utils.isRemote(file)) {
+        if (utils.isRemoteFile(file)) {
 
             var request = http.get(file, function (res) {
 
@@ -158,7 +156,6 @@ Resource.cache = {};
  */
 Resource.defaults = {
     cache: false,
-    scan: function () {},
     resourceLoad: function () {},
     resourceBeforeLoad: function () {},
     resourceError: function () {}
