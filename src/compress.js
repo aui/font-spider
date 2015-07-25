@@ -1,5 +1,4 @@
 /* global require,module */
-// TODO 路径安全检查
 
 'use strict';
 
@@ -96,7 +95,7 @@ Compress.prototype = {
         if (fs.existsSync(source + '.backup')) {
             backupFile = source + '.backup';
         } else {
-            backupFile = dirname + '/.font-spider/' + basename;
+            backupFile = path.join(dirname, '.font-spider', basename);
         }
 
         if (fs.existsSync(backupFile)) {
