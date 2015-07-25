@@ -6,7 +6,6 @@ var fs = require('fs');
 var path = require('path');
 var FontSpider = require('../');
 var program = require('commander');
-var glob = require('glob');
 
 program
     .version(require('../package.json').version)
@@ -61,17 +60,6 @@ if (!files.length) {
 }
 
 
-if (typeof files === 'string') {
-    files = glob.sync(files);
-} else if (Array.isArray(files)) {
-    var srcs = [];
-    files.forEach(function (item) {
-        srcs = srcs.concat(glob.sync(item));
-    });
-    files = srcs;
-}
-
-
 // 合并配置项目
 Object.keys(FontSpider.defaults).forEach(function (key) {
     if (program[key] !== undefined) {
@@ -96,8 +84,6 @@ function onerror (errors) {
 
 // 显示 WebFont 信息
 if (program.info) {
-
-
 
     new FontSpider.Spider(files, options)
     .then(function (webFonts) {
