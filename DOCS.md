@@ -32,7 +32,7 @@ new FontSpider.Spider([__dirname + '/index.html'])
     console.log(webFonts);
 })
 .catch(function (errors) {
-    console.log('Error:', errors.stack.toString());
+    console.error('Error:', errors.stack.toString());
     process.exit(1);
 });
 ```
@@ -81,7 +81,7 @@ new FontSpider.Spider([__dirname + '/index.html'])
     });
 })
 .catch(function (errors) {
-    console.log('Error:', errors.stack.toString());
+    console.error('Error:', errors.stack.toString());
     process.exit(1);
 });
 ```
@@ -159,7 +159,7 @@ new FontSpider
     });
 })
 .catch(function (errors) {
-    console.log('Error:', errors.stack.toString());
+    console.error('Error:', errors.stack.toString());
     process.exit(1);
 });
 ```
