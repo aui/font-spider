@@ -39,16 +39,15 @@ new FontSpider.Spider([__dirname + '/index.html'])
 
 #### 选项
 
+#### 选项
+
 - `ignore` 忽略列表，用来忽略路径或文件。[语法示例](https://github.com/kaelzhang/node-ignore)
   - 类型：`Array` `Function`
   - 示例：`['icon.css', '*.eot']`
 - `map` 映射规则，支持映射远程路径到本地（远程字体需要映射到本地才能压缩）
   - 类型：`Array` `Function`
   - 示例：`[['http://font-spider.org/css', __dirname + '/css'], [...]]`
-- `maxImportCss` CSS `@import` 语法导入的文件数量限制，避免爬虫陷入死循环陷阱
-  - 类型：`Number`
-  - 默认：`16`
-- `scan` 路径检查函数，非法路径可直接 `throw new Error(message)`
+- `maxImportCss` CSS `@import` 语法导入的文件数量限制，避免爬虫陷入死循环陷阱（默认值 `16`）
 - `resourceBeforeLoad` 资源准备加载的事件
 - `resourceLoad` 资源加载成功的事件
 - `resourceError` 资源加载失败的事件
@@ -77,11 +76,11 @@ webFont 描述信息
 var FontSpider = require('font-spider');
 new FontSpider.Spider([__dirname + '/index.html'])
 .then(function (webFonts) {
-    return Promise.all(webFonts.map(function (item) {
-        return new FontSpider.Compress(item, {
+    webFonts.forEach(function (item) {
+        new FontSpider.Compress(item, {
             backup: true
         });
-    }));
+    });
 })
 .catch(function (errors) {
     console.log('Error:', errors.stack.toString());
@@ -95,7 +94,7 @@ new FontSpider.Spider([__dirname + '/index.html'])
 
 ## 完整示例
 
-使用 font-spider 构造一个 CDN 字体动态压缩服务的示例：
+使用 font-spider 构造一个 CDN 字体动态压缩服务的示例（脚本与字体文件在同一台服务器）：
 
 ``` javascript
 'use strict';
@@ -116,26 +115,10 @@ new FontSpider
     ignore: ['*.eot', 'icons.css', 'font?name=*'],
 
     // 路径映射规则。映射远程路径到本地（远程字体文件必须映射到本地才能压缩）
+    // 也可以自定义 map 函数，来限制目录的访问
     map: [
-        ['http://font-spider.org/font', __dirname + '/../release/font']
+    	['http://font-spider.org/font', __dirname + '/../release/font']
     ],
-
-    // 文件合法性检查
-    scan: function (file) {
-        var RE_SERVER = /^https?\:\/\//i;
-        var REG_DOMAIN = /^https?\:\/\/(?:\w+\.)?font-spider\.org/;
-
-        if (RE_SERVER.test(file)) {
-            if (!REG_DOMAIN.test(file)) {
-                throw new Error('只允许来自 font-spider.org 网站的资源请求');
-            }
-        } else {
-            var base = path.resolve(__dirname + '/../release');
-            if (file.indexOf(base) !== 0) {
-                throw new Error('禁止读取上层目录的内容');
-            }
-        }
-    },
 
     // 资源加载成功事件
     resourceLoad: function (file) {
@@ -183,4 +166,4 @@ new FontSpider
 });
 ```
 
-> font-spider v0.3 或更高版本才可以使用此接口
+> 本文档针对 font-spider v0.3+ 撰写
