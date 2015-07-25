@@ -8,7 +8,6 @@ var utils = require('./utils');
 var CSSOM = require('cssom');
 var Resource = require('./resource');
 var Promise = require('./promise');
-var fontValueParse = require('./css-parser-font');
 var VError = require('verror');
 
 
@@ -54,10 +53,8 @@ function CssParser (resource /*,importLength*/) {
         ast = CSSOM.parse(content);
     } catch (errors) {
         
-        var code = content.split('\n')[errors.line - 1] || '';
-        console.log('code', code)
         return Promise.reject(
-            new VError(errors, 'parse "%s" failed', file, code)
+            new VError(errors, 'parse "%s" failed', file)
         );
     }
 
@@ -130,8 +127,7 @@ CssParser.defaults = {
     debug: false,           // 调试开关
     maxImportCss: 16,       // CSS @import 语法导入的文件数量限制
     ignore: [],             // 忽略的文件配置
-    map: [],                // 文件映射配置
-    scan: function () {}    // 安全检查
+    map: []                 // 文件映射配置
 };
 
 
@@ -150,11 +146,7 @@ CssParser.Parser = function (ast, file, options, importLength) {
     this.file = file;
     this.importLength = importLength;
 
-
-    // 忽略文件
     this.ignore = utils.ignore(options.ignore);
-
-    // 对文件地址进行映射
     this.map = utils.map(options.map);
 
 
@@ -215,9 +207,7 @@ CssParser.Parser.prototype = {
         
         var url = utils.unquotation(rule.href.trim());
         url = utils.resolve(base, url);
-        url = this.ignore(url);
-        url = this.map(url);
-        url = utils.normalize(url);
+        url = this._uri(url);
 
 
         if (!url) {
@@ -252,6 +242,7 @@ CssParser.Parser.prototype = {
         var base = this.base;
         var files = [];
         var style = rule.style;
+        var that = this;
 
         var model = new CssParser
         .Model('CSSFontFaceRule')
@@ -274,7 +265,7 @@ CssParser.Parser.prototype = {
 
             } else if (key === 'font') {
 
-                model.options = fontValueParse(style.font) || {};
+                model.options = utils.fontValueParse(style.font) || {};
                 model.family = model.options['font-family'];
 
                 if (Array.isArray(model.family)) {
@@ -300,19 +291,15 @@ CssParser.Parser.prototype = {
 
         
         // 解析字体地址
-        var urls = utils.urlToArray(style.src);
-        urls = urls.map(function (file) {
+        var src = utils.srcValueParse(style.src);
+        var urls = [];
+        src.forEach(function (file) {
             file = utils.resolve(base, file);
-            return utils.normalize(file);
+            file = that._uri(file);
+            if (file) {
+                urls.push(file);
+            }
         });
-
-        urls = this.ignore(urls);
-        urls = this.map(urls);
-
-
-
-        // 对路径进行安全扫描
-        urls.forEach(this.options.scan);
 
         files.push.apply(files, urls);
 
@@ -356,7 +343,7 @@ CssParser.Parser.prototype = {
 
             } else if (key === 'font') {
 
-                model.options = fontValueParse(style.font) || {};
+                model.options = utils.fontValueParse(style.font) || {};
                 model.family = model.options['font-family'];
                 delete model.options['font-family'];
 
@@ -392,6 +379,17 @@ CssParser.Parser.prototype = {
             this.options,
             this.importLength
         );
+    },
+
+
+    // 转换文件地址
+    // 执行顺序：ignore > map > normalize
+    _uri: function (file) {
+        if (!this.ignore(file)) {
+            file = this.map(file);
+            file = utils.normalize(file);
+            return file;
+        }
     }
 
 };

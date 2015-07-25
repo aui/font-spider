@@ -113,11 +113,11 @@ function unique (array) {
 
 
 /*
- * 提取 CSS URL 列表
+ * 提取 @font-face src 列表
  * @param   {String}    url("../test.css"), url(file.css)
  * @return  {Array}
  */
-function urlToArray (value) {
+function srcValueParse (value) {
     var list = [];
     var src;
 
@@ -161,14 +161,14 @@ function reduce (array) {
  */
 function resolve (from, to) {
 
-    if (isRemote(from)) {
+    if (isRemoteFile(from)) {
 
         if (!/\/$/.test(from)) {
             from += '/';
         }
 
         return url.resolve(from, to);
-    } else if (isRemote(to)) {
+    } else if (isRemoteFile(to)) {
         return to;
     } else {
         return path.resolve(from, to);
@@ -182,7 +182,12 @@ function resolve (from, to) {
  * @return  {String}    标准化路径
  */
 function normalize (src) {
-    if (isRemote(src)) {
+
+    if (!src) {
+        return src;
+    }
+
+    if (isRemoteFile(src)) {
         // http://font/font?name=xxx#x
         // http://font/font?
         return src.replace(/#.*$/, '').replace(/\?$/, '');
@@ -199,7 +204,7 @@ function normalize (src) {
  * @param   {String}     路径
  * @return  {Boolean}
  */
-function isRemote (src) {
+function isRemoteFile (src) {
     return RE_SERVER.test(src);
 }
 
@@ -211,7 +216,7 @@ function isRemote (src) {
  */
 function dirname (src) {
     
-    if (isRemote(src)) {
+    if (isRemoteFile(src)) {
 
         // http://www.font-spider.org/////
         src = src.replace(/\/+$/, '');
@@ -250,18 +255,12 @@ function mapFactory (params) {
         regs.push(params);
     });
 
+    // @param   {String}
+    // @param   {String}
     return regs.length ? function map (src) {
 
         if (!src) {
             return src;
-        }
-
-        if (Array.isArray(src)) {
-            return src.map(map);
-        }
-
-        if (!Array.isArray(regs[0])) {
-            regs = [regs];
         }
 
         regs.forEach(function (reg) {
@@ -278,7 +277,7 @@ function mapFactory (params) {
 
 
 /*
- * 筛选器工厂
+ * 忽略器工厂
  * @param   {Array, Function}     规则
  * @return  {Function}
  */
@@ -292,24 +291,106 @@ function ignoreFactory (ignoreList) {
         ignore: ignoreList || []
     });
 
+    // @param   {String}
+    // @return  {Boolean}
     return ignoreList.length ? function (src) {
 
         if (!src) {
-            return;
+            return false;
         }
 
-        if (Array.isArray(src)){
-            return fn.filter(src);
-        } else {
-            return fn.filter([src])[0];
-        }
+        return !fn.filter([src])[0];
 
-    } : function (src) {
-        return src;
+    } : function () {
+        return false;
     };
 }
 
 
+
+
+/*
+ * css `font` 属性解析
+ * @see https://github.com/bramstein/css-font-parser
+ * @version 0.2.0
+ */
+function fontValueParse(input) {
+
+    var states = {
+        VARIATION: 1,
+        LINE_HEIGHT: 2,
+        FONT_FAMILY: 3
+    };
+
+    var state = states.VARIATION;
+    var buffer = '';
+    var result = {
+        'font-family': []
+    };
+
+
+    for (var c, i = 0; c = input.charAt(i); i += 1) {
+        if (state === states.FONT_FAMILY && (c === '"' || c === '\'')) {
+            var index = i + 1;
+
+            // consume the entire string
+            do {
+                index = input.indexOf(c, index) + 1;
+                if (!index) {
+                    // If a string is not closed by a ' or " return null.
+                    // TODO: Check to see if this is correct.
+                    return null;
+                }
+            } while (input.charAt(index - 2) === '\\');
+
+            result['font-family']
+            .push(input.slice(i + 1, index - 1)
+            .replace(/\\('|")/g, '$1'));
+
+            i = index - 1;
+            buffer = '';
+        } else if (state === states.FONT_FAMILY && c === ',') {
+            if (!/^\s*$/.test(buffer)) {
+                result['font-family'].push(buffer.replace(/^\s+|\s+$/, '').replace(/\s+/g, ' '));
+                buffer = '';
+            }
+        } else if (state === states.VARIATION && (c === ' ' || c === '/')) {
+            if (/^((xx|x)-large|(xx|s)-small|small|large|medium)$/.test(buffer) ||
+                /^(larg|small)er$/.test(buffer) ||
+                /^(\+|-)?([0-9]*\.)?[0-9]+(em|ex|ch|rem|vh|vw|vmin|vmax|px|mm|cm|in|pt|pc|%)$/.test(buffer)) {
+                state = c === '/' ? states.LINE_HEIGHT : states.FONT_FAMILY;
+                result['font-size'] = buffer;
+            } else if (/^(italic|oblique)$/.test(buffer)) {
+                result['font-style'] = buffer;
+            } else if (/^small-caps$/.test(buffer)) {
+                result['font-variant'] = buffer;
+            } else if (/^(bold(er)?|lighter|[1-9]00)$/.test(buffer)) {
+                result['font-weight'] = buffer;
+            } else if (/^((ultra|extra|semi)-)?(condensed|expanded)$/.test(buffer)) {
+                result['font-stretch'] = buffer;
+            }
+            buffer = '';
+        } else if (state === states.LINE_HEIGHT && c === ' ') {
+            if (/^(\+|-)?([0-9]*\.)?[0-9]+(em|ex|ch|rem|vh|vw|vmin|vmax|px|mm|cm|in|pt|pc|%)?$/.test(buffer)) {
+                result['line-height'] = buffer;
+            }
+            state = states.FONT_FAMILY;
+            buffer = '';
+        } else {
+            buffer += c;
+        }
+    }
+
+    if (state === states.FONT_FAMILY && !/^\s*$/.test(buffer)) {
+        result['font-family'].push(buffer.replace(/^\s+|\s+$/, '').replace(/\s+/g, ' '));
+    }
+
+    if (result['font-size'] && result['font-family'].length) {
+        return result;
+    } else {
+        return null;
+    }
+}
 
 
 
@@ -320,13 +401,14 @@ module.exports = {
     copy: copy,
     options: options,
     unique: unique,
-    urlToArray: urlToArray,
+    srcValueParse: srcValueParse,
     commaToArray: commaToArray,
     reduce: reduce,
     resolve: resolve,
     normalize: normalize,
     dirname: dirname,
-    isRemote: isRemote,
+    isRemoteFile: isRemoteFile,
     ignore: ignoreFactory,
-    map: mapFactory
+    map: mapFactory,
+    fontValueParse: fontValueParse
 };
