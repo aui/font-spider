@@ -39,8 +39,6 @@ new FontSpider.Spider([__dirname + '/index.html'])
 
 #### 选项
 
-#### 选项
-
 - `ignore` 忽略列表，用来忽略路径或文件。[语法示例](https://github.com/kaelzhang/node-ignore)
   - 类型：`Array` `Function`
   - 示例：`['icon.css', '*.eot']`
