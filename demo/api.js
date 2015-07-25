@@ -27,21 +27,7 @@ new FontSpider
     maxImportCss: 16,
 
     // 资源加载前事件
-    resourceBeforeLoad: function (file) {
-        var RE_SERVER = /^https?\:\/\//i;
-        var REG_DOMAIN = /^https?\:\/\/(?:\w+\.)?font-spider\.org/;
-
-        if (RE_SERVER.test(file)) {
-            if (!REG_DOMAIN.test(file)) {
-                throw new Error('只允许来自 font-spider.org 网站的资源请求');
-            }
-        } else {
-            var base = path.resolve(__dirname + '/../release');
-            if (file.indexOf(base) !== 0) {
-                throw new Error('禁止访问上层目录');
-            }
-        }
-    },
+    resourceBeforeLoad: function (file) {},
 
     // 资源加载成功事件
     resourceLoad: function (file) {
