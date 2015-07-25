@@ -6,6 +6,7 @@ var fs = require('fs');
 var path = require('path');
 var FontSpider = require('../');
 var program = require('commander');
+var glob = require('glob');
 
 program
     .version(require('../package.json').version)
@@ -59,8 +60,21 @@ if (!files.length) {
     process.exit(1);
 }
 
-Object.keys(program).forEach(function (key) {
-    if (key.indexOf('_') !== 0 && key !== 'args') {
+
+if (typeof files === 'string') {
+    files = glob.sync(files);
+} else if (Array.isArray(files)) {
+    var srcs = [];
+    files.forEach(function (item) {
+        srcs = srcs.concat(glob.sync(item));
+    });
+    files = srcs;
+}
+
+
+// 合并配置项目
+Object.keys(FontSpider.defaults).forEach(function (key) {
+    if (program[key] !== undefined) {
         options[key] = program[key];
     }
 });
@@ -81,7 +95,7 @@ function onerror (errors) {
 
 
 // 显示 WebFont 信息
-if (options.info) {
+if (program.info) {
 
 
 
@@ -91,25 +105,23 @@ if (options.info) {
         writeln('');
 
         if (webFonts.length === 0) {
-            write('web font not found');
+            write('<web font not found>');
             return;
         }
 
         webFonts.forEach(function (webFont) {
-            write(
-                [
-                    'Font name: ' + color('cyan', webFont.name),
-                    'Font id: ' + color('cyan', webFont.id),
-                    'Include chars: ' + webFont.chars,
-                    'CSS selector: ' + webFont.selectors.join(', '),
-                    'Font files: \n' +
-                        webFont.files
-                        .map(function (val) {
-                            return color('cyan', path.relative('./', val));
-                        }).join('\n'),
-                    '\n'
-                ].join('\n')
-            );
+
+            write('Font name:', color('green', webFont.name));
+            write('Include chars:', webFont.chars);
+            write('Font id:', webFont.id);
+            write('CSS selector:', webFont.selectors.join(', '));   
+            write('Font files:');
+
+            webFont.files.forEach(function (file) {
+                write(color('cyan', path.relative('./', file)));
+            });
+
+            write('');
         });
 
     })
@@ -125,16 +137,18 @@ if (options.info) {
         writeln('');
 
         if (webFonts.length === 0) {
-            write('web font not found');
+            write('<web font not found>');
             return;
         }
 
         webFonts.forEach(function (webFont) {
-            
-            write('Font name:', color('cyan', webFont.name));
-            write('Font id:', color('cyan', webFont.id));
+
+            write('Font name:', color('green', webFont.name));
             write('Original size:', color('green', webFont.originalSize / 1000 + ' KB'));
             write('Include chars:', webFont.chars);
+            write('Font id:', webFont.id);
+            write('CSS selector:', webFont.selectors.join(', '));
+            write('Font files:');
 
             webFont.files.forEach(function (file) {
                 if (fs.existsSync(file)) {
