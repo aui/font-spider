@@ -306,11 +306,6 @@ Spider.Parser.prototype = {
  * 默认选项
  */
 Spider.defaults = {
-    // ignore: [],
-    // map: [],
-    // resourceLoad: function () {},
-    // resourceBeforeLoad: function () {},
-    // resourceError: function () {},
     spiderBeforeLoad: function () {},
     spiderLoad: function () {},
     spiderError: function () {},
@@ -318,6 +313,10 @@ Spider.defaults = {
     sort: true,        // 是否将查询到的文本按字体中字符的顺序排列
     unique: true       // 是否去除重复字符
 };
+
+utils.mix(Spider.defaults, CssParser.defaults);
+utils.mix(Spider.defaults, HtmlParser.defaults);
+utils.mix(Spider.defaults, Resource.defaults);
 
 
 
