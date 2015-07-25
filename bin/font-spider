@@ -6,14 +6,6 @@ var fs = require('fs');
 var path = require('path');
 var FontSpider = require('../');
 var program = require('commander');
-var colors = require('../src/color');
-
-
-Object.keys(colors).forEach(function (color) {
-    String.prototype.__defineGetter__(color, function () {
-        return colors[color][0] + this + colors[color][1];
-    });
-});
 
 program
     .version(require('../package.json').version)
@@ -21,16 +13,14 @@ program
     .option('--info', 'show only webfont information')
     .option('--ignore <pattern>', 'ignore the files', list)
     .option('--map <remotePath,localPath>', 'mapping the remote path to the local', toMap)
-    .option('--log', 'enable debug mode')
     .option('--no-backup', 'do not back up fonts')
-    .option('--no-error', 'silently fail on parse errors')
-    .option('--revert', 'revert compressed font file')
+    .option('--debug', 'enable debug mode')
     .parse(process.argv);
 
 
 function list(args) {
     return args.split(',');
-};
+}
 
 function toMap(args) {
     args = list(args);
@@ -46,70 +36,173 @@ function toMap(args) {
     }
 
     return map;
-};
+}
 
 
 var files = program.args;
-var options = {};
+var options = {
+    resourceLoad: function (file) {
+        writeln('Load:', color('cyan', file), color('green', '<OK>'));
+    },
+
+    resourceError: function () {
+        writeln('');
+    },
+
+    spiderLoad: function () {
+        writeln('Loading ..');
+    }
+};
 
 if (!files.length) {
     program.help();
     process.exit(1);
 }
 
-Object.keys(program).forEach(function (key) {
-    if (key.indexOf('_') !== 0 && key !== 'args') {
+
+// 合并配置项目
+Object.keys(FontSpider.defaults).forEach(function (key) {
+    if (program[key] !== undefined) {
         options[key] = program[key];
     }
 });
 
+
+
+writeln('Loading ..');
+
+
+function onerror (errors) {
+    writeln('');
+    process.stderr.write(color('red', 'Error: ' + errors.message) + '\n');
+    process.stderr.write(color('grey', errors.stack.toString() + '\n'));
+
+    // 可能有异步任务运行，强制中断
+    process.exit(1);
+}
+
+
 // 显示 WebFont 信息
-if (options.info) {
+if (program.info) {
 
     new FontSpider.Spider(files, options)
-    .then(function (data) {
-        data.forEach(function (item) {
-            process.stdout.write(
-                [
-                    'Font name: ' + (item.name).cyan,
-                    'Include chars: ' + item.chars,
-                    'Font File: \n' +
-                        item.files
-                        .map(function (val) {
-                            return (path.relative('./', val)).cyan;
-                        }).join('\n'),
-                    '\n'
-                ].join('\n')
-            );
-        });
+    .then(function (webFonts) {
 
-    });
+        writeln('');
 
-// 恢复备份的字体
-} else if (options.revert) {
+        if (webFonts.length === 0) {
+            write('<web font not found>');
+            return;
+        }
 
-    var backupExtname = FontSpider.BACKUP_EXTNAME;
+        webFonts.forEach(function (webFont) {
 
-    new FontSpider.Spider(files, options)
-    .then(function (data) {
-        data.forEach(function (item) {
-            item.files.forEach(function (file) {
-                if (fs.existsSync(file + backupExtname)) {
-                    fs.renameSync(file + backupExtname, file);
-                    process.stdout.write('File ' + (path.relative('./', file)).cyan + ' revert\n');
-                }
+            write('Font name:', color('green', webFont.name));
+            write('Include chars:', webFont.chars);
+            write('Font id:', webFont.id);
+            write('CSS selector:', webFont.selectors.join(', '));   
+            write('Font files:');
+
+            webFont.files.forEach(function (file) {
+                write(color('cyan', path.relative('./', file)));
             });
+
+            write('');
         });
 
-    });
+    })
+    .catch(onerror);
 
 
 // 处理 WebFont
 } else {
 
+    new FontSpider(files, options)
+    .then(function (webFonts) {
 
-    new FontSpider(files, options);
+        writeln('');
+
+        if (webFonts.length === 0) {
+            write('<web font not found>');
+            return;
+        }
+
+        webFonts.forEach(function (webFont) {
+
+            write('Font name:', color('green', webFont.name));
+            write('Original size:', color('green', webFont.originalSize / 1000 + ' KB'));
+            write('Include chars:', webFont.chars);
+            write('Font id:', webFont.id);
+            write('CSS selector:', webFont.selectors.join(', '));
+            write('Font files:');
+
+            webFont.files.forEach(function (file) {
+                if (fs.existsSync(file)) {
+                    write('File', color('cyan', path.relative('./', file)),
+                        'created:', color('green', + fs.statSync(file).size / 1000 + ' KB'));
+                } else {
+                    write(color('red', 'File ' + path.relative('./', file) + ' not created'));
+                }
+            });
+
+            write('');
+        });
+
+    })
+    .catch(onerror);
 }
 
+
+
+function write () {
+    var stream = process.stdout;
+
+    if (!stream.isTTY) {
+        return;
+    }
+
+    stream.write(Array.prototype.join.call(arguments, ' ') + '\n');
+}
+
+
+function writeln () {
+    var stream = process.stdout;
+
+    if (!stream.isTTY) {
+        return;
+    }
+
+    stream.clearLine();
+    stream.cursorTo(0);
+    stream.write(Array.prototype.join.call(arguments, ' '));
+}
+
+
+function color (name, string) {
+    var c = color.colors[name];
+    if (c && typeof string === 'string') {
+        return c[0] + string + c[1];
+    } else {
+        return string;
+    }
+}
+
+color.colors = {
+    // styles
+    'bold'      : ['\x1B[1m',  '\x1B[22m'],
+    'italic'    : ['\x1B[3m',  '\x1B[23m'],
+    'underline' : ['\x1B[4m',  '\x1B[24m'],
+    'inverse'   : ['\x1B[7m',  '\x1B[27m'],
+    // colors
+    'white'     : ['\x1B[37m', '\x1B[39m'],
+    'grey'      : ['\x1B[90m', '\x1B[39m'],
+    'black'     : ['\x1B[30m', '\x1B[39m'],
+    'blue'      : ['\x1B[34m', '\x1B[39m'],
+    'cyan'      : ['\x1B[36m', '\x1B[39m'],
+    'green'     : ['\x1B[32m', '\x1B[39m'],
+    'magenta'   : ['\x1B[35m', '\x1B[39m'],
+    'red'       : ['\x1B[31m', '\x1B[39m'],
+    'yellow'    : ['\x1B[33m', '\x1B[39m']
+};
 
 

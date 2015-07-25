@@ -1,0 +1,372 @@
+@charset "UTF-8";
+
+/*
+ * Project:Font-spider
+ * Comments:首页
+ * @author feihuangfu(fufu)
+ *
+ */
+@font-face {
+  font-family: 'anjingchen';
+  src: url('../font/anjingchen.eot');
+  src:
+    url('../font/anjingchen.eot?#font-spider') format('embedded-opentype'),
+    url('../font/anjingchen.woff') format('woff'),
+    url('../font/anjingchen.ttf') format('truetype'),
+    url('../font/anjingchen.svg') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'xiaofeng';
+  src: url('../font/xiaofeng.eot');
+  src:
+    url('../font/xiaofeng.eot?#font-spider') format('embedded-opentype'),
+    url('../font/xiaofeng.woff') format('woff'),
+    url('../font/xiaofeng.ttf') format('truetype'),
+    url('../font/xiaofeng.svg') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+
+html {font-size:62.5%; font-family: "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif; }
+body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,button,textarea,p,blockquote,th,td,hr {margin:0;padding:0}
+h1,h2,h3,h4,h5,h6{font-size:100%;}
+input,textarea,select,button{font-size:12px;font-weight:normal}
+input[type="button"],input[type="submit"],select,button{cursor:pointer}
+table {border-collapse:collapse;border-spacing:0}
+address,caption,cite,code,dfn,em,th,var {font-style:normal;font-weight:normal}
+li {list-style:none}
+caption,th {text-align:left}
+q:before,q:after {content:''}
+abbr,acronym {border:0;font-variant:normal}
+sup {vertical-align:text-top}
+sub {vertical-align:text-bottom}
+fieldset,img,a img,iframe {border-width:0;border-style:none}
+img{-ms-interpolation-mode:bicubic}
+textarea{overflow-y:auto}
+legend {color:#000}
+a:link,a:visited {text-decoration:none}
+
+hr{height:0}
+label{cursor:pointer}
+
+body {
+    font-size: 16px;
+    font-size: 1.6rem;
+    height: 100%;
+    background: #c82e2e;
+}
+a{color:#328CE5}
+a:hover{color:#2b8ae8;text-decoration:none}
+a.hit{color:#C06C6C}
+a:focus {outline:none}
+.visually_hidden {
+    position: absolute !important;
+    clip: rect(1px 1px 1px 1px);
+    clip: rect(1px,1px,1px,1px);
+    padding: 0 !important;
+    border: 0 !important;
+    height: 1px !important;
+    width: 1px !important;
+    overflow: hidden;
+}
+/*公用*/
+.inner
+{
+    max-width: 1000px;
+    margin: 0 auto;
+}
+.card {
+    height: 100%;
+    background: #FFF;
+}
+
+/*头部*/
+.header
+{
+    /*position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 99;
+    width: 100%;*/
+    height: 65px;
+    background: #c82e2e;
+    padding-top: 40px;
+    font-size: 14px;
+}
+.header .logo
+{
+    display: inline-block;
+    width:157px;
+    height: 33px;
+    background: url("../img/sprite-fontspider.png") 0 0 no-repeat;
+}
+.header .logo a {
+    display: inline-block;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    text-indent: -999em;
+}
+.header .menu
+{
+    float: right;
+}
+.header .menu ul li
+{
+    float: left;
+    margin-left: 55px;
+}
+.header .menu ul li .menu-item
+{
+    font-size: 20px;
+    color: #fff;
+    padding-bottom: 10px;
+}
+.header .menu ul li a:hover,
+.header .menu ul li a.current
+{
+    background: url("../img/circle-1.png") left bottom repeat-x;
+}
+.header-min {
+
+}
+/*banner*/
+.banner
+{
+    text-align: center;
+    background: transparent;
+    
+}
+.banner .inner {
+    height: 100%;
+}
+.banner .banner-img
+{
+    height: 50%;
+    line-height: 50%;
+    position: relative;
+    margin: 0 auto;
+}
+.banner .banner-img img {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    margin-top: -120px;
+}
+.banner .content {
+    padding-bottom: 150px;
+}
+.banner h2
+{
+    font-size: 80px;
+    color: #fff;
+    font-weight: normal;
+    font-family: 'xiaofeng', 'Times New Roman', Times, serif;
+    margin:0 0 40px 0;
+}
+.banner p
+{
+    font-size: 24px;
+    color: #fff;
+    line-height: 50px;
+}
+.banner .ico-drag
+{
+    display: inline-block;
+    width: 30px;
+    height: 65px;
+}
+
+.card
+{
+    text-align: center;
+}
+.card-a, .card-b {
+    padding: 10% 0;
+}
+.card-a
+{
+    background: #FFF;
+}
+.card-b
+{
+    background: #F8F8F8;
+}
+.card h3
+{
+    color: #c22a2a;
+    font-family: 'xiaofeng';
+    font-size: 80px;
+    font-weight: normal;
+    text-align: center;
+    position: relative;
+    margin-bottom: 40px;
+}
+.card h4 {
+    text-align: center;
+    font-size: 30px;
+    font-family: 'anjingchen';
+}
+.card h3 .ico-end-big
+{
+    background: url("../img/sprite-fontspider.png") -130px -35px no-repeat;
+    display: inline-block;
+    width: 23px;
+    height: 24px;
+    vertical-align: bottom;
+    margin: 0 0 20px 10px;
+}
+.card .ct-text-box
+{   
+    max-width: 800px;
+    display: inline-block;
+    text-align: left;
+    font-size: 30px;
+    color: #272727;
+    line-height: 70px;
+}
+.card .ct-text-box.about
+{
+    font-size: 18px;
+    line-height: 2.4em;
+    max-width: 612px;
+}
+.card .ct-text-box li {
+    
+    color: #333;
+}
+.card pre
+{
+    min-width: 700px;
+    overflow: auto;
+    padding: 5px 20px;
+}
+.card pre, .card pre code {
+    color: #888;
+    font-size: 14px;
+    line-height: 1.6em;
+    background: #000;
+    font-family: Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal;
+}
+.card blockquote {
+    margin-bottom: 40px;
+    padding: 5px 20px;
+    font-size: 14px;
+    line-height: 2em;
+    background: #F8F8F8;
+    color: #888;
+}
+.card-b blockquote {
+    background: #DDD;
+}
+.card blockquote li {
+    padding: 0;
+    margin: 0;
+    line-height: 2em;
+    
+}
+.card .op
+{
+    text-align: center;
+    font-size: 40px;
+    margin-top: 60px;
+}
+.card .btn
+{
+    display: inline-block;
+    width: 340px;
+    height: 75px;
+    color:#c22a2a;
+    border: 3px solid #c22a2a;
+    line-height: 75px;
+}
+.ct-setup
+{
+    background: #f8f8f8;
+}
+.ct-setup .inner
+{
+    width: 1200px;
+}
+.ct-setup .ct-text-box
+{
+    text-align: center;
+}
+.footer
+{
+    text-align: center;
+    background: #FFF;
+    padding-bottom: 40px;
+    font-size: 12px;
+    color: #989898;
+}
+.footer .name
+{
+    color: #c22a2a;
+}
+
+@media screen and (max-width: 48em) {
+    .inner {
+        padding: 0 15px;
+    }
+    .header {
+        text-align: center;
+    }
+    .header .menu  {
+        display: none;
+    }
+    .banner {
+        margin-top: 30px;
+    }
+    .banner .banner-img {
+        display: none;
+        text-align: center;
+        height: 40%;
+    }
+    .banner h2 {
+        font-size: 56px;
+    }
+    .banner p {
+        position: absolute;
+        left: 0;
+        bottom: 25px;
+        width: 100%;
+        font-size: 14px;
+    }
+    .banner .banner-img img {
+        position: inherit;
+        width: 90%;
+        height: auto;
+    }
+    .card .ct-text-box {
+        display: block;
+    }
+    .card h4 {
+        text-align: left;
+        font-size: 24px;
+    }
+    .card h3 {
+        font-size: 50px;
+    }
+    .about img {
+        width: 100%;
+        height: auto;
+    }
+    .card pre {
+        display: block;
+        min-width: 0;
+        max-width: auto;
+        padding: 5px 15px;
+    }
+    .card blockquote {
+       padding: 5px 15px; 
+    }
+
+    .link {
+        text-align: center;
+        font-size: 12px;
+    }
+}

@@ -1,12 +1,14 @@
-/* global require,Buffer,module */
+/* global require,module,console */
+
+//TODO 支持行内样式
+
 'use strict';
 
-var fs = require('fs');
-var path = require('path');
 var cheerio = require('cheerio');
 var utils = require('./utils');
 var Resource = require('./resource');
-var Promise = typeof Promise === 'function' ? Promise : require('promise');
+var Promise = require('./promise');
+var VError = require('verror');
 
 
 
@@ -20,9 +22,10 @@ function HtmlParser (resource) {
     }
 
 
-    if (!(resource instanceof Resource.Content)) {
-        throw new Error('require `Resource.Content`');
+    if (!(resource instanceof Resource.Model)) {
+        throw new Error('require `Resource.Model`');
     }
+
 
 
     var file = resource.file;
@@ -30,46 +33,64 @@ function HtmlParser (resource) {
     var options = resource.options;
     var $;
 
-    options.base = options.base || path.dirname(file);
-
-    
 
     try {
         $ = cheerio.load(content);
+        return new HtmlParser.Parser($, file, options);
     } catch (error) {
-        utils.warn(error);
-        return Promise.reject(error);
+
+        var errors = new VError(error, 'parse "%s" failed', file);
+
+        return Promise.reject(errors);
     }
-
-
-    return new HtmlParser.Parser($, options);
+    
 }
 
 
 
-HtmlParser.Parser = function Parser ($, options) {
+/*
+ * 默认选项
+ */
+HtmlParser.defaults = {
+    cache: true,        // 缓存开关
+    debug: false,       // 调试开关
+    ignore: [],         // 忽略的文件配置
+    map: []             // 文件映射配置
+};
 
-    var that = this;
+
+
+HtmlParser.Parser = function ($, file, options) {
+
+    options = utils.options(HtmlParser.defaults, options);
 
     this.$ = $;
 
     this.options = options;
 
-    // 忽略文件
-    this.filter = utils.filter(options.ignore);
+    this.file = file;
 
-    // 对文件地址进行映射
+    this.ignore = utils.ignore(options.ignore);
+
     this.map = utils.map(options.map);
 
-    // TODO <base /> 标签顺序会影响解析
-    this.base = $('base[href]').attr('href') || options.base;
-
-    this.file = options.file;
+    // TODO <base /> 标签顺序会影响解析。
+    // 这里只考虑 <base /> 标签在 HTML 顶部的情况
+    // /Users/aui/test.html >> /Users/aui
+    // http://font-spider.org >>> http://font-spider.org
+    // http://font-spider.org/html/test.html >>> http://font-spider.org/html
+    this.base = $('base[href]').attr('href') || utils.dirname(file);
 
     return Promise.resolve(this);
 };
 
+
+
+
+
 HtmlParser.Parser.prototype = {
+
+
     constructor: HtmlParser.Parser,
 
 
@@ -82,7 +103,6 @@ HtmlParser.Parser.prototype = {
         var that = this;
         var base = this.base;
         var $ = this.$;
-        var htmlFile = this.file;
         var files = [];
 
 
@@ -92,30 +112,30 @@ HtmlParser.Parser.prototype = {
             var cssFile;
             var href = $this.attr('href');
 
-
-            // 忽略含有有 disabled 属性的
-            if (isDisabled($this)) {
-                files.push(null); // 确保返回的数组 length 正确
-                return;
-            }
-
-
-            if (!that.filter([href]).length) {
-                return;
-            }
-
             cssFile = utils.resolve(base, href);
-            cssFile = that.filter(cssFile);
-            cssFile = that.map(cssFile);
-            cssFile = utils.normalize(cssFile);
+            cssFile = uri(cssFile);
 
+            // 注意：为空也得放进去，保持与 link 标签一一对应
             files.push(cssFile);
         });
 
 
-        function isDisabled ($elem) {
-            var disabled = $elem.attr('disabled');
-            return disabled && disabled !== 'false';
+        // 转换 file 地址
+        // 执行顺序：ignore > map > normalize
+        function uri (file) {
+
+            if (!that.ignore(file)) {
+                file = that.map(file);
+                file = utils.normalize(file);
+                return file;
+            }
+        }
+
+
+        if (this.options.debug) {
+            console.log('');
+            console.log('[DEBUG]', 'HtmlParser#getCssFiles', this.file);
+            console.log(files);
         }
 
 
@@ -129,9 +149,8 @@ HtmlParser.Parser.prototype = {
      * @return  {Array}
      */
     getCssContents: function () {
-        var that = this;
+
         var $ = this.$;
-        var htmlFile = this.file;
         var contents = [];
 
         $('style').each(function () {
@@ -139,6 +158,12 @@ HtmlParser.Parser.prototype = {
             var content = $this.text();
             contents.push(content);
         });
+
+        if (this.options.debug) {
+            console.log('');
+            console.log('[DEBUG]', 'HtmlParser#getCssContents', this.file);
+            console.log(contents);
+        }
 
         return contents;
     },
@@ -150,35 +175,61 @@ HtmlParser.Parser.prototype = {
      * @return  {Array}     字符数组
      */
     querySelectorChars: function (selector) {
+
+        var chars = '';
+        var that = this;
+
+
+        // 将多个语句拆开进行查询，避免其中有失败导致所有规则失效
+        if (selector.indexOf(',') !== -1) {
+            
+            selector.split(',').forEach(function (selector) {
+                chars += that.querySelectorChars(selector).join('');
+            });
+
+            return chars.split('');
+        }
+
+
         var $elem;
         var $ = this.$;
-        var chars = [];
         var RE_SPURIOUS = /\:(link|visited|hover|active|focus)\b/ig;
+
 
         // 剔除状态伪类
         selector = selector.replace(RE_SPURIOUS, '');
+
 
         // 使用选择器查找节点
         try {
             $elem = $(selector);
         } catch (e) {
-            // 1. 包含 :before 等不支持的伪类
-            // 2. 其他非法语句
-            return chars;
+            // 1. 包含 :before \ :after 等不支持的伪类
+            // 2. 非法语句
+            return [];
         }
+
 
         // 查找文本节点
         $elem.each(function () {
-            chars.push($(this).text());
+            chars += $(this).text();
         });
+
+
+        chars = chars.split('');
+
+
+        if (this.options.debug) {
+            console.log('');
+            console.log('[DEBUG]', 'HtmlParser#querySelectorChars', selector, this.file);
+            console.log(chars.join(''));
+        }
+
 
         return chars;
     }
 };
 
 
-
-
-//TODO 支持行内样式
 
 module.exports = HtmlParser;

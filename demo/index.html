@@ -1,0 +1,128 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0, minimal-ui">
+    <title>字蛛（FontSpider）</title>
+    <link href="css/style.css" rel="stylesheet" media="screen" />
+</head>
+<body>
+    <div class="header">
+        <div class="inner">
+            <h1 class="logo">
+                <a href="index.html">字蛛FontSpider</a>
+            </h1>
+            <div class="menu">
+                <ul>
+                    <li><a href="#about" class="menu-item">特性</a></li>
+                    <li><a href="#install" class="menu-item">安装</a></li>
+                    <li><a href="#use" class="menu-item">使用</a></li>
+                    <li><a href="#source" class="menu-item">源码</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="banner" class="card banner">
+        <div class="inner">
+            <div class="banner-img">
+                <img width="1000" height="240" src="./img/banner-img.png">
+            </div>
+            <div class="content">
+                <h2>字蛛-中文字体压缩器</h2>
+                <p>让网页自由引入中文字体成为可能</p> 
+            </div> 
+        </div>
+    </div>
+
+    <div id="about" class="card card-a">
+        <div class="inner">
+            <h3 style="display:none">特性<span class="ico ico-end-big"></span></h3>
+            <div class="ct-text-box about">
+                <p><img src="img/window.jpg" alt="window" width="612" height="464"></p>
+                <p>字蛛通过分析本地 CSS 与 HTML 文件获取 WebFont 中没有使用的字符，并将这些字符数据从字体中删除以实现压缩，同时生成跨浏览器使用的格式。</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="install" class="card card-b">
+        <div class="inner">
+            <h3>安装<span class="ico ico-end-big"></span></h3>
+            <div class="ct-text-box">
+                <h4>先安装好 NodeJS，然后执行：</h4>
+
+                <pre><code>npm install font-spider -g</code></pre>
+                <blockquote>
+                    <p>- GruntJS 用户可使用 <a href="install.html">gruntjs 插件</a></p>
+                </blockquote>
+            </div>
+        </div>
+    </div>
+
+    <div id="use" class="card card-a">
+        <div class="inner">
+            <h3>使用<span class="ico ico-end-big"></span></h3>
+            <div class="ct-text-box">
+                <h4>在 CSS 中使用 WebFont：</h4>
+                <pre><code>/*声明 WebFont*/
+@font-face {
+  font-family: 'pinghei';
+  src: url('../font/pinghei.eot');
+  src:
+    url('../font/pinghei.eot?#font-spider') format('embedded-opentype'),
+    url('../font/pinghei.woff') format('woff'),
+    url('../font/pinghei.ttf') format('truetype'),
+    url('../font/pinghei.svg') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/*使用选择器指定字体*/
+.home h1, .demo > .test {
+    font-family: 'pinghei';
+}
+</code></pre>
+                <blockquote>
+                    <p>1. @font-face 中的 src 定义的 .ttf 文件必须存在，其余的格式将由工具自动生成</p>
+                    <p>2. 开发阶段请使用相对路径的 CSS 与 WebFont</p>
+                </blockquote>
+                <h4>运行 font-spider 命令：</h4>
+                <pre><code>font-spider ./demo/*.html</code></pre>
+                <blockquote>
+                    <p>页面依赖的字体将会自动压缩好，原 .ttf 字体会备份</p>
+                </blockquote>
+            </div>
+        </div>
+    </div>
+
+    <div id="source" class="card card-a">
+        <div class="inner">
+            <h3>源码<span class="ico ico-end-big"></span></h3>
+            <div class="ct-text-box">
+                <p class="link"><a href="https://github.com/aui/font-spider">github.com/aui/font-spider</a></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="inner">
+            <p>友情链接：<a href="http://ecomfe.github.io/fontmin/">fontmin</a></p>
+            <p>© 2015 <span class="name">FONT-SPIDER.ORG</span> ALL RIGHTS RESERVED.</p>
+        </div>
+    </div>
+    <script type="text/javascript">
+    (function () {
+        var resize = function () {
+            var winHeight = document.documentElement.clientHeight;
+            document.getElementById('banner').style.height = winHeight + 'px';
+        };
+
+        window.onresize = resize;
+        resize();
+    })();
+    </script>
+
+
+</body>
+</html>

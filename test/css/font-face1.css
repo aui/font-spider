@@ -1,0 +1,13 @@
+@font-face {
+    font-family: 'aui';
+    src: url('../font/aui.eot');
+    src:
+        local("Helvetica Neue Bold"),
+        local("HelveticaNeue-Bold"),
+        url('../font/aui.eot?#font-spider') format('embedded-opentype'),
+        url('../font/aui.woff') format('woff'),
+        url('../font/aui.ttf') format('truetype'),
+        url('../font/aui.svg') format('svg');
+    font-weight: bold;
+    font-style: normal;
+}

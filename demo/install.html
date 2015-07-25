@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0, minimal-ui">
+    <title>字蛛（FontSpider）</title>
+    <link href="css/style.css" rel="stylesheet" media="screen" />
+</head>
+<body>
+    <div class="header">
+        <div class="inner">
+            <h1 class="logo">
+                <a href="index.html">字蛛FontSpider</a>
+            </h1>
+            <div class="menu">
+                <ul>
+                    <li><a href="index.html#about" class="menu-item">特性</a></li>
+                    <li><a href="index.html#install" class="current menu-item">安装</a></li>
+                    <li><a href="index.html#use" class="menu-item">使用</a></li>
+                    <li><a href="index.html#source" class="menu-item">源码</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="install" class="card card-a">
+        <div class="inner">
+            <h3>GruntJS 版本<span class="ico ico-end-big"></span></h3>
+            <div class="ct-text-box">
+               <h4>安装：</h4>
+                <pre><code>npm install grunt-font-spider --save-dev</code></pre>
+                <blockquote>
+                    <p>Windows 下运行需要安装 <a href="http://www.perl.org">perl</a> 才能运行</p>
+                </blockquote>
+                <h4>配置：</h4>
+                <pre><code>module.exports = function(grunt) {
+  grunt.initConfig({
+     // 拷贝文件到发布目录，这样字体可被反复处理
+    copy: {
+      main: {
+        src: './test/**',
+        dest: './dest/'
+      },
+    },
+     // 字蛛插件：压缩与转码静态页面中的 WebFont
+    'font-spider': {
+      main: {
+        src: './dest/test/**/*.html'
+      }
+    }
+  });
+  grunt.loadNpmTasks('grunt-font-spider');
+  grunt.loadNpmTasks('grunt-contrib-copy');
+  grunt.registerTask('default', ['copy', 'font-spider']);
+};</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="inner">
+            <p>友情链接：<a href="http://ecomfe.github.io/fontmin/">fontmin</a></p>
+            <p>© 2015 <span class="name">FONT-SPIDER.ORG</span> ALL RIGHTS RESERVED.</p>
+        </div>
+    </div>
+    
+    <div style="display:none">
+        <script type="text/javascript">
+        var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+        document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3Fb13d4b52f0984285ed05624f0a24a69b' type='text/javascript'%3E%3C/script%3E"));
+        </script>  
+    </div>
+
+</body>
+</html>
