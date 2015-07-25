@@ -10,7 +10,7 @@ var HtmlParser = require('../src/spider/html-parser');
 // TODO 大小写路径测试
 // TODO css font 属性缩写测试
 // TODO scan 配置测试
-// TODO map、ignore 配置测试
+
 
 describe('Utils', function () {
 
@@ -61,15 +61,15 @@ describe('Utils', function () {
     });
 
 
-    describe('#urlToArray', function () {
+    describe('#srcValueParse', function () {
 
         it('单个地址', function () {
-            var list = utils.urlToArray('url(MgOpenModernaBold.ttf)');
+            var list = utils.srcValueParse('url(MgOpenModernaBold.ttf)');
             assert.equal('MgOpenModernaBold.ttf', list[0]);
         });
 
         it('多个地址', function () {
-            var list = utils.urlToArray('local("Helvetica Neue Bold"), url(MgOpenModernaBold.ttf), url("2.otf"), url( \'x.woff\' )');
+            var list = utils.srcValueParse('local("Helvetica Neue Bold"), url(MgOpenModernaBold.ttf), url("2.otf"), url( \'x.woff\' )');
             assert.equal('MgOpenModernaBold.ttf', list[0]);
             assert.equal('2.otf', list[1]);
             assert.equal('x.woff', list[2]);
@@ -191,14 +191,14 @@ describe('Utils', function () {
     });
 
 
-    describe('#isRemote', function () {
+    describe('#isRemoteFile', function () {
         it('判断是否为远程地址', function () {
-            assert.equal(true, utils.isRemote('http://www.baidu.com/test.css'));
-            assert.equal(true, utils.isRemote('https://www.baidu.com/test.css'));
-            assert.equal(false, utils.isRemote('./test.css'));
-            assert.equal(false, utils.isRemote('/test.css'));
-            assert.equal(false, utils.isRemote('/temp/test.css?#iefix'));
-            assert.equal(false, utils.isRemote('./temp/test.css?#iefix'));
+            assert.equal(true, utils.isRemoteFile('http://www.baidu.com/test.css'));
+            assert.equal(true, utils.isRemoteFile('https://www.baidu.com/test.css'));
+            assert.equal(false, utils.isRemoteFile('./test.css'));
+            assert.equal(false, utils.isRemoteFile('/test.css'));
+            assert.equal(false, utils.isRemoteFile('/temp/test.css?#iefix'));
+            assert.equal(false, utils.isRemoteFile('./temp/test.css?#iefix'));
         });
     });
 
@@ -206,6 +206,53 @@ describe('Utils', function () {
     describe('#reduce', function () {
         it('数组扁平化', function () {
             assert.equal(7, utils.reduce([[0, 1, 2, 3], [5, 6, 3]]).length);
+        });
+    });
+
+
+    describe('#map', function () {
+        it('字符串', function () {
+            var map = utils.map([
+                ['http://font-spider.org/css/', '/User/aui/css/']
+            ]);
+            assert.equal('/User/aui/css/inc/test.css', map('http://font-spider.org/css/inc/test.css'));
+        });
+
+        it('字符串2', function () {
+            var map = utils.map([]);
+            assert.equal('http://font-spider.org/css/inc/test.css', map('http://font-spider.org/css/inc/test.css'));
+        });
+
+        it('函数', function () {
+            var map = utils.map(function (file) {
+                return file.replace('http://font-spider.org/css/', '/User/aui/css/');
+            });
+
+            assert.equal('/User/aui/css/inc/test.css', map('http://font-spider.org/css/inc/test.css'));
+        });
+    });
+
+    describe('#ignore', function () {
+        it('字符串', function () {
+            var ignore = utils.ignore([
+                '*.eot',
+                'icon.css'
+            ]);
+            assert.equal(true, ignore('test.eot'));
+            assert.equal(false, ignore('test.ttf'));
+        });
+
+        it('字符串2', function () {
+            var ignore = utils.ignore([]);
+            assert.equal(false, ignore('test.eot'));
+        });
+
+        it('函数', function () {
+            var ignore = utils.ignore(function (file) {
+                return /.*\.eot|icon.css/.test(file);
+            });
+            assert.equal(true, ignore('test.eot'));
+            assert.equal(false, ignore('test.ttf'));
         });
     });
 
@@ -247,14 +294,14 @@ describe('Resource', function(){
             });
         });
 
-        it('测试错误处理：读取不存在的远程文件', function (done) {
-            new Resource('http://www.qq.com/fsdfsdfdsfdsf/')
-            .then(function (resource) {
-                done(resource);
-            }, function (error) {
-                done();
-            });
-        });
+        // it('测试错误处理：读取不存在的远程文件', function (done) {
+        //     new Resource('http://www.twitter.com/fsdfsdfdsfdsf/')
+        //     .then(function (resource) {
+        //         done(resource);
+        //     }, function (error) {
+        //         done();
+        //     });
+        // });
 
     });
 
@@ -318,7 +365,6 @@ describe('CssParser', function () {
             .then(function (resource) {
                 new CssParser(resource).then(function (list) {
                     var item = list[0];
-
                     if (!item || !Array.isArray(item.files)) {
                         done('没有按预期格式返回');
                         return;
