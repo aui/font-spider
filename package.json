@@ -32,7 +32,7 @@
     "_remove": "rm -rf release",
     "_copy": "mkdir release && cp -R demo/* release",
     "_http": "node release/spider-http.js",
-    "demo": "npm run _remove && npm run _copy && node bin/font-spider release/*.html --no-backup",
+    "demo": "npm run _remove && npm run _copy && node bin/font-spider release/*.html",
     "test": "mocha test/test.js && npm run demo"
   },
   "dependencies": {
@@ -44,6 +44,9 @@
     "ignore": "^2.2.15",
     "promise": "^6.1.0",
     "verror": "^1.6.0"
+  },
+  "devDependencies": {
+    "mocha": "=2.2.5"
   },
   "keywords": [
     "font",
