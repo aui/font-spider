@@ -1,5 +1,7 @@
 /* global require,module,console */
 
+//TODO 支持行内样式
+
 'use strict';
 
 var cheerio = require('cheerio');
@@ -58,10 +60,6 @@ HtmlParser.defaults = {
 
 
 
-/*
- * @param   {Object}
- * @param   {Object}    Options: ignore | map
- */
 HtmlParser.Parser = function ($, file, options) {
 
     options = utils.options(HtmlParser.defaults, options);
@@ -72,13 +70,12 @@ HtmlParser.Parser = function ($, file, options) {
 
     this.file = file;
 
-    // 忽略文件
     this.ignore = utils.ignore(options.ignore);
 
-    // 对文件地址进行映射
     this.map = utils.map(options.map);
 
-    // TODO <base /> 标签顺序会影响解析
+    // TODO <base /> 标签顺序会影响解析。
+    // 这里只考虑 <base /> 标签在 HTML 顶部的情况
     // /Users/aui/test.html >> /Users/aui
     // http://font-spider.org >>> http://font-spider.org
     // http://font-spider.org/html/test.html >>> http://font-spider.org/html
@@ -116,13 +113,23 @@ HtmlParser.Parser.prototype = {
             var href = $this.attr('href');
 
             cssFile = utils.resolve(base, href);
-            cssFile = that.ignore(cssFile);
-            cssFile = that.map(cssFile);
-            cssFile = utils.normalize(cssFile);
+            cssFile = uri(cssFile);
 
             // 注意：为空也得放进去，保持与 link 标签一一对应
             files.push(cssFile);
         });
+
+
+        // 转换 file 地址
+        // 执行顺序：ignore > map > normalize
+        function uri (file) {
+
+            if (!that.ignore(file)) {
+                file = that.map(file);
+                file = utils.normalize(file);
+                return file;
+            }
+        }
 
 
         if (this.options.debug) {
@@ -224,8 +231,5 @@ HtmlParser.Parser.prototype = {
 };
 
 
-
-
-//TODO 支持行内样式
 
 module.exports = HtmlParser;
