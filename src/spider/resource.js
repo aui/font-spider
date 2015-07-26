@@ -6,6 +6,7 @@
 
 var fs = require('fs');
 var http = require('http');
+var zlib = require('zlib');
 var utils = require('./utils');
 var Promise = require('./promise');
 var VError = require('verror');
@@ -63,7 +64,6 @@ function Resource (file, content, options) {
 
 
     resource = new Promise(function (resolve, reject) {
-
         
 
         // 远程文件
@@ -92,13 +92,25 @@ function Resource (file, content, options) {
 
                     res.on('end', function () {
 
-                        
-                        
                         var buffer = Buffer.concat(chunks, size);
-                        data.content = buffer.toString();
-                        resourceLoad(file, data);
+                        var encoding = res.headers['content-encoding'];
 
-                        resolve(data);
+                        if (encoding === 'gzip') {
+                            zlib.unzip(buffer, function(errors, buffer) {
+                                if (errors) {
+                                    resourceError(file, errors);
+                                    reject(errors);
+                                } else {
+                                    data.content = buffer.toString();
+                                    resourceLoad(file, data);
+                                    resolve(data);
+                                }
+                            });
+                        } else {
+                            data.content = buffer.toString();
+                            resourceLoad(file, data);
+                            resolve(data);
+                        }
 
                     });
 
