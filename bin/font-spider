@@ -117,7 +117,7 @@ if (program.info) {
 // 处理 WebFont
 } else {
 
-    new FontSpider(files, options)
+    new FontSpider.Spider(files, options)
     .then(function (webFonts) {
 
         writeln('');
@@ -127,26 +127,31 @@ if (program.info) {
             return;
         }
 
-        webFonts.forEach(function (webFont) {
+        return Promise.all(webFonts.map(function (webFont) {
+            return new FontSpider.Compress(webFont, options)
+            .then(function (webFont) {
+                
+                write('Font name:', color('green', webFont.name));
+                write('Original size:', color('green', webFont.originalSize / 1000 + ' KB'));
+                write('Include chars:', webFont.chars);
+                write('Font id:', webFont.id);
+                write('CSS selector:', webFont.selectors.join(', '));
+                write('Font files:');
 
-            write('Font name:', color('green', webFont.name));
-            write('Original size:', color('green', webFont.originalSize / 1000 + ' KB'));
-            write('Include chars:', webFont.chars);
-            write('Font id:', webFont.id);
-            write('CSS selector:', webFont.selectors.join(', '));
-            write('Font files:');
+                webFont.files.forEach(function (file) {
+                    if (fs.existsSync(file)) {
+                        write('File', color('cyan', path.relative('./', file)),
+                            'created:', color('green', + fs.statSync(file).size / 1000 + ' KB'));
+                    } else {
+                        write(color('red', 'File ' + path.relative('./', file) + ' not created'));
+                    }
+                });
 
-            webFont.files.forEach(function (file) {
-                if (fs.existsSync(file)) {
-                    write('File', color('cyan', path.relative('./', file)),
-                        'created:', color('green', + fs.statSync(file).size / 1000 + ' KB'));
-                } else {
-                    write(color('red', 'File ' + path.relative('./', file) + ' not created'));
-                }
+                write('');
+
+                return webFont;
             });
-
-            write('');
-        });
+        }));
 
     })
     .catch(onerror);
