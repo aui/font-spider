@@ -1,5 +1,11 @@
 # 字蛛
 
+[![NPM Version][npm-image]][npm-url]
+[![NPM Downloads][downloads-image]][downloads-url]
+[![Node.js Version][node-version-image]][node-version-url]
+[![Build Status][travis-image]][travis-url]
+[![Test Coverage][coveralls-image]][coveralls-url]
+
 中文 WebFont 自动化压缩工具，它能自动分析页面使用的 WebFont 并进行按需压缩。
 
 官方网站：<http://font-spider.org>
@@ -128,4 +134,13 @@ font-spider [options] <htmlFile ...>
 
 *字体受版权保护，若在网页中使用商业字体，请联系相关字体厂商购买授权*
 
-[![NPM](https://nodei.co/npm/font-spider.png?downloads=true&stars=true)](https://nodei.co/npm/font-spider/)
+[npm-image]: https://img.shields.io/npm/v/font-spider.svg
+[npm-url]: https://npmjs.org/package/font-spider
+[node-version-image]: https://img.shields.io/node/v/font-spider.svg
+[node-version-url]: http://nodejs.org/download/
+[travis-image]: https://img.shields.io/travis/pillarjs/font-spider/master.svg
+[travis-url]: https://travis-ci.org/pillarjs/font-spider
+[coveralls-image]: https://img.shields.io/coveralls/pillarjs/font-spider/master.svg
+[coveralls-url]: https://coveralls.io/r/pillarjs/font-spider?branch=master
+[downloads-image]: https://img.shields.io/npm/dm/font-spider.svg
+[downloads-url]: https://npmjs.org/package/font-spider
