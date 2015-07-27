@@ -75,7 +75,7 @@ writeln('Loading ..');
 function onerror (errors) {
     writeln('');
 
-    if (!stream.isTTY) {
+    if (process.stderr.isTTY) {
         process.stderr.write(color('red', 'Error: ' + errors.message) + '\n');
         process.stderr.write(color('grey', errors.stack.toString() + '\n'));
     }
