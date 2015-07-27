@@ -66,50 +66,77 @@ function Resource (file, content, options) {
     resource = new Promise(function (resolve, reject) {
         
 
+        function succeed (content) {
+            data.content = content;
+            resourceLoad(file, data);
+            resolve(data);
+        }
+
+
+        function error (errors) {
+            errors = new VError(errors, 'ENOENT, load "%s" failed', file);
+            resourceError(file, errors);
+            reject(errors);
+        }
+
+
         // 远程文件
         if (utils.isRemoteFile(file)) {
 
-            var request = http.get(file, function (res) {
+            http.get(file, function (res) {
+
+                var encoding = res.headers['content-encoding'];
+                var type = res.headers['content-type'];
+                var errors = res.statusCode !== 200 && new Error(res.statusMessage);
+
 
                 if (res.statusCode !== 200) {
+                    errors = new Error(res.statusMessage);
+                } else if (type.indexOf('text/') !== 0) {
+                    errors = new Error('only supports `text/*` resources');
+                }
 
-                    var errors = new Error(res.statusMessage);
-                    errors = new VError(errors, 'ENOENT, load "%s" failed', file);
 
-                    resourceError(file, errors);
-                    reject(errors);
-                    request.end();
-
+                if (errors) {
+                    error(errors);
                 } else {
 
-                    var size = 0;
-                    var chunks = []; 
+                    var buffer = new Buffer([]);
+
+
+                    if (encoding === 'undefined') {
+                        res.setEncoding('utf-8'); 
+                    }
+
 
                     res.on('data', function (chunk) {
-                        size += chunk.length;
-                        chunks.push(chunk);
+                        buffer = Buffer.concat([buffer, chunk]);
                     });
 
-                    res.on('end', function () {
-
-                        var buffer = Buffer.concat(chunks, size);
-                        var encoding = res.headers['content-encoding'];
+                    res.on('end', function () {                
 
                         if (encoding === 'gzip') {
+
                             zlib.unzip(buffer, function(errors, buffer) {
                                 if (errors) {
-                                    resourceError(file, errors);
-                                    reject(errors);
+                                    error(errors);
                                 } else {
-                                    data.content = buffer.toString();
-                                    resourceLoad(file, data);
-                                    resolve(data);
+                                    succeed(buffer.toString());
                                 }
                             });
+
+                        } else if (encoding == 'deflate') {
+
+                            zlib.inflate(buffer, function (errors, decoded) {
+                                if (errors) {
+                                    error(errors);
+                                } else {
+                                    succeed(decoded.toString());
+                                }
+                            });
+
                         } else {
-                            data.content = buffer.toString();
-                            resourceLoad(file, data);
-                            resolve(data);
+                            succeed(buffer.toString());
                         }
 
                     });
@@ -117,11 +144,7 @@ function Resource (file, content, options) {
                 }
 
             })
-            .on('error', function (errors) {
-                errors = new VError(errors, 'ENOENT, load "%s" failed', file);
-                resourceError(file, errors);
-                reject(errors);
-            });
+            .on('error', error);
 
 
         // 本地文件
@@ -131,13 +154,9 @@ function Resource (file, content, options) {
             fs.readFile(file, 'utf8', function (errors, content) {
 
                 if (errors) {
-                    resourceError(file, errors);
-                    reject(errors);
+                    error(errors);
                 } else {
-                    
-                    data.content = content;
-                    resourceLoad(file, data);
-                    resolve(data);
+                    succeed(content);
                 }
 
             });
