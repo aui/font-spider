@@ -6,6 +6,7 @@
 
 var fs = require('fs');
 var http = require('http');
+var https = require('https');
 var zlib = require('zlib');
 var utils = require('./utils');
 var Promise = require('./promise');
@@ -64,30 +65,17 @@ function Resource (file, content, options) {
 
 
     resource = new Promise(function (resolve, reject) {
-        
-
-        function succeed (content) {
-            data.content = content;
-            resourceLoad(file, data);
-            resolve(data);
-        }
-
-
-        function error (errors) {
-            errors = new VError(errors, 'ENOENT, load "%s" failed', file);
-            resourceError(file, errors);
-            reject(errors);
-        }
-
 
         // 远程文件
         if (utils.isRemoteFile(file)) {
 
-            http.get(file, function (res) {
+            var q = file.indexOf('https://') === 0 ? https : http;
+
+            q.get(file, function (res) {
 
                 var encoding = res.headers['content-encoding'];
                 var type = res.headers['content-type'];
-                var errors = res.statusCode !== 200 && new Error(res.statusMessage);
+                var errors = null;
 
 
                 if (res.statusCode !== 200) {
@@ -98,7 +86,7 @@ function Resource (file, content, options) {
 
 
                 if (errors) {
-                    error(errors);
+                    reject(errors);
                 } else {
 
                     var buffer = new Buffer([]);
@@ -119,9 +107,9 @@ function Resource (file, content, options) {
 
                             zlib.unzip(buffer, function(errors, buffer) {
                                 if (errors) {
-                                    error(errors);
+                                    reject(errors);
                                 } else {
-                                    succeed(buffer.toString());
+                                    resolve(buffer.toString());
                                 }
                             });
 
@@ -129,14 +117,14 @@ function Resource (file, content, options) {
 
                             zlib.inflate(buffer, function (errors, decoded) {
                                 if (errors) {
-                                    error(errors);
+                                    reject(errors);
                                 } else {
-                                    succeed(decoded.toString());
+                                    resolve(decoded.toString());
                                 }
                             });
 
                         } else {
-                            succeed(buffer.toString());
+                            resolve(buffer.toString());
                         }
 
                     });
@@ -144,7 +132,7 @@ function Resource (file, content, options) {
                 }
 
             })
-            .on('error', error);
+            .on('error', reject);
 
 
         // 本地文件
@@ -154,16 +142,25 @@ function Resource (file, content, options) {
             fs.readFile(file, 'utf8', function (errors, content) {
 
                 if (errors) {
-                    error(errors);
+                    reject(errors);
                 } else {
-                    succeed(content);
+                    resolve(content);
                 }
 
             });
 
         }
+    })
+    .then(function (content) {
+        data.content = content;
+        resourceLoad(file, data);
+        return data;
+    })
+    .catch(function (errors) {
+        errors = new VError(errors, 'ENOENT, load "%s" failed', file);
+        resourceError(file, errors);
+        return Promise.reject(errors);
     });
-    
 
     if (cache) {
         Resource.cache[file] = resource;
