@@ -75,12 +75,22 @@ writeln('Loading ..');
 function onerror (errors) {
     writeln('');
 
+    var message = 'Error: ' + errors.message;
+    var stack = errors.stack.toString();
+
+    stack = stack.split('\n');
+    stack.shift();
+    stack = stack.join('\n');
+
     if (process.stderr.isTTY) {
-        process.stderr.write(color('red', 'Error: ' + errors.message) + '\n');
-        process.stderr.write(color('grey', errors.stack.toString() + '\n'));
+        message = color('red', message);
+        stack = color('grey', stack);
     }
 
-    // 可能有异步任务运行，强制中断
+    process.stderr.write(message + '\n');
+    process.stderr.write(stack + '\n');
+
+    // 可能有异步 http 任务运行，强制中断
     process.exit(1);
 }
 
