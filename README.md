@@ -133,3 +133,14 @@ font-spider [options] <htmlFile ...>
 相关链接：[Google: 网页字体优化](https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency/webfont-optimization?hl=zh-cn)
 
 *字体受版权保护，若在网页中使用商业字体，请联系相关字体厂商购买授权*
+
+[npm-image]: https://img.shields.io/npm/v/font-spider.svg
+[npm-url]: https://npmjs.org/package/font-spider
+[node-version-image]: https://img.shields.io/node/v/font-spider.svg
+[node-version-url]: http://nodejs.org/download/
+[travis-image]: https://img.shields.io/travis/pillarjs/font-spider/master.svg
+[travis-url]: https://travis-ci.org/pillarjs/font-spider
+[coveralls-image]: https://img.shields.io/coveralls/pillarjs/font-spider/master.svg
+[coveralls-url]: https://coveralls.io/r/pillarjs/font-spider?branch=master
+[downloads-image]: https://img.shields.io/npm/dm/font-spider.svg
+[downloads-url]: https://npmjs.org/package/font-spider
