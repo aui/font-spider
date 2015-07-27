@@ -87,7 +87,7 @@ function Resource (file, content, options) {
 
                 var encoding = res.headers['content-encoding'];
                 var type = res.headers['content-type'];
-                var errors = res.statusCode !== 200 && new Error(res.statusMessage);
+                var errors = null;
 
 
                 if (res.statusCode !== 200) {
