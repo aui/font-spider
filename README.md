@@ -78,7 +78,7 @@ font-spider [options] <htmlFile ...>
 
 使用 font-spider 的 API，可以构建在线动态字体压缩服务。
 
-文档参见：[DOCS.md](./DOCS.md)
+文档参见：[API.md](./API.md)
 
 ## 使用场景限制
 
