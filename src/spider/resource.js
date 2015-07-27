@@ -6,6 +6,7 @@
 
 var fs = require('fs');
 var http = require('http');
+var https = require('https');
 var zlib = require('zlib');
 var utils = require('./utils');
 var Promise = require('./promise');
@@ -68,7 +69,9 @@ function Resource (file, content, options) {
         // 远程文件
         if (utils.isRemoteFile(file)) {
 
-            http.get(file, function (res) {
+            var q = file.indexOf('https://') === 0 ? https : http;
+
+            q.get(file, function (res) {
 
                 var encoding = res.headers['content-encoding'];
                 var type = res.headers['content-type'];
