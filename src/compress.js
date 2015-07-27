@@ -1,5 +1,6 @@
 /* global require,module */
 
+// TODO 错误处理使用 Promise
 'use strict';
 
 var fs = require('fs');
@@ -20,58 +21,60 @@ var number = 0;
 
 function Compress (webFont, options) {
 
-    number ++;
-    options = getOptions(options);
+    return new Promise(function (resolve, reject) {
 
-    var files = {};
-    var source;
-    
+        number ++;
+        options = getOptions(options);
 
-    webFont.files.forEach(function (file) {
-        var extname = path.extname(file);
-        var type = extname.replace('.', '');
 
-        if (RE_SERVER.test(file)) {
-            throw new Error('does not support the absolute path "' + file + '"'); 
+        var files = {};
+        var source;
+        
+
+        webFont.files.forEach(function (file) {
+            var extname = path.extname(file);
+            var type = extname.replace('.', '');
+
+            if (RE_SERVER.test(file)) {
+                throw new Error('does not support the absolute path "' + file + '"'); 
+            }
+
+            if (type.toLocaleLowerCase() === 'ttf') {
+                source = file;
+            }
+
+            files[type] = file;
+        });
+
+
+
+        // 必须有 TTF 字体
+        if (!source) {
+            throw new Error('"' + webFont.name + '"' + ' did not find turetype fonts');
         }
 
-        if (type.toLocaleLowerCase() === 'ttf') {
-            source = file;
+
+
+        this.source = source;
+        this.webFont = webFont;
+        this.options = options;
+        this.files = files;
+        this.dirname = path.dirname(source);
+        this.extname = path.extname(source);
+        this.basename = path.basename(source, this.extname);
+
+
+        // 备份字体与恢复备份
+        if (options.backup) {
+            this.backup();
         }
 
-        files[type] = file;
-    });
+        if (!fs.existsSync(this.source)) {
+            throw new Error('"' + source + '" file not found');
+        }
 
-
-
-    // 必须有 TTF 字体
-    if (!source) {
-        throw new Error('"' + webFont.name + '"' + ' did not find turetype fonts');
-    }
-
-
-
-    this.source = source;
-    this.webFont = webFont;
-    this.options = options;
-    this.files = files;
-    this.dirname = path.dirname(source);
-    this.extname = path.extname(source);
-    this.basename = path.basename(source, this.extname);
-
-
-    // 备份字体与恢复备份
-    if (options.backup) {
-        this.backup();
-    }
-
-
-    if (!fs.existsSync(source)) {
-        throw new Error('"' + source + '" file not found');
-    }
-
-
-    return this.min();
+        this.min(resolve, reject);
+    }.bind(this));
 }
 
 
@@ -105,14 +108,16 @@ Compress.prototype = {
         }
     },
 
-    min: function () {
+    min: function (succeed, error) {
 
         var webFont = this.webFont;
         var files = this.files;
         var source = this.source;
         var dirname = this.dirname;
         var basename = this.basename;
+
         var originalSize = fs.statSync(source).size;
+
 
         var fontmin = new Fontmin().src(source);
         var temp = path.join(dirname, TEMP + number);
@@ -125,7 +130,6 @@ Compress.prototype = {
         }
 
 
-
         Object.keys(files).forEach(function (key) {
             key = key.toLocaleLowerCase();
             if (typeof Fontmin['ttf2' + key] === 'function') {
@@ -135,35 +139,32 @@ Compress.prototype = {
 
 
         fontmin.dest(temp);
-        
 
-        return new Promise(function (resolve, reject) {
-            fontmin.run(function (errors /*, buffer*/) {
+        fontmin.run(function (errors /*, buffer*/) {
 
-                if (errors) {
-                    reject(errors);
-                } else {
-                    
-                    Object.keys(files).forEach(function (key) {
+            if (errors) {
+                error(errors);
+            } else {
+                
+                Object.keys(files).forEach(function (key) {
 
-                        var filename = basename + '.' + key;
+                    var filename = basename + '.' + key;
 
-                        var file = path.join(temp, filename);
-                        var out = files[key];
+                    var file = path.join(temp, filename);
+                    var out = files[key];
 
-                        file = path.resolve(file);
-                        fsUtils.rename(file, out);
-                    });
+                    file = path.resolve(file);
+                    fsUtils.rename(file, out);
+                });
 
 
-                    fsUtils.rmdir(temp);
+                fsUtils.rmdir(temp);
 
-                    // 添加新字段：记录原始文件大小
-                    webFont.originalSize = originalSize;
+                // 添加新字段：记录原始文件大小
+                webFont.originalSize = originalSize;
 
-                    resolve(webFont);
-                }
-            });
+                succeed(webFont);
+            }
         });
     }
 };
