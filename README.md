@@ -96,12 +96,13 @@ font-spider [options] <htmlFile ...>
 
 ## 更新日志
 
-### 0.3.0
+### v0.3.2
 
 - 重构爬虫模块，解决压缩后的 CSS 解析失败的问题
 - `font` 属性缩写支持、多个`@font-face`同名字体支持 [#32](https://github.com/aui/font-spider/issues/32)
 - 改进错误流程处理：HTML、CSS 加载与解析错误都会进入错误流程
 - 提供对外接口
+- 支持 http 与 https 远程资源解析
 
 [更多日志](./CHANGELOG.md)
 
@@ -122,6 +123,8 @@ font-spider [options] <htmlFile ...>
 ==========
 
 字蛛愿以开放的心态和开源社区一起推动中文 WebFont 发展。
+
+相关链接：[Google: 网页字体优化](https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency/webfont-optimization?hl=zh-cn)
 
 *字体受版权保护，若在网页中使用商业字体，请联系相关字体厂商购买授权*
 
