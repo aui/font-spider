@@ -74,8 +74,11 @@ writeln('Loading ..');
 
 function onerror (errors) {
     writeln('');
-    process.stderr.write(color('red', 'Error: ' + errors.message) + '\n');
-    process.stderr.write(color('grey', errors.stack.toString() + '\n'));
+
+    if (!stream.isTTY) {
+        process.stderr.write(color('red', 'Error: ' + errors.message) + '\n');
+        process.stderr.write(color('grey', errors.stack.toString() + '\n'));
+    }
 
     // 可能有异步任务运行，强制中断
     process.exit(1);
@@ -89,26 +92,8 @@ if (program.info) {
     .then(function (webFonts) {
 
         writeln('');
-
-        if (webFonts.length === 0) {
-            write('<web font not found>');
-            return;
-        }
-
-        webFonts.forEach(function (webFont) {
-
-            write('Font name:', color('green', webFont.name));
-            write('Include chars:', webFont.chars);
-            write('Font id:', webFont.id);
-            write('CSS selector:', webFont.selectors.join(', '));   
-            write('Font files:');
-
-            webFont.files.forEach(function (file) {
-                write(color('cyan', path.relative('./', file)));
-            });
-
-            write('');
-        });
+        var json = JSON.stringify(webFonts, null, 4);
+        process.stdout.write(json + '\n');
 
     })
     .catch(onerror);
