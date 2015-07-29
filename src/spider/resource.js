@@ -7,6 +7,7 @@
 var fs = require('fs');
 var http = require('http');
 var https = require('https');
+var url = require('url');
 var zlib = require('zlib');
 var utils = require('./utils');
 var Promise = require('./promise');
@@ -69,9 +70,20 @@ function Resource (file, content, options) {
         // 远程文件
         if (utils.isRemoteFile(file)) {
 
-            var q = file.indexOf('https://') === 0 ? https : http;
+            
+            var location = url.parse(file);
+            var protocol = location.protocol === 'http:' ? http : https;
 
-            q.get(file, function (res) {
+            var request = protocol.request({
+                method: 'GET',
+                host: location.host,
+                hostname: location.hostname,
+                path: location.path,
+                port: location.port,
+                headers: {
+                    'accept-encoding': 'gzip,deflate'
+                }
+            }, function (res) {
 
                 var encoding = res.headers['content-encoding'];
                 var type = res.headers['content-type'];
@@ -133,6 +145,8 @@ function Resource (file, content, options) {
 
             })
             .on('error', reject);
+
+            request.end();
 
 
         // 本地文件

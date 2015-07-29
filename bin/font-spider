@@ -75,12 +75,22 @@ writeln('Loading ..');
 function onerror (errors) {
     writeln('');
 
+    var message = 'Error: ' + errors.message;
+    var stack = errors.stack.toString();
+
+    stack = stack.split('\n');
+    stack.shift();
+    stack = stack.join('\n');
+
     if (process.stderr.isTTY) {
-        process.stderr.write(color('red', 'Error: ' + errors.message) + '\n');
-        process.stderr.write(color('grey', errors.stack.toString() + '\n'));
+        message = color('red', message);
+        stack = color('grey', stack);
     }
 
-    // 可能有异步任务运行，强制中断
+    process.stderr.write(message + '\n');
+    process.stderr.write(stack + '\n');
+
+    // 可能有异步 http 任务运行，强制中断
     process.exit(1);
 }
 
@@ -105,17 +115,19 @@ if (program.info) {
     new FontSpider.Spider(files, options)
     .then(function (webFonts) {
 
-        writeln('');
-
         if (webFonts.length === 0) {
             write('<web font not found>');
             return;
         }
 
+        writeln('Loading ...');
+
         return Promise.all(webFonts.map(function (webFont) {
+
             return new FontSpider.Compress(webFont, options)
             .then(function (webFont) {
                 
+                writeln('');
                 write('Font name:', color('green', webFont.name));
                 write('Original size:', color('green', webFont.originalSize / 1000 + ' KB'));
                 write('Include chars:', webFont.chars);
@@ -147,24 +159,20 @@ if (program.info) {
 function write () {
     var stream = process.stdout;
 
-    if (!stream.isTTY) {
-        return;
+    if (stream.isTTY) {
+        stream.write(Array.prototype.join.call(arguments, ' ') + '\n');
     }
-
-    stream.write(Array.prototype.join.call(arguments, ' ') + '\n');
 }
 
 
 function writeln () {
     var stream = process.stdout;
 
-    if (!stream.isTTY) {
-        return;
+    if (stream.isTTY) {
+        stream.clearLine();
+        stream.cursorTo(0);
+        stream.write(Array.prototype.join.call(arguments, ' '));
     }
-
-    stream.clearLine();
-    stream.cursorTo(0);
-    stream.write(Array.prototype.join.call(arguments, ' '));
 }
 
 
