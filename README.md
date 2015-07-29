@@ -1,7 +1,9 @@
 # 字蛛
 
-[![NPM Version][npm-image]][npm-url]
+[][node-version-url][![NPM Version][npm-image]][npm-url]
+
 [![NPM Downloads][downloads-image]][downloads-url]
+
 [![Node.js Version][node-version-image]][node-version-url]
 
 中文 WebFont 自动化压缩工具，它能自动分析页面使用的 WebFont 并进行按需压缩。
@@ -10,7 +12,7 @@
 
 ## 特性
 
-相对于图片，WebFont 拥有更好的体验。它支持选中、搜索、翻译、朗读、缩放等，而字蛛作为一个 WebFont 压缩转码工具，拥有如下特性：
+在网页中呈现艺术字体，WebFont 比图片拥有更好的体验，它支持选中、搜索、翻译、朗读、缩放等，而字蛛作为一个 WebFont 压缩转码工具，拥有如下特性：
 
 1. 按需压缩：数 MB 的中文字体可被压成几十 KB
 2. 简单可靠：完全基于 CSS 规则，无需 js 与服务端辅助
@@ -67,6 +69,7 @@ font-spider [options] <htmlFile ...>
 --ignore <pattern>            忽略的文件配置（可以是字体、CSS、HTML）
 --map <remotePath,localPath>  映射 CSS 内部 HTTP 路径到本地
 --no-backup                   关闭字体备份功能
+--debug                       调试模式
 ```
 
 ## 构建插件
@@ -82,10 +85,10 @@ font-spider [options] <htmlFile ...>
 
 ## 使用场景限制
 
-- 不支持元素行内样式（仅支持 `<link>` 与 `<style>` 标签声明的样式）
+- 仅支持 `link` 与 `style` 标签引入的样式，不支持元素行内样式
 - CSS `content` 属性插入的字符需要定义 `font-family`，不支持继承
-- 不支持 javascript 动态插入的样式与元素节点
-- 不支持 .otf 格式的字体
+- 仅支持固定的文本与样式，不支持 javascript 动态插入的元素与样式
+- 仅支持 .ttf 字体，不支持 .otf 字体
 
 ## 字体兼容性参考
 
@@ -124,7 +127,7 @@ font-spider [options] <htmlFile ...>
 - [cssom](https://github.com/NV/CSSOM) 标准化的 CSS 解析库*（字蛛 v0.3 版本使用它取代了 [css](https://github.com/reworkcss/css)）*
 - [cheerio](https://github.com/cheeriojs/cheerio) 轻量的 HTML 解析库*（字蛛 v0.2 版本使用它取代了 [jsdom](https://github.com/tmpvar/jsdom)）*
 
-==========
+------
 
 字蛛愿以开放的心态和开源社区一起推动中文 WebFont 发展。
 
