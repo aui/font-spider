@@ -157,24 +157,20 @@ if (program.info) {
 function write () {
     var stream = process.stdout;
 
-    if (!stream.isTTY) {
-        return;
+    if (stream.isTTY) {
+        stream.write(Array.prototype.join.call(arguments, ' ') + '\n');
     }
-
-    stream.write(Array.prototype.join.call(arguments, ' ') + '\n');
 }
 
 
 function writeln () {
     var stream = process.stdout;
 
-    if (!stream.isTTY) {
-        return;
+    if (stream.isTTY) {
+        stream.clearLine();
+        stream.cursorTo(0);
+        stream.write(Array.prototype.join.call(arguments, ' '));
     }
-
-    stream.clearLine();
-    stream.cursorTo(0);
-    stream.write(Array.prototype.join.call(arguments, ' '));
 }
 
 
