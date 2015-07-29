@@ -1,9 +1,7 @@
 # 字蛛
 
 [][node-version-url][![NPM Version][npm-image]][npm-url]
-
 [![NPM Downloads][downloads-image]][downloads-url]
-
 [![Node.js Version][node-version-image]][node-version-url]
 
 中文 WebFont 自动化压缩工具，它能自动分析页面使用的 WebFont 并进行按需压缩。
