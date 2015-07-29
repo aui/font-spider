@@ -115,17 +115,19 @@ if (program.info) {
     new FontSpider.Spider(files, options)
     .then(function (webFonts) {
 
-        writeln('');
-
         if (webFonts.length === 0) {
             write('<web font not found>');
             return;
         }
 
+        writeln('Loading ...');
+
         return Promise.all(webFonts.map(function (webFont) {
+
             return new FontSpider.Compress(webFont, options)
             .then(function (webFont) {
                 
+                writeln('');
                 write('Font name:', color('green', webFont.name));
                 write('Original size:', color('green', webFont.originalSize / 1000 + ' KB'));
                 write('Include chars:', webFont.chars);
