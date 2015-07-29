@@ -83,12 +83,13 @@ font-spider [options] <htmlFile ...>
 
 文档参见：[API.md](./API.md)
 
-## 使用场景限制
+## 限制
 
 - 仅支持 `link` 与 `style` 标签引入的样式，不支持元素行内样式
 - CSS `content` 属性插入的字符需要定义 `font-family`，不支持继承
 - 仅支持固定的文本与样式，不支持 javascript 动态插入的元素与样式
 - 仅支持 .ttf 字体，不支持 .otf 字体
+- 仅支持 `utf-8` 编码
 
 ## 字体兼容性参考
 
