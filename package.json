@@ -1,7 +1,7 @@
 {
   "name": "font-spider",
   "description": "Webfont optimizer",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "homepage": "https://github.com/aui/font-spider",
   "author": {
     "name": "aui",
@@ -39,7 +39,7 @@
     "cheerio": "^0.18.0",
     "commander": "^2.6.0",
     "cssom": "^0.3.0",
-    "fontmin": "^0.9.0-alpha-2",
+    "fontmin": "^0.9.0-alpha-3",
     "glob": "^4.4.0",
     "ignore": "^2.2.15",
     "promise": "^6.1.0",
