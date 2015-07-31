@@ -1,10 +1,8 @@
 # font-spider
 
-font-spider 由爬虫模块与压缩模块组成，其接口基于 `Promise`  实现。
+font-spider 由爬虫模块与压缩模块组成，其接口基于 `Promise` 实现。
 
 ## API
-
-这样调用 font-spider：
 
 ``` javascript
 var FontSpider = require('font-spider');
@@ -45,12 +43,12 @@ new FontSpider.Spider([__dirname + '/index.html'])
   - 类型：`Array` `Function`
   - 示例：`[['http://font-spider.org/css', __dirname + '/css'], [...]]`
 - `maxImportCss` CSS `@import` 语法导入的文件数量限制，避免爬虫陷入死循环陷阱（默认值 `16`）
-- `resourceBeforeLoad` 资源准备加载的事件
-- `resourceLoad` 资源加载成功的事件
-- `resourceError` 资源加载失败的事件
-- `spiderBeforeLoad` 爬虫准备爬页面的事件
-- `spiderLoad` 爬虫解析成功后的事件
-- `spiderError` 爬虫解析失败后的事件
+- `resourceBeforeLoad` 事件：资源准备加载
+- `resourceLoad` 事件：资源加载成功
+- `resourceError` 事件：资源加载失败
+- `spiderBeforeLoad` 事件：爬虫准备解析
+- `spiderLoad` 事件：爬虫解析成功
+- `spiderError` 事件：爬虫解析失败
 
 > 事件第一个参数可以获取文件路径
 
