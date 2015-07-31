@@ -1,10 +1,8 @@
 # font-spider
 
-font-spider 由爬虫模块与压缩模块组成，其接口基于 `Promise`  实现。
+font-spider 由爬虫模块与压缩模块组成，其接口基于 `Promise` 实现。
 
 ## API
-
-这样调用 font-spider：
 
 ``` javascript
 var FontSpider = require('font-spider');
@@ -33,7 +31,6 @@ new FontSpider.Spider([__dirname + '/index.html'])
 })
 .catch(function (errors) {
     console.error('Error:', errors.stack.toString());
-    process.exit(1);
 });
 ```
 
@@ -42,16 +39,16 @@ new FontSpider.Spider([__dirname + '/index.html'])
 - `ignore` 忽略列表，用来忽略路径或文件。[语法示例](https://github.com/kaelzhang/node-ignore)
   - 类型：`Array` `Function`
   - 示例：`['icon.css', '*.eot']`
-- `map` 映射规则，支持映射远程路径到本地（远程字体需要映射到本地才能压缩）
+- `map` 映射规则（支持正则），用来映射远程路径到本地（远程字体需要映射到本地才能压缩）
   - 类型：`Array` `Function`
   - 示例：`[['http://font-spider.org/css', __dirname + '/css'], [...]]`
 - `maxImportCss` CSS `@import` 语法导入的文件数量限制，避免爬虫陷入死循环陷阱（默认值 `16`）
-- `resourceBeforeLoad` 资源准备加载的事件
-- `resourceLoad` 资源加载成功的事件
-- `resourceError` 资源加载失败的事件
-- `spiderBeforeLoad` 爬虫准备爬页面的事件
-- `spiderLoad` 爬虫解析成功后的事件
-- `spiderError` 爬虫解析失败后的事件
+- `resourceBeforeLoad` 事件：资源准备加载
+- `resourceLoad` 事件：资源加载成功
+- `resourceError` 事件：资源加载失败
+- `spiderBeforeLoad` 事件：爬虫准备解析
+- `spiderLoad` 事件：爬虫解析成功
+- `spiderError` 事件：爬虫解析失败
 
 > 事件第一个参数可以获取文件路径
 
@@ -82,7 +79,6 @@ new FontSpider.Spider([__dirname + '/index.html'])
 })
 .catch(function (errors) {
     console.error('Error:', errors.stack.toString());
-    process.exit(1);
 });
 ```
 
@@ -160,7 +156,6 @@ new FontSpider
 })
 .catch(function (errors) {
     console.error('Error:', errors.stack.toString());
-    process.exit(1);
 });
 ```
 

@@ -1,7 +1,9 @@
 # 字蛛
 
 [][node-version-url][![NPM Version][npm-image]][npm-url]
+
 [![NPM Downloads][downloads-image]][downloads-url]
+
 [![Node.js Version][node-version-image]][node-version-url]
 
 中文 WebFont 自动化压缩工具，它能自动分析页面使用的 WebFont 并进行按需压缩。
@@ -56,7 +58,25 @@ npm install font-spider -g
 font-spider [options] <htmlFile ...>
 ```
 
-> 支持通配符，例如：`font-spider dest/*.html`
+#### 示例
+
+1. 使用通配符压缩多个 HTML 文件关联的 WebFont：
+
+``` shell
+font-spider dest/*.html
+```
+
+2. 使用 `--map <remotePath,localPath>` 参数将线上的页面的 WebFont 映射到本地来进行压缩：
+
+``` shell
+font-spider --map http://font-spider.org/font,./font http://font-spider.org/index.html
+```
+
+3. 使用 `--ignore <pattern>` 忽略文件：
+
+``` shell
+font-spider --ignore *-icon.css,*.eot dest/*.html
+```
 
 #### options
 
@@ -65,7 +85,7 @@ font-spider [options] <htmlFile ...>
 -V, --version                 输出当前版本号
 --info                        仅提取 WebFont 信息显示，不压缩与转码
 --ignore <pattern>            忽略的文件配置（可以是字体、CSS、HTML）
---map <remotePath,localPath>  映射 CSS 内部 HTTP 路径到本地
+--map <remotePath,localPath>  映射 CSS 内部 HTTP 路径到本地（支持正则表达式）
 --no-backup                   关闭字体备份功能
 --debug                       调试模式
 ```
@@ -86,8 +106,9 @@ font-spider [options] <htmlFile ...>
 - 仅支持 `link` 与 `style` 标签引入的样式，不支持元素行内样式
 - CSS `content` 属性插入的字符需要定义 `font-family`，不支持继承
 - 仅支持固定的文本与样式，不支持 javascript 动态插入的元素与样式
-- 仅支持 .ttf 字体，不支持 .otf 字体
+-  .otf 字体需要转换成 .ttf 才能被压缩
 - 仅支持 `utf-8` 编码
+- 不支持 CSS `unicode-range` 属性
 
 ## 字体兼容性参考
 
@@ -99,18 +120,6 @@ font-spider [options] <htmlFile ...>
 | `.svg`  | --   | --      | 4      | 3.2    | 9.6   | 3.2        | 3               | 36                 | 
 
 来源：<http://caniuse.com/#feat=fontface>
-
-## 更新日志
-
-### v0.3.2
-
-- 重构爬虫模块，解决压缩后的 CSS 解析失败的问题
-- `font` 属性缩写支持、多个`@font-face`同名字体支持 [#32](https://github.com/aui/font-spider/issues/32)
-- 改进错误流程处理：HTML、CSS 加载与解析错误都会进入错误流程
-- 提供对外接口
-- 支持 http 与 https 远程资源解析
-
-[更多日志](./CHANGELOG.md)
 
 ## 贡献者
 
@@ -126,11 +135,14 @@ font-spider [options] <htmlFile ...>
 - [cssom](https://github.com/NV/CSSOM) 标准化的 CSS 解析库*（字蛛 v0.3 版本使用它取代了 [css](https://github.com/reworkcss/css)）*
 - [cheerio](https://github.com/cheeriojs/cheerio) 轻量的 HTML 解析库*（字蛛 v0.2 版本使用它取代了 [jsdom](https://github.com/tmpvar/jsdom)）*
 
-------
-
 字蛛愿以开放的心态和开源社区一起推动中文 WebFont 发展。
 
-相关链接：[Google: 网页字体优化](https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency/webfont-optimization?hl=zh-cn)
+## 相关链接
+
+- [Google: 网页字体优化](https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency/webfont-optimization?hl=zh-cn)
+- [思源黑体: ttf 版本](https://github.com/akiratw/kaigen-gothic/releases)
+
+------
 
 *字体受版权保护，若在网页中使用商业字体，请联系相关字体厂商购买授权*
 
