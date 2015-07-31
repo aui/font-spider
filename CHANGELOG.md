@@ -1,5 +1,10 @@
 # 更新日志
 
+## 0.3.6
+
+* 修复 BUG [#43](https://github.com/aui/font-spider/issues/43)
+* 提高程序稳定性
+
 ## 0.3.5
 
 * 升级 fontmin 版本
