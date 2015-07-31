@@ -33,7 +33,6 @@ new FontSpider.Spider([__dirname + '/index.html'])
 })
 .catch(function (errors) {
     console.error('Error:', errors.stack.toString());
-    process.exit(1);
 });
 ```
 
@@ -42,7 +41,7 @@ new FontSpider.Spider([__dirname + '/index.html'])
 - `ignore` 忽略列表，用来忽略路径或文件。[语法示例](https://github.com/kaelzhang/node-ignore)
   - 类型：`Array` `Function`
   - 示例：`['icon.css', '*.eot']`
-- `map` 映射规则，支持映射远程路径到本地（远程字体需要映射到本地才能压缩）
+- `map` 映射规则（支持正则），用来映射远程路径到本地（远程字体需要映射到本地才能压缩）
   - 类型：`Array` `Function`
   - 示例：`[['http://font-spider.org/css', __dirname + '/css'], [...]]`
 - `maxImportCss` CSS `@import` 语法导入的文件数量限制，避免爬虫陷入死循环陷阱（默认值 `16`）
@@ -82,7 +81,6 @@ new FontSpider.Spider([__dirname + '/index.html'])
 })
 .catch(function (errors) {
     console.error('Error:', errors.stack.toString());
-    process.exit(1);
 });
 ```
 
@@ -160,7 +158,6 @@ new FontSpider
 })
 .catch(function (errors) {
     console.error('Error:', errors.stack.toString());
-    process.exit(1);
 });
 ```
 
