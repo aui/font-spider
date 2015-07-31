@@ -6,6 +6,7 @@ var fs = require('fs');
 var path = require('path');
 var FontSpider = require('../');
 var program = require('commander');
+var Promise = require('promise');
 
 program
     .version(require('../package.json').version)
