@@ -8,8 +8,6 @@ var CssParser = require('../src/spider/css-parser');
 var HtmlParser = require('../src/spider/html-parser');
 
 // TODO 大小写路径测试
-// TODO css font 属性缩写测试
-// TODO scan 配置测试
 
 
 describe('Utils', function () {
@@ -582,6 +580,33 @@ describe('CssParser', function () {
                 done(error);
             });
         });
+    });
+
+
+    describe('#font', function () {
+
+        it('缩写', function () {
+            new CssParser(new Resource('TEMP/temp.css', ".test {font:italic bold 12px/20px arial,'sans-serif';}"))
+            .then(function (cssInfo) {
+                cssInfo.forEach(function (rule) {
+                    if (rule.type === 'CSSStyleRule' && rule.selector.indexOf('.test') === 0) {
+                        if (
+                            rule.family.indexOf('arial') !== -1
+                            && rule.family.indexOf('sans-serif') !== -1
+                            && rule.options['font-weight'] === 'bold'
+                            && rule.options['font-style'] === 'italic') {
+                            done();
+                        } else {
+                            done(rule);
+                        }
+                    } else {
+                        done(rule);
+                    }
+                });
+
+            });
+        });
+
     });
 
     
