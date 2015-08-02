@@ -29,52 +29,72 @@ function CssParser (resource /*,importLength*/) {
     }
 
 
-    var file = resource.file;
-    var content = resource.content;
-    var options = resource.options;
-    var cache = options.cache;
-    var cssParser;
+    return new Promise(function (resolve, reject) {
+
+        var file = resource.file;
+        var content = resource.content;
+        var options = resource.options;
+        var cache = options.cache;
+        var ast, tasks;
 
 
-    if (cache) {
-        cssParser = CssParser.cache[file];
-        if (cssParser) {
-            // 深拷贝缓存
-            return cssParser.then(utils.copy);
+        if (cache) {
+            tasks = CssParser.cache[file];
+            if (tasks) {
+                // 深拷贝缓存
+                return resolve(utils.copy(tasks));
+            }
         }
-    }
 
-    var ast;
 
-    // CSSOM BUG?
-    content = content.replace(/@charset\b.+;/g, '');
-
-    try {
-        ast = CSSOM.parse(content);
-    } catch (errors) {
+        // CSSOM BUG?
+        content = content.replace(/@charset\b.+;/g, '');
         
-        return Promise.reject(
-            new VError(errors, 'parse "%s" failed', file)
-        );
-    }
 
-    cssParser = new CssParser
-    .Parser(ast, file, options, importLength);
+        try {
+            ast = CSSOM.parse(content);
+        } catch (errors) {
+            
+            return reject(
+                new VError(errors, 'parse "%s" failed', file)
+            );
+        }
 
-    if (cache) {
-        CssParser.cache[file] = cssParser;
-    }
 
-    if (options.debug) {
-        cssParser.then(function (data) {
-            console.log('');
-            console.log('[DEBUG]', 'CssParser', file);
-            console.log(data);
-            return data;
-        });
-    }
+        tasks = new CssParser
+        .Parser(ast, file, options, importLength);
 
-    return cssParser;
+
+        Promise.all(tasks)
+        .then(function (tasks) {
+            var cssInfo = [];
+            tasks.forEach(function (item) {
+                if (Array.isArray(item)) {
+                    cssInfo = cssInfo.concat(item);
+                } else if (item instanceof CssParser.Model) {
+                    cssInfo.push(item);
+                }
+            });
+
+
+            if (cache) {
+                CssParser.cache[file] = cssInfo;
+            }
+
+
+            if (options.debug) {
+                console.log('');
+                console.log('[DEBUG]', 'CssParser', file);
+                console.log(cssInfo);
+            }
+
+            resolve(cssInfo);
+
+        })
+        .catch(reject);
+
+        
+    });
 }
 
 
@@ -152,35 +172,18 @@ CssParser.Parser = function (ast, file, options, importLength) {
 
     ast.cssRules.forEach(function (rule) {
         var type = rule.constructor.name;
-        var ret;
+        var cssInfo;
 
         if (typeof that[type] === 'function') {
 
-            ret = that[type](rule);
-            if (ret) {
-                tasks.push(ret);
+            cssInfo = that[type](rule);
+            if (cssInfo) {
+                tasks.push(cssInfo);
             }
         }
     });
 
-
-    var promise = Promise.all(tasks)
-    .then(function (list) {
-
-        var ret = [];
-        list.forEach(function (item) {
-            if (Array.isArray(item)) {
-                ret = ret.concat(item);
-            } else if (item instanceof CssParser.Model) {
-                ret.push(item);
-            }
-        });
-
-        return ret;
-    });
-
-
-    return promise;
+    return tasks;
 };
 
 

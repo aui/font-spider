@@ -22,6 +22,13 @@ function Compress (webFont, options) {
 
     return new Promise(function (resolve, reject) {
 
+
+        if (webFont.length === 0) {
+            resolve(webFont);
+            return;
+        }
+
+
         number ++;
         options = getOptions(options);
 

@@ -27,22 +27,23 @@ function HtmlParser (resource) {
     }
 
 
+    return new Promise(function (resolve, reject) {
+        var file = resource.file;
+        var content = resource.content;
+        var options = resource.options;
+        var $;
 
-    var file = resource.file;
-    var content = resource.content;
-    var options = resource.options;
-    var $;
+
+        try {
+            $ = cheerio.load(content);
+        } catch (error) {
+            var errors = new VError(error, 'parse "%s" failed', file);
+            return reject(errors);
+        }
 
 
-    try {
-        $ = cheerio.load(content);
-        return new HtmlParser.Parser($, file, options);
-    } catch (error) {
-
-        var errors = new VError(error, 'parse "%s" failed', file);
-
-        return Promise.reject(errors);
-    }
+        resolve(new HtmlParser.Parser($, file, options));
+    });
     
 }
 
@@ -80,8 +81,6 @@ HtmlParser.Parser = function ($, file, options) {
     // http://font-spider.org >>> http://font-spider.org
     // http://font-spider.org/html/test.html >>> http://font-spider.org/html
     this.base = $('base[href]').attr('href') || utils.dirname(file);
-
-    return Promise.resolve(this);
 };
 
 

@@ -62,7 +62,6 @@ function Spider (htmlFiles, options) {
 
         webFonts.forEach(function (font) {
 
-            //console.log(font);
             font.chars = chars[font.id];
 
             // 对字符进行除重操作
@@ -109,62 +108,61 @@ Spider.Model = function WebFont (id, name, files, chars, selectors) {
  * @return  {Promise}
  */
 Spider.Parser = function (htmlFile, options) {
+    return new Promise(function (resolve, reject) {
+        var resource;
+        var isBuffer = typeof htmlFile === 'object' && htmlFile.isBuffer();
 
-    var resource;
-    var that = this;
-    var isBuffer = typeof htmlFile === 'object' && htmlFile.isBuffer();
+        if (isBuffer) {
 
+            resource = resolve(new Resource.Model(
+                htmlFile.path,
+                htmlFile.contents.toString(),
+                utils.options(options, {
+                    from: 'Node',
+                    cache: false
+                })
+            ));
 
-    if (isBuffer) {
+            htmlFile = htmlFile.path;
 
-        resource = Promise.resolve(new Resource.Model(
-            htmlFile.path,
-            htmlFile.contents.toString(),
-            utils.options(options, {
-                from: 'Node',
-                cache: false
-            })
-        ));
+        } else {
 
-        htmlFile = htmlFile.path;
-
-    } else {
-
-        resource = new Resource(
-            htmlFile,
-            null,
-            utils.options(options, {
-                from: 'Node',
-                cache: false
-            }
-        ));
-    }
+            resource = new Resource(
+                htmlFile,
+                null,
+                utils.options(options, {
+                    from: 'Node',
+                    cache: false
+                }
+            ));
+        }
 
 
-    this.options = options;
-    var spiderBeforeLoad = options.spiderBeforeLoad;
-    var spiderLoad = options.spiderLoad;
-    var spiderError = options.spiderError;
+        this.options = options;
+        var spiderBeforeLoad = options.spiderBeforeLoad;
+        var spiderLoad = options.spiderLoad;
+        var spiderError = options.spiderError;
 
-    spiderBeforeLoad(htmlFile);
+        spiderBeforeLoad(htmlFile);
 
-    return new HtmlParser(resource)
-    .then(function (htmlParser) {
-        this.htmlParser = htmlParser;
-        this.htmlFile = htmlFile;
-        return htmlParser;
-    }.bind(this))
-    .then(that.getCssInfo.bind(this))
-    .then(this.getFontInfo.bind(this))
-    .then(this.getCharsInfo.bind(this))
-    .then(function (webFonts) {
-        spiderLoad(htmlFile);
-        return webFonts;
-    })
-    .catch(function (errors) {
-        spiderError(htmlFile, errors);
-        return Promise.reject(errors);
-    });
+        new HtmlParser(resource)
+        .then(function (htmlParser) {
+            this.htmlParser = htmlParser;
+            this.htmlFile = htmlFile;
+            return htmlParser;
+        }.bind(this))
+        .then(this.getCssInfo.bind(this))
+        .then(this.getFontInfo.bind(this))
+        .then(this.getCharsInfo.bind(this))
+        .then(function (webFonts) {
+            spiderLoad(htmlFile);
+            resolve(webFonts);
+        })
+        .catch(function (errors) {
+            spiderError(htmlFile, errors);
+            reject(errors);
+        });
+    }.bind(this));
 };
 
 
