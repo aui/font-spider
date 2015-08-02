@@ -101,10 +101,10 @@ font-spider --ignore *-icon.css,*.eot dest/*.html
 
 - 仅支持 `link` 与 `style` 标签引入的样式，不支持元素行内样式
 - 仅支持固定的文本与样式，不支持 javascript 动态插入的元素与样式
+- 不支持字体继承（例如 CSS `content` 属性插入的字符需要声明 `font-family`）
 - .otf 字体需要转换成 .ttf 才能被压缩
 - 仅支持 `utf-8` 编码
 - 不支持 CSS `unicode-range` 属性
-- 不支持字体继承（例如 CSS `content` 属性插入的字符需要定义 `font-family`）
 
 ## 字体兼容性参考
 

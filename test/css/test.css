@@ -45,6 +45,7 @@
 
 h1 {
   font-weight: ft;
+  font-family: inherit;
 }
 
 #content > h3 {

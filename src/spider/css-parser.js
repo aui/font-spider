@@ -369,6 +369,13 @@ CssParser.Parser.prototype = {
         });
 
 
+        // 不支持继承的字体
+        if (model.family.indexOf('inherit') !== -1) {
+            console.warn('[WARN]', 'does not support `font-family: inherit`',
+                'from:', this.file,
+                'selector:', selectorText);
+        }
+
 
         return model;
     },
