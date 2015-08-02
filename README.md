@@ -1,18 +1,14 @@
 # 字蛛
 
-[][node-version-url][![NPM Version][npm-image]][npm-url]
+[][node-version-url][![NPM Version][npm-image]][npm-url] [![NPM Downloads][downloads-image]][downloads-url] [![Node.js Version][node-version-image]][node-version-url]
 
-[![NPM Downloads][downloads-image]][downloads-url]
-
-[![Node.js Version][node-version-image]][node-version-url]
-
-中文 WebFont 自动化压缩工具，它能自动分析页面使用的 WebFont 并进行按需压缩。
+中文 WebFont 自动化压缩工具，它能自动分析页面使用的 WebFont 并进行按需压缩，并不需要指定字体与字符。
 
 官方网站：<http://font-spider.org>
 
 ## 特性
 
-在网页中呈现艺术字体，WebFont 比图片拥有更好的体验，它支持选中、搜索、翻译、朗读、缩放等，而字蛛作为一个 WebFont 压缩转码工具，拥有如下特性：
+在网页中呈现艺术字体，WebFont 会比图片拥有更好的体验，它支持选中、搜索、翻译、朗读、缩放等。字蛛作为一个 WebFont 压缩转码工具，拥有如下特性：
 
 1. 按需压缩：数 MB 的中文字体可被压成几十 KB
 2. 简单可靠：完全基于 CSS 规则，无需 js 与服务端辅助
@@ -104,11 +100,11 @@ font-spider --ignore *-icon.css,*.eot dest/*.html
 ## 限制
 
 - 仅支持 `link` 与 `style` 标签引入的样式，不支持元素行内样式
-- CSS `content` 属性插入的字符需要定义 `font-family`，不支持继承
 - 仅支持固定的文本与样式，不支持 javascript 动态插入的元素与样式
--  .otf 字体需要转换成 .ttf 才能被压缩
+- .otf 字体需要转换成 .ttf 才能被压缩
 - 仅支持 `utf-8` 编码
 - 不支持 CSS `unicode-range` 属性
+- 不支持字体继承（例如 CSS `content` 属性插入的字符需要定义 `font-family`）
 
 ## 字体兼容性参考
 
