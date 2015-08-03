@@ -210,7 +210,7 @@ CssParser.Parser.prototype = {
         
         var url = utils.unquotation(rule.href.trim());
         url = utils.resolve(base, url);
-        url = this._uri(url);
+        url = this._getUrl(url);
 
 
         if (!url) {
@@ -298,7 +298,7 @@ CssParser.Parser.prototype = {
         var urls = [];
         src.forEach(function (file) {
             file = utils.resolve(base, file);
-            file = that._uri(file);
+            file = that._getUrl(file);
             if (file) {
                 urls.push(file);
             }
@@ -321,7 +321,20 @@ CssParser.Parser.prototype = {
 
 
         var selectorText = rule.selectorText;
-        var content = utils.unquotation(style.content || '');
+        var content = style.content || '';
+        
+        // CSS content 属性
+        // @see https://developer.mozilla.org/en-US/docs/Web/CSS/content
+        if (/^['"]|['"]$/.test(content)) {
+            content = utils.unquotation(content);
+        } else if (/^(?:open|close)-quote$/.test(content)) {
+
+            console.warn('[WARN]', 'does not support `content: ' + content + '`',
+                'from:', this.file,
+                'selector:', selectorText);
+
+        }
+        
 
         var model = new CssParser
         .Model('CSSStyleRule')
@@ -394,7 +407,7 @@ CssParser.Parser.prototype = {
 
     // 转换文件地址
     // 执行顺序：ignore > map > normalize
-    _uri: function (file) {
+    _getUrl: function (file) {
         if (!this.ignore(file)) {
             file = this.map(file);
             file = utils.normalize(file);
