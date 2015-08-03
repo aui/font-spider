@@ -133,11 +133,9 @@ Compress.prototype = {
         var temp = path.join(dirname, TEMP + number);
 
 
-        if (webFont.chars) {
-            fontmin.use(Fontmin.glyph({
-                text: webFont.chars
-            }));
-        }
+        fontmin.use(Fontmin.glyph({
+            text: webFont.chars || '-'
+        }));
 
 
         Object.keys(files).forEach(function (key) {
