@@ -112,7 +112,7 @@ HtmlParser.Parser.prototype = {
             var href = $this.attr('href');
 
             cssFile = utils.resolve(base, href);
-            cssFile = uri(cssFile);
+            cssFile = getUrl(cssFile);
 
             // 注意：为空也得放进去，保持与 link 标签一一对应
             files.push(cssFile);
@@ -121,7 +121,7 @@ HtmlParser.Parser.prototype = {
 
         // 转换 file 地址
         // 执行顺序：ignore > map > normalize
-        function uri (file) {
+        function getUrl (file) {
 
             if (!that.ignore(file)) {
                 file = that.map(file);
@@ -192,11 +192,11 @@ HtmlParser.Parser.prototype = {
 
         var $elem;
         var $ = this.$;
-        var RE_SPURIOUS = /\:(link|visited|hover|active|focus)\b/ig;
+        var RE_DPSEUDOS = /\:(link|visited|target|active|focus|hover|checked|disabled|enabled|selected|lang\(([-\w]{2,})\)|not\(([^()]*|.*)\))?(.*)/i;
 
 
         // 剔除状态伪类
-        selector = selector.replace(RE_SPURIOUS, '');
+        selector = selector.replace(RE_DPSEUDOS, '');
 
 
         // 使用选择器查找节点

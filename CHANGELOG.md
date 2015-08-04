@@ -1,5 +1,10 @@
 # 更新日志
 
+## 0.3.7
+
+* 完善伪类选择器支持
+* 给部分不支持的 CSS 规则显示警告信息
+
 ## 0.3.6
 
 * 修复 BUG [#43](https://github.com/aui/font-spider/issues/43)
