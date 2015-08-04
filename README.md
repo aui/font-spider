@@ -79,7 +79,7 @@ font-spider --ignore *-icon.css,*.eot dest/*.html
 ``` shell
 -h, --help                    输出帮助信息
 -V, --version                 输出当前版本号
---info                        仅提取 WebFont 信息显示，不压缩与转码
+--info                        输出 WebFont 的 JSON 描述信息，不压缩与转码
 --ignore <pattern>            忽略的文件配置（可以是字体、CSS、HTML）
 --map <remotePath,localPath>  映射 CSS 内部 HTTP 路径到本地（支持正则表达式）
 --no-backup                   关闭字体备份功能
