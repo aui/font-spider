@@ -132,10 +132,13 @@ Compress.prototype = {
         var fontmin = new Fontmin().src(source);
         var temp = path.join(dirname, TEMP + number);
 
-
-        fontmin.use(Fontmin.glyph({
-            text: webFont.chars || '-'
-        }));
+        // 有些 webfont 使用 content 属性加字体继承，查询不到 chars
+        // 不压缩，避免意外将
+        if (webFont.chars) {
+            fontmin.use(Fontmin.glyph({
+                text: webFont.chars
+            }));
+        }
 
 
         Object.keys(files).forEach(function (key) {
