@@ -56,19 +56,19 @@ font-spider [options] <htmlFile ...>
 
 #### 示例
 
-1. 使用通配符压缩多个 HTML 文件关联的 WebFont：
+1\. 使用通配符压缩多个 HTML 文件关联的 WebFont：
 
 ``` shell
 font-spider dest/*.html
 ```
 
-2. 使用 `--map <remotePath,localPath>` 参数将线上的页面的 WebFont 映射到本地来进行压缩：
+2\. 使用 `--map <remotePath,localPath>` 参数将线上的页面的 WebFont 映射到本地来进行压缩：
 
 ``` shell
 font-spider --map http://font-spider.org/font,./font http://font-spider.org/index.html
 ```
 
-3. 使用 `--ignore <pattern>` 忽略文件：
+3\. 使用 `--ignore <pattern>` 忽略文件：
 
 ``` shell
 font-spider --ignore *-icon.css,*.eot dest/*.html
