@@ -1,4 +1,3 @@
-/* global require,module */
 'use strict';
 
 var path = require('path');
@@ -7,7 +6,7 @@ var fs = require('fs');
 
 
 // 拷贝文件
-function cp (srcpath, destpath) {
+function cp(srcpath, destpath) {
     var destdir = path.dirname(destpath);
     var contents = fs.readFileSync(srcpath);
     mkdir(destdir);
@@ -17,7 +16,7 @@ function cp (srcpath, destpath) {
 
 
 // 重命名文件或文件夹
-function rename (src, target) {
+function rename(src, target) {
     if (fs.existsSync(src)) {
         var dir = path.dirname(target);
         mkdir(dir);
@@ -28,7 +27,7 @@ function rename (src, target) {
 
 
 // 创建目录，包括子文件夹
-function mkdir (dir) {
+function mkdir(dir) {
 
     var currPath = dir;
     var toMakeUpPath = [];
@@ -38,7 +37,7 @@ function mkdir (dir) {
         currPath = path.dirname(currPath);
     }
 
-    toMakeUpPath.forEach(function (pathItem) {
+    toMakeUpPath.forEach(function(pathItem) {
         fs.mkdirSync(pathItem);
     });
 }
@@ -46,9 +45,9 @@ function mkdir (dir) {
 
 
 // 删除文件夹，包括子文件夹
-function rmdir (dir) {
+function rmdir(dir) {
 
-    var walk = function (dir) {
+    var walk = function(dir) {
 
         if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
             return;
@@ -60,7 +59,7 @@ function rmdir (dir) {
             fs.rmdirSync(dir);
             return;
         } else {
-            files.forEach(function (file) {
+            files.forEach(function(file) {
                 var fullName = path.join(dir, file);
                 if (fs.statSync(fullName).isDirectory()) {
                     walk(fullName);

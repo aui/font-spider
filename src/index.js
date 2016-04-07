@@ -1,47 +1,32 @@
-/* global require,module */
-
 'use strict';
 
-var glob = require('glob');
-var Promise = require('promise');
-var Spider = require('./spider');
-var Compress = require('./compress');
+var spider = require('./spider');
+var compressor = require('./compressor');
+var Adapter = require('./adapter');
 
-var FontSpider = function (htmlFiles, options) {
 
-    if (typeof htmlFiles === 'string') {
-        htmlFiles = glob.sync(htmlFiles);
-    } else if (Array.isArray(htmlFiles)) {
-        var srcs = [];
-        htmlFiles.forEach(function (item) {
-            srcs = srcs.concat(glob.sync(item));
+function runner(htmlFiles, options, callback) {
+
+    options = new Adapter(options);
+    callback = callback || function() {};
+
+    return spider(htmlFiles, options).then(function(webFonts) {
+        return compressor(webFonts, options);
+    }).then(function(webFonts) {
+        process.nextTick(function() {
+            callback(null, webFonts);
         });
-        htmlFiles = srcs;
-    }
-
-    return new FontSpider.Spider(htmlFiles, options)
-    .then(function (webFonts) {
-        return Promise
-        .all(webFonts.map(function (webFont) {
-            return new FontSpider.Compress(webFont, options);
-        }));
+        return webFonts;
+    }).catch(function(errors) {
+        process.nextTick(function() {
+            callback(errors);
+        });
+        return Promise.reject(errors);
     });
 };
 
 
+runner.spider = spider;
+runner.compressor = compressor;
 
-FontSpider.Spider = Spider;
-FontSpider.Compress = Compress;
-
-FontSpider.defaults = {};
-mix(FontSpider.defaults, Spider.defaults);
-mix(FontSpider.defaults, Compress.defaults);
-
-function mix (target, object) {
-    Object.keys(object).forEach(function (key) {
-        target[key] = object[key];
-    });
-}
-
-
-module.exports = FontSpider;
+module.exports = runner;
