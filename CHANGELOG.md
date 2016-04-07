@@ -1,5 +1,18 @@
 # 更新日志
 
+## 1.0.0-pre
+
+* 支持字体继承
+* 支持伪元素`content`，支持 icon-font
+* 提高运行速度
+* 支持行内样式
+* API 不再兼容之前版本
+* 修复 CSS `font-weight` 可能导致遗漏字符的 BUG [#62](https://github.com/aui/font-spider/issues/62)
+* 修复 OSX 表情字符无法解析的问题 [#59](https://github.com/aui/font-spider/issues/59)
+* 修复设置`font-family: inherit`可能遗漏字符的 BUG [#44](https://github.com/aui/font-spider/issues/44)
+* 修复 Windows 下使用通配符路径报错的 BUG
+* 修复 CSS `content` 属性不支持 unicode 的 BUG
+
 ## 0.3.8
 
 * 修复 CSS `@charset` 可能导致无法解析的 BUG
