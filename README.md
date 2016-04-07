@@ -91,20 +91,11 @@ font-spider --ignore *-icon.css,*.eot dest/*.html
 - [grunt-font-spider](https://github.com/aui/grunt-font-spider)
 - [gulp-font-spider](https://github.com/aui/gulp-font-spider)
 
-## API
-
-使用 font-spider 的 API，可以构建在线动态字体压缩服务。
-
-文档参见：[API.md](./API.md)
-
 ## 限制
 
-- 仅支持 `link` 与 `style` 标签引入的样式，不支持元素行内样式
 - 仅支持固定的文本与样式，不支持 javascript 动态插入的元素与样式
-- 不支持字体继承（例如 CSS `content` 属性插入的字符需要声明 `font-family`）
 - .otf 字体需要转换成 .ttf 才能被压缩
 - 仅支持 `utf-8` 编码
-- 不支持 CSS `unicode-range` 属性
 
 ## 字体兼容性参考
 
@@ -128,8 +119,6 @@ font-spider --ignore *-icon.css,*.eot dest/*.html
 字蛛的发展离不开以下开源项目的支持：
 
 - [fontmin](https://github.com/ecomfe/fontmin) 来自百度前端团队的字体压缩库*（字蛛 v0.2 版本使用它取代了内置的字体压缩库 [#18](https://github.com/aui/font-spider/issues/18)）*
-- [cssom](https://github.com/NV/CSSOM) 标准化的 CSS 解析库*（字蛛 v0.3 版本使用它取代了 [css](https://github.com/reworkcss/css)）*
-- [cheerio](https://github.com/cheeriojs/cheerio) 轻量的 HTML 解析库*（字蛛 v0.2 版本使用它取代了 [jsdom](https://github.com/tmpvar/jsdom)）*
 
 字蛛愿以开放的心态和开源社区一起推动中文 WebFont 发展。
 
