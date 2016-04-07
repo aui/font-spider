@@ -4,9 +4,11 @@
 
 var fs = require('fs');
 var path = require('path');
-var FontSpider = require('../');
+var fontSpider = require('../');
+var Adapter = require('../src/adapter');
 var program = require('commander');
-var Promise = require('promise');
+var glob = require('glob');
+var color = require('./color');
 
 program
     .version(require('../package.json').version)
@@ -29,7 +31,7 @@ function toMap(args) {
     var map = [];
     var p = 2;
     var n = args.length / p;
-    for (var i = 0; i < n; i ++) {
+    for (var i = 0; i < n; i++) {
         map.push([
             args[p * i],
             args[p * i + 1]
@@ -39,42 +41,61 @@ function toMap(args) {
     return map;
 }
 
+// 扁平化二维数组
+function reduce(array) {
+    var ret = [];
+
+    array.forEach(function(item) {
+        ret.push.apply(ret, item);
+    });
+
+    return ret;
+}
+
 
 var files = program.args;
-var options = {
-    resourceLoad: function (file) {
-        writeln('Load:', color('cyan', file), color('green', '<OK>'));
-    },
-
-    resourceError: function () {
-        writeln('');
-    },
-
-    spiderLoad: function () {
-        writeln('Loading ..');
+var options = new Adapter({
+    resourceBeforeLoad: function(file) {
+        writeln('Load:', color('cyan', file));
     }
-};
+});
+
+
 
 if (!files.length) {
     program.help();
     process.exit(1);
+} else {
+    files = files.map(function(file) {
+        if (/https?/.test(file)) {
+            return [file];
+        } else {
+            file = path.resolve(file);
+            return glob.sync(file);
+        }
+    });
+    files = reduce(files);
 }
 
 
 // 合并配置项目
-Object.keys(FontSpider.defaults).forEach(function (key) {
-    if (program[key] !== undefined) {
+Object.keys(program).forEach(function(key) {
+    if (key in options) {
         options[key] = program[key];
     }
 });
+
+if (program.debug) {
+    options.silent = false;
+}
 
 
 
 writeln('Loading ..');
 
 
-function onerror (errors) {
-    writeln('');
+function onerror(errors) {
+    clearWriteln();
 
     var message = 'Error: ' + errors.message;
     var stack = errors.stack.toString();
@@ -98,66 +119,66 @@ function onerror (errors) {
 
 // 显示 WebFont 信息
 if (program.info) {
+    fontSpider.spider(files, options)
+        .then(function(webFonts) {
 
-    new FontSpider.Spider(files, options)
-    .then(function (webFonts) {
+            clearWriteln();
+            var json = JSON.stringify(webFonts, null, 4);
+            process.stdout.write(json + '\n');
 
-        writeln('');
-        var json = JSON.stringify(webFonts, null, 4);
-        process.stdout.write(json + '\n');
-
-    })
-    .catch(onerror);
+        })
+        .catch(onerror);
 
 
-// 处理 WebFont
+    // 处理 WebFont
 } else {
 
-    new FontSpider.Spider(files, options)
-    .then(function (webFonts) {
+    fontSpider.spider(files, options)
+        .then(function(webFonts) {
 
-        if (webFonts.length === 0) {
-            write('<web font not found>');
-            return;
-        }
+            if (webFonts.length === 0) {
+                clearWriteln();
+                write('<web font not found>');
+                return;
+            }
 
-        writeln('Loading ...');
+            writeln('Loading ...');
 
-        return Promise.all(webFonts.map(function (webFont) {
+            return fontSpider.compressor(webFonts, options)
+                .then(function(webFonts) {
 
-            return new FontSpider.Compress(webFont, options)
-            .then(function (webFont) {
-                
-                writeln('');
-                write('Font name:', color('green', webFont.name));
-                write('Original size:', color('green', webFont.originalSize / 1000 + ' KB'));
-                write('Include chars:', webFont.chars);
-                write('Font id:', webFont.id);
-                write('CSS selector:', webFont.selectors.join(', '));
-                write('Font files:');
+                    webFonts.forEach(function(webFont) {
+                        clearWriteln();
+                        write('Font family:', color('green', webFont.family));
+                        write('Original size:', color('green', webFont.originalSize / 1000 + ' KB'));
+                        write('Include chars:', webFont.chars);
+                        write('Font id:', webFont.id);
+                        write('CSS selector:', webFont.selectors.join(', '));
+                        write('Font files:');
 
-                webFont.files.forEach(function (file) {
-                    if (fs.existsSync(file)) {
-                        write('File', color('cyan', path.relative('./', file)),
-                            'created:', color('green', + fs.statSync(file).size / 1000 + ' KB'));
-                    } else {
-                        write(color('red', 'File ' + path.relative('./', file) + ' not created'));
-                    }
+                        webFont.files.forEach(function(file) {
+                            file = file.toString();
+                            if (fs.existsSync(file)) {
+                                write('File', color('cyan', path.relative('./', file)),
+                                    'created:', color('green', +fs.statSync(file).size / 1000 + ' KB'));
+                            } else {
+                                write(color('red', 'File ' + path.relative('./', file) + ' not created'));
+                            }
+                        });
+
+                        write('');
+                    });
+
+                    return webFonts;
                 });
 
-                write('');
-
-                return webFont;
-            });
-        }));
-
-    })
-    .catch(onerror);
+        })
+        .catch(onerror);
 }
 
 
 
-function write () {
+function write() {
     var stream = process.stdout;
 
     if (stream.isTTY) {
@@ -166,7 +187,7 @@ function write () {
 }
 
 
-function writeln () {
+function writeln() {
     var stream = process.stdout;
 
     if (stream.isTTY) {
@@ -176,32 +197,6 @@ function writeln () {
     }
 }
 
-
-function color (name, string) {
-    var c = color.colors[name];
-    if (c && typeof string === 'string') {
-        return c[0] + string + c[1];
-    } else {
-        return string;
-    }
+function clearWriteln() {
+    writeln('');
 }
-
-color.colors = {
-    // styles
-    'bold'      : ['\x1B[1m',  '\x1B[22m'],
-    'italic'    : ['\x1B[3m',  '\x1B[23m'],
-    'underline' : ['\x1B[4m',  '\x1B[24m'],
-    'inverse'   : ['\x1B[7m',  '\x1B[27m'],
-    // colors
-    'white'     : ['\x1B[37m', '\x1B[39m'],
-    'grey'      : ['\x1B[90m', '\x1B[39m'],
-    'black'     : ['\x1B[30m', '\x1B[39m'],
-    'blue'      : ['\x1B[34m', '\x1B[39m'],
-    'cyan'      : ['\x1B[36m', '\x1B[39m'],
-    'green'     : ['\x1B[32m', '\x1B[39m'],
-    'magenta'   : ['\x1B[35m', '\x1B[39m'],
-    'red'       : ['\x1B[31m', '\x1B[39m'],
-    'yellow'    : ['\x1B[33m', '\x1B[39m']
-};
-
-
