@@ -7,7 +7,7 @@ var utils = require('./utils');
 
 /**
  * @param   {Window}
- * @return  {Promise}
+ * @return  {Array<WebFont>}
  */
 function FontSpider(window) {
     return this.parse(window);
@@ -19,6 +19,12 @@ FontSpider.prototype = {
     window: null,
     document: null,
 
+
+    /**
+     * parser
+     * @param   {Window}
+     * @return  {Array<WebFont>}
+     */
     parse: function(window) {
         var that = this;
         var document = window.document;
@@ -113,7 +119,7 @@ FontSpider.prototype = {
                 return false;
             }
 
-            // 向上查找比提高效率
+            // 向上查找效率比较高
             while (element) {
                 if (elements.indexOf(element) !== -1) {
                     return true;
@@ -128,6 +134,7 @@ FontSpider.prototype = {
 
         elements = null;
         pseudoCssStyleRules = null;
+        inlineStyleElements = null;
 
         return webFonts;
     },
@@ -151,7 +158,6 @@ FontSpider.prototype = {
         } else {
             return '';
         }
-
     },
 
 
@@ -185,6 +191,8 @@ FontSpider.prototype = {
 
         // 伪元素
         if (matchPseudoParent) {
+            // .selector ::after
+            // ::after
             selector = selector.replace(/\:\:?(?:before|after)$/i, '') || '*';
         }
 
