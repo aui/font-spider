@@ -4,28 +4,32 @@ var path = require('path');
 var url = require('url');
 var crypto = require('crypto');
 var cssFontParser = require('css-font-parser');
+var utils = require('./utils');
 
 
 /**
- * FontFace 描述类
+ * WebFont 描述类
  * @param   {object}
  */
-function FontFace(options) {
+function WebFont(options) {
     this.id = options.id;
     this.family = options.family;
     this.files = options.files;
     this.stretch = options.stretch;
     this.style = options.style;
     this.weight = options.weight;
+
+    this.chars = options.chars || '';
+    this.selectors = options.selectors || [];
 }
 
 
 /**
  * 解析 @font-face
  * @param   {CSSFontFaceRule}
- * @return  {FontFace}
+ * @return  {WebFont}
  */
-FontFace.parse = function parseFontFace(cssFontFaceRule) {
+WebFont.parse = function parseFontFace(cssFontFaceRule) {
     var baseURI = cssFontFaceRule.parentStyleSheet.href;
     var s = cssFontFaceRule.style;
 
@@ -48,7 +52,7 @@ FontFace.parse = function parseFontFace(cssFontFaceRule) {
         .update(files.join(','))
         .digest('hex');
 
-    return new FontFace({
+    return new WebFont({
         id: id,
         family: family,
         files: files,
@@ -60,13 +64,18 @@ FontFace.parse = function parseFontFace(cssFontFaceRule) {
 
 
 
+WebFont.FontFile = FontFile;
+WebFont.parseFontFaceSrc = parseFontFaceSrc;
+WebFont.parseFontfamily = parseFontfamily;
+
+
 /**
  * 匹配 CSS 规则
  * @see https://www.w3.org/html/ig/zh/wiki/CSS3字体模块#.E5.AD.97.E4.BD.93.E5.8C.B9.E9.85.8D.E7.AE.97.E6.B3.95
  * @param   {CSSStyleDeclaration}
  * @return  {Boolean}
  */
-FontFace.prototype.match = function(style) {
+WebFont.prototype.match = function(style) {
 
     var fontFamilys = [];
 
@@ -101,7 +110,12 @@ FontFace.prototype.match = function(style) {
 
 
 
-// 解析 @font-face src 值
+/**
+ * 解析 @font-face src 值
+ * @param   {String}    src
+ * @param   {String}    baseURI
+ * @param   {Array<Object>}
+ */
 function parseFontFaceSrc(value, baseURI) {
     var list = [];
     var src;
@@ -118,21 +132,38 @@ function parseFontFaceSrc(value, baseURI) {
 }
 
 
+/**
+ * 解析 font-family 值
+ * @param   {String}
+ * @return  {Array<String>}
+ */
+function parseFontfamily(fontFamily) {
+    return utils.split(fontFamily).map(function(value) {
+        return value.replace(/^["']|["']$/g, '');
+    });
+}
+
 
 // font-face 路径与字体类型描述信息类
 function FontFile(baseURI, source, format) {
 
-    if (baseURI) {
+    if (!/^https?\:/.test(source)) {
         source = url.resolve(baseURI, source);
     }
 
-    source = source.replace(/[\?#].*$/, '');
+    if (/^https?\:/.test(source)) {
+        source = source.replace(/[#].*$/, '');
+    } else {
+        source = source.replace(/[?#].*$/, '');
+    }
 
     if (!format) {
-
-        switch (path.dirname(source).toLowerCase()) {
+        switch (path.extname(source.replace(/\?.*$/, '')).toLowerCase()) {
             case '.eot':
                 format = 'embedded-opentype';
+                break;
+            case '.woff2':
+                format = 'woff2';
                 break;
             case '.woff':
                 format = 'woff';
@@ -152,37 +183,11 @@ function FontFile(baseURI, source, format) {
     this.format = format;
 }
 
+
 FontFile.prototype.toString = function() {
     return this.source;
 };
 
-
-
-// 解析 font-family 属性值为数组
-function parseFontfamily(fontFamily) {
-    // TODO test
-    var list = fontFamily
-        .replace(/^\s*["']?|["']?\s*$|["']?\s*(,)\s*["']?/g, '$1')
-        .split(',');
-    return list;
-}
-
-
-/**
- * WebFont 描述类 - 继承自 FontFace
- * @param   {object}
- */
-function WebFont(options) {
-    FontFace.call(this, options);
-    this.chars = '';
-    this.selectors = [];
-}
-
-WebFont.parse = function(cssFontFaceRule) {
-    return new WebFont(FontFace.parse(cssFontFaceRule));
-};
-WebFont.prototype = Object.create(FontFace.prototype);
-WebFont.prototype.constructor = WebFont;
 
 
 module.exports = WebFont;
