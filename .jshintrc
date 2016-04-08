@@ -6,8 +6,6 @@
   "validthis": true,
   "browser": false,
   "globals": {
-    "EventEmitter": true,
-    "Promise": true,
     "describe": true,
     "it": true
   }
