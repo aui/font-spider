@@ -9,6 +9,7 @@ var Adapter = require('../src/adapter');
 var program = require('commander');
 var glob = require('glob');
 var color = require('./color');
+var util = require('util');
 
 program
     .version(require('../package.json').version)
@@ -123,8 +124,18 @@ if (program.info) {
         .then(function(webFonts) {
 
             clearWriteln();
+
+
             var json = JSON.stringify(webFonts, null, 4);
-            process.stdout.write(json + '\n');
+            if (process.stdout.isTTY) {
+                json = JSON.parse(json);
+                process.stdout.write(util.inspect(json, {
+                    colors: true,
+                    depth: null
+                }) + '\n');
+            } else {
+                process.stdout.write(json + '\n');
+            }
 
         })
         .catch(onerror);
@@ -160,7 +171,7 @@ if (program.info) {
                             file = file.toString();
                             if (fs.existsSync(file)) {
                                 write('File', color('cyan', path.relative('./', file)),
-                                    'created:', color('green', +fs.statSync(file).size / 1000 + ' KB'));
+                                    'created:', color('green', fs.statSync(file).size / 1000 + ' KB'));
                             } else {
                                 write(color('red', 'File ' + path.relative('./', file) + ' not created'));
                             }
