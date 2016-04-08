@@ -11,8 +11,7 @@ function Adapter(options) {
     }
 
     for (var key in options) {
-        var value = options[key];
-        this[key] = value;
+        this[key] = options[key];
     }
 
     this._resourceCache = {};

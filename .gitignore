@@ -7,5 +7,6 @@ npm-debug.log
 .sass-cache
 .idea
 .markdowns
+test/demo-release
 test/demo/home
-test/release
+

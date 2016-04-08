@@ -114,16 +114,11 @@ font-spider --ignore *-icon.css,*.eot dest/*.html
 - @fufu  - [微博](http://www.weibo.com/u/1715968673)
 - @kdd - [微博](http://www.weibo.com/kddie)
 
-### 鸣谢
-
-字蛛的发展离不开以下开源项目的支持：
-
-- [fontmin](https://github.com/ecomfe/fontmin) 来自百度前端团队的字体压缩库*（字蛛 v0.2 版本使用它取代了内置的字体压缩库 [#18](https://github.com/aui/font-spider/issues/18)）*
-
 字蛛愿以开放的心态和开源社区一起推动中文 WebFont 发展。
 
 ## 相关链接
 
+- [fontmin](https://github.com/ecomfe/fontmin)
 - [Google: 网页字体优化](https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency/webfont-optimization?hl=zh-cn)
 - [思源黑体: ttf 版本](https://github.com/akiratw/kaigen-gothic/releases)
 

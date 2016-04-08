@@ -25,7 +25,7 @@
     "scripts": {
         "_remove": "rm -rf test/demo-release",
         "_copy": "mkdir test/demo-release && cp -R test/demo/* test/demo-release",
-        "demo": "npm run _remove && npm run _copy && node bin/font-spider --no-backup test/demo-release/*/*.html",
+        "demo": "npm run _remove && npm run _copy && node bin/font-spider --ignore *.woff2 --no-backup test/demo-release/**/*.html",
         "test": "mocha test/index.js && npm run demo"
     },
     "dependencies": {
