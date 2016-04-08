@@ -40,10 +40,7 @@
     "devDependencies": {
         "mocha": "=2.2.5"
     },
-    "license": {
-        "type": "MIT",
-        "url": "http://creativecommons.org/licenses/MIT/"
-    },
+    "license": "MIT",
     "keywords": [
         "font",
         "fontforge",
