@@ -1,5 +1,4 @@
 node_modules
-release
 .DS_Store
 cache.manifest
 _draft/
@@ -8,4 +7,5 @@ npm-debug.log
 .sass-cache
 .idea
 .markdowns
-demo/home
+test/demo/home
+test/release

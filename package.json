@@ -23,9 +23,9 @@
         "node": ">= 4.0.0"
     },
     "scripts": {
-        "_remove": "rm -rf release",
-        "_copy": "mkdir release && cp -R demo/* release",
-        "demo": "npm run _remove && npm run _copy && node bin/font-spider --no-backup release/*/*.html",
+        "_remove": "rm -rf test/demo-release",
+        "_copy": "mkdir test/demo-release && cp -R test/demo/* test/demo-release",
+        "demo": "npm run _remove && npm run _copy && node bin/font-spider --no-backup test/demo-release/*/*.html",
         "test": "mocha test/index.js && npm run demo"
     },
     "dependencies": {
