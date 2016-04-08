@@ -7,38 +7,50 @@ var split = utils.split;
 
 describe('Utils', function() {
     describe('#split', function() {
-        it("#1", function() {
+        it('.class', function() {
             assert.deepEqual(['.class'], split('.class'));
         });
-        it("#2", function() {
+        it('.class, .class2', function() {
             assert.deepEqual(['.class', '.class2'], split('.class, .class2'));
         });
-        it("#3", function() {
+        it('.class, [attr]', function() {
             assert.deepEqual(['.class', '[attr]'], split('.class, [attr]'));
         });
-        it("#4", function() {
+        it('.class, [attr=","]', function() {
             assert.deepEqual(['.class', '[attr=","]'], split('.class, [attr=","]'));
         });
-        it("#5", function() {
+        it(".class, [attr=',']", function() {
             assert.deepEqual(['.class', '[attr=\',\']'], split(".class, [attr=',']"));
         });
-        it("#6", function() {
+        it('.class, [attr=",\'"], .class2', function() {
             assert.deepEqual(['.class', '[attr=",\'"]', '.class2'], split('.class, [attr=",\'"], .class2'));
         });
-        it("#7", function() {
+        it('[attr="\\,"]', function() {
             assert.deepEqual(['[attr="\\,"]'], split('[attr="\\,"]'));
         });
-        it("#8", function() {
+        it('[attr="\\,\\"\'"]', function() {
             assert.deepEqual(['[attr="\\,\\"\'"]'], split('[attr="\\,\\"\'"]'));
         });
-        it("#9", function() {
+        it('.class, [attr="\\""], .class2', function() {
             assert.deepEqual(['.class', '[attr="\\""]', '.class2'], split('.class, [attr="\\""], .class2'));
         });
-        it("#10", function() {
+        it('\n .class \n,\n   .class2', function() {
             assert.deepEqual(['.class', '.class2'], split('\n .class \n,\n   .class2'));
         });
-        it("#11", function() {
+        it('\n .class \n  ,  [attr^="   "],  \n   .class2', function() {
             assert.deepEqual(['.class', '[attr^="   "]', '.class2'], split('\n .class \n  ,  [attr^="   "],  \n   .class2'));
+        });
+        it('[data-name="a,\\""], .class2', function() {
+            assert.deepEqual(['[data-name="a,\\""]', '.class2'], split('[data-name="a,\\""], .class2'));
+        });
+        it('","', function() {
+            assert.deepEqual(['","'], split('","'));
+        });
+        it('",", ",\\""', function() {
+            assert.deepEqual(['","', '",\\""'], split('",", ",\\""'));
+        });
+        it('Arial,Helvetica,"Microsoft Yahei","\\","', function() {
+            assert.deepEqual(['Arial', 'Helvetica', '"Microsoft Yahei"', '"\\","'], split('Arial,Helvetica,"Microsoft Yahei","\\","'));
         });
     });
 });
