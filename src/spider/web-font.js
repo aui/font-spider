@@ -108,7 +108,7 @@ WebFont.prototype.match = function(style) {
     }
 
 
-    // 暂时只能做到名称匹配，会产生冗余
+    // 虽然仅使用字体名称来匹配会可能产生冗余，但能能避免压缩后缺少字形的问题
     // TODO 完善匹配算法 fontFamily | fontStretch | fontStyle | fontWeight
     if (fontFamilys.indexOf(this.family) !== -1) {
         return true;
@@ -155,11 +155,14 @@ function parseFontfamily(fontFamily) {
 
 // font-face 路径与字体类型描述信息类
 function FontFile(baseURI, source, format) {
-    if (!/^https?\:/.test(source)) {
+
+    var RE_SERVER = /^https?\:\/\//i;
+
+    if (!RE_SERVER.test(source)) {
         source = url.resolve(baseURI, source);
     }
 
-    if (/^https?\:/.test(source)) {
+    if (RE_SERVER.test(source)) {
         source = source.replace(/[#].*$/, '');
     } else {
         source = source.replace(/[?#].*$/, '');
