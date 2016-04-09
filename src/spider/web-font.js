@@ -27,10 +27,12 @@ function WebFont(options) {
 /**
  * 解析 @font-face
  * @param   {CSSFontFaceRule}
- * @return  {WebFont}
+ * @return  {WebFont, null}
  */
 WebFont.parse = function parseFontFace(cssFontFaceRule) {
-    var baseURI = cssFontFaceRule.parentStyleSheet.href;
+
+    var parentStyleSheet = cssFontFaceRule.parentStyleSheet;
+    var baseURI = parentStyleSheet.href || parentStyleSheet.ownerNode.baseURI;
     var s = cssFontFaceRule.style;
 
     var family = s['font-family'];
@@ -38,12 +40,18 @@ WebFont.parse = function parseFontFace(cssFontFaceRule) {
     var style = s['font-style'];
     var weight = s['font-weight'];
 
-    var src = s.src;
-    var files = parseFontFaceSrc(src, baseURI);
-
     if (!family) {
         return null;
     }
+
+    var src = s.src;
+    var files = parseFontFaceSrc(src, baseURI);
+
+
+    if (!files.length) {
+        return null;
+    }
+
 
     family = parseFontfamily(family)[0];
 
@@ -99,6 +107,7 @@ WebFont.prototype.match = function(style) {
         }
     }
 
+
     // 暂时只能做到名称匹配，会产生冗余
     // TODO 完善匹配算法 fontFamily | fontStretch | fontStyle | fontWeight
     if (fontFamilys.indexOf(this.family) !== -1) {
@@ -146,7 +155,6 @@ function parseFontfamily(fontFamily) {
 
 // font-face 路径与字体类型描述信息类
 function FontFile(baseURI, source, format) {
-
     if (!/^https?\:/.test(source)) {
         source = url.resolve(baseURI, source);
     }
