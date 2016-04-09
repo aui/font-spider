@@ -10,9 +10,9 @@ describe('fontSpider', function() {
         }).then(function(webFonts) {
             var testChars = {
                 'webfont-a': ['字', '代', '码', '如', '诗', '美', '丽', '@'],
-                'webfont-b': ['方', '块', '字', '中', '文', '大', '海'],
+                'webfont-b': ['方', '块', '字', '中', '文', '大', '海', '🍎'],
                 'webfont-c': ['蛛', '@'],
-                'webfont-e': ['厦', '门']
+                'webfont-e': ['❤️', '厦', '门']
             };
 
             function unequal(family, chars) {
