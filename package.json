@@ -29,7 +29,7 @@
         "test": "mocha test/index.js && npm run demo"
     },
     "dependencies": {
-        "browser-x": "^0.0.1-pre1",
+        "browser-x": "^0.0.1-pre2",
         "commander": "^2.6.0",
         "fontmin": "^0.9.2",
         "glob": "^4.4.0",
