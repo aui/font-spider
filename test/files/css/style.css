@@ -7,13 +7,13 @@
 .webfont-a-pseudo::before {
     content: '代码'
 }
-.webfont-a-pseudo:hover::before {
+body div.webfont-a-pseudo:hover::before {
     content: '美丽'
 }
 .webfont-a-pseudo:after {
     content: '如诗'
 }
-.webfont-b-hover:hover {
+div.webfont-b-hover:hover {
     font-family: 'webfont-b'
 }
 

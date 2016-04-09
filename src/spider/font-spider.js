@@ -283,10 +283,8 @@ FontSpider.prototype = {
                 var cssRule = cssRuleList[n];
 
                 if (cssRule instanceof CSSImportRule) {
-
                     var cssStyleSheet = cssRule.styleSheet;
                     cssRuleListFor(cssStyleSheet.cssRules || [], callback);
-
                 } else if (cssRule instanceof CSSMediaRule) {
                     cssRuleListFor(cssRule.cssRules || [], callback);
                 } else {
