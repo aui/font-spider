@@ -57,7 +57,7 @@ WebFont.parse = function parseFontFace(cssFontFaceRule) {
 
     var id = crypto
         .createHash('md5')
-        .update(files.join(','))
+        .update(family + files.join(','))
         .digest('hex');
 
     return new WebFont({
