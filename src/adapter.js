@@ -155,7 +155,7 @@ function mapFactory(params) {
     var regs = [];
     (params || []).forEach(function(params) {
         if (typeof params[0] === 'string') {
-            params[0] = new RegExp(params[0]);
+            params[0] = new RegExp(params[0], 'g');
         }
         regs.push(params);
     });
