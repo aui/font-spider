@@ -34,10 +34,10 @@ describe('Utils', function() {
         it('.class, [attr="\\""], .class2', function() {
             assert.deepEqual(['.class', '[attr="\\""]', '.class2'], split('.class, [attr="\\""], .class2'));
         });
-        it('\n .class \n,\n   .class2', function() {
+        it('\\n .class \\n,\\n   .class2', function() {
             assert.deepEqual(['.class', '.class2'], split('\n .class \n,\n   .class2'));
         });
-        it('\n .class \n  ,  [attr^="   "],  \n   .class2', function() {
+        it('\\n .class \\n  ,  [attr^="   "],  \\n   .class2', function() {
             assert.deepEqual(['.class', '[attr^="   "]', '.class2'], split('\n .class \n  ,  [attr^="   "],  \n   .class2'));
         });
         it('[data-name="a,\\""], .class2', function() {
