@@ -28,13 +28,13 @@
         "test": "mocha test/index.js && npm run demo"
     },
     "dependencies": {
-        "browser-x": "^0.0.1-pre2",
+        "browser-x": "^0.0.1-pre3",
+        "colors": "^1.1.2",
         "commander": "^2.6.0",
+        "css-font-parser": "^0.2.1",
         "fontmin": "^0.9.2",
         "glob": "^4.4.0",
-        "ignore": "^2.2.15",
-        "verror": "^1.6.0",
-        "css-font-parser": "^0.2.1"
+        "ignore": "^2.2.15"
     },
     "devDependencies": {
         "mocha": "=2.2.5"
