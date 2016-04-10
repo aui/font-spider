@@ -177,10 +177,18 @@ Compress.prototype = {
 
 
 /**
- * @param   {WebFont}
+ * @param   {Array<WebFont>}
  * @param   {Adapter}
  * @return  {Promise}
  */
-module.exports = function(webFont, options) {
-    return new Compress(webFont, options);
+module.exports = function(webFonts, adapter) {
+    adapter = new Adapter(adapter);
+
+    if (!Array.isArray(webFonts)) {
+        webFonts = [webFonts];
+    }
+
+    return Promise.all(webFonts.map(function(webFont) {
+        return new Compress(webFont, adapter);
+    }));
 };
