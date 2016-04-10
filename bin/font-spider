@@ -8,12 +8,11 @@ var path = require('path');
 var Adapter = require('../src/adapter');
 var program = require('commander');
 var glob = require('glob');
-var color = require('./color');
+var colors = require('colors/safe');
 var util = require('util');
 
 var fontSpider = require('../');
 var spider = fontSpider.spider;
-var concat = fontSpider.concat;
 var compressor = fontSpider.compressor;
 
 program
@@ -62,7 +61,7 @@ function reduce(array) {
 var htmlFiles = program.args;
 var options = new Adapter({
     resourceBeforeLoad: function(file) {
-        writeln('Load:', color('cyan', file));
+        writeln('Load:', colors.cyan(file));
     }
 });
 
@@ -113,8 +112,8 @@ function onerror(errors) {
     stack = stack.join('\n');
 
     if (process.stderr.isTTY) {
-        message = color('red', message);
-        stack = color('grey', stack);
+        message = colors.red(message);
+        stack = colors.grey(stack);
     }
 
     process.stderr.write(message + '\n');
@@ -130,13 +129,9 @@ function showWebFont(htmlFiles, options) {
 
     writeln('Loading ..');
 
-    Promise.all(htmlFiles.map(function(htmlFile) {
-        return spider(htmlFile, options);
-    })).then(function(webFonts) {
+    spider(htmlFiles, options).then(function(webFonts) {
 
-        webFonts = concat(webFonts, options);
         webFonts = JSON.stringify(webFonts, null, 4);
-
         clearWriteln();
 
         if (process.stdout.isTTY) {
@@ -157,9 +152,7 @@ function compressWebFont(htmlFiles, options) {
 
     writeln('Loading ..');
 
-    Promise.all(htmlFiles.map(function(htmlFile) {
-        return spider(htmlFile, options);
-    })).then(function(webFonts) {
+    spider(htmlFiles, options).then(function(webFonts) {
 
         if (webFonts.length === 0) {
             clearWriteln();
@@ -169,17 +162,13 @@ function compressWebFont(htmlFiles, options) {
 
         writeln('Loading ...');
 
-        return concat(webFonts, options);
-    }).then(function(webFonts) {
-        return Promise.all(webFonts.map(function(webFont) {
-            return compressor(webFont, options);
-        }));
+        return compressor(webFonts, options);
     }).then(function(webFonts) {
 
         webFonts.forEach(function(webFont) {
             clearWriteln();
-            write('Font family:', color('green', webFont.family));
-            write('Original size:', color('green', webFont.originalSize / 1000 + ' KB'));
+            write('Font family:', colors.green(webFont.family));
+            write('Original size:', colors.green(webFont.originalSize / 1000 + ' KB'));
             write('Include chars:', webFont.chars);
             write('Font id:', webFont.id);
             write('CSS selector:', webFont.selectors.join(', '));
@@ -187,10 +176,10 @@ function compressWebFont(htmlFiles, options) {
 
             webFont.files.forEach(function(file) {
                 if (fs.existsSync(file.source)) {
-                    write('File', color('cyan', path.relative('./', file.source)),
-                        'created:', color('green', file.size / 1000 + ' KB'));
+                    write('File', colors.cyan(path.relative('./', file.source)),
+                        'created:', colors.green(file.size / 1000 + ' KB'));
                 } else {
-                    write(color('red', 'File ' + path.relative('./', file.source) + ' not created'));
+                    write(colors.red('File ' + path.relative('./', file.source) + ' not created'));
                 }
             });
 
