@@ -4,12 +4,17 @@
 
 var fs = require('fs');
 var path = require('path');
-var fontSpider = require('../');
+
 var Adapter = require('../src/adapter');
 var program = require('commander');
 var glob = require('glob');
 var color = require('./color');
 var util = require('util');
+
+var fontSpider = require('../');
+var spider = fontSpider.spider;
+var concat = fontSpider.concat;
+var compressor = fontSpider.compressor;
 
 program
     .version(require('../package.json').version)
@@ -54,7 +59,7 @@ function reduce(array) {
 }
 
 
-var files = program.args;
+var htmlFiles = program.args;
 var options = new Adapter({
     resourceBeforeLoad: function(file) {
         writeln('Load:', color('cyan', file));
@@ -62,12 +67,11 @@ var options = new Adapter({
 });
 
 
-
-if (!files.length) {
+if (!htmlFiles.length) {
     program.help();
     process.exit(1);
 } else {
-    files = files.map(function(file) {
+    htmlFiles = htmlFiles.map(function(file) {
         if (/https?/.test(file)) {
             return [file];
         } else {
@@ -75,7 +79,7 @@ if (!files.length) {
             return glob.sync(file);
         }
     });
-    files = reduce(files);
+    htmlFiles = reduce(htmlFiles);
 }
 
 
@@ -91,8 +95,11 @@ if (program.debug) {
 }
 
 
-
-writeln('Loading ..');
+if (program.info) {
+    showWebFont(htmlFiles, options);
+} else {
+    compressWebFont(htmlFiles, options);
+}
 
 
 function onerror(errors) {
@@ -118,75 +125,81 @@ function onerror(errors) {
 }
 
 
-// 显示 WebFont 信息
-if (program.info) {
-    fontSpider.spider(files, options)
-        .then(function(webFonts) {
+// 显示 webFont 信息
+function showWebFont(htmlFiles, options) {
 
-            clearWriteln();
+    writeln('Loading ..');
 
+    Promise.all(htmlFiles.map(function(htmlFile) {
+        return spider(htmlFile, options);
+    })).then(function(webFonts) {
 
-            var json = JSON.stringify(webFonts, null, 4);
-            if (process.stdout.isTTY) {
-                json = JSON.parse(json);
-                process.stdout.write(util.inspect(json, {
-                    colors: true,
-                    depth: null
-                }) + '\n');
-            } else {
-                process.stdout.write(json + '\n');
-            }
+        webFonts = concat(webFonts, options);
+        webFonts = JSON.stringify(webFonts, null, 4);
 
-        })
-        .catch(onerror);
+        clearWriteln();
 
+        if (process.stdout.isTTY) {
+            webFonts = JSON.parse(webFonts);
+            process.stdout.write(util.inspect(webFonts, {
+                colors: true,
+                depth: null
+            }) + '\n');
+        } else {
+            process.stdout.write(webFonts + '\n');
+        }
 
-    // 处理 WebFont
-} else {
-
-    fontSpider.spider(files, options)
-        .then(function(webFonts) {
-
-            if (webFonts.length === 0) {
-                clearWriteln();
-                write('<web font not found>');
-                return;
-            }
-
-            writeln('Loading ...');
-
-            return fontSpider.compressor(webFonts, options)
-                .then(function(webFonts) {
-
-                    webFonts.forEach(function(webFont) {
-                        clearWriteln();
-                        write('Font family:', color('green', webFont.family));
-                        write('Original size:', color('green', webFont.originalSize / 1000 + ' KB'));
-                        write('Include chars:', webFont.chars);
-                        write('Font id:', webFont.id);
-                        write('CSS selector:', webFont.selectors.join(', '));
-                        write('Font files:');
-
-                        webFont.files.forEach(function(file) {
-                            file = file.toString();
-                            if (fs.existsSync(file)) {
-                                write('File', color('cyan', path.relative('./', file)),
-                                    'created:', color('green', fs.statSync(file).size / 1000 + ' KB'));
-                            } else {
-                                write(color('red', 'File ' + path.relative('./', file) + ' not created'));
-                            }
-                        });
-
-                        write('');
-                    });
-
-                    return webFonts;
-                });
-
-        })
-        .catch(onerror);
+    }).catch(onerror);
 }
 
+// 压缩 webFont
+function compressWebFont(htmlFiles, options) {
+
+    writeln('Loading ..');
+
+    Promise.all(htmlFiles.map(function(htmlFile) {
+        return spider(htmlFile, options);
+    })).then(function(webFonts) {
+
+        if (webFonts.length === 0) {
+            clearWriteln();
+            write('<web font not found>');
+            return;
+        }
+
+        writeln('Loading ...');
+
+        return concat(webFonts, options);
+    }).then(function(webFonts) {
+        return Promise.all(webFonts.map(function(webFont) {
+            return compressor(webFont, options);
+        }));
+    }).then(function(webFonts) {
+
+        webFonts.forEach(function(webFont) {
+            clearWriteln();
+            write('Font family:', color('green', webFont.family));
+            write('Original size:', color('green', webFont.originalSize / 1000 + ' KB'));
+            write('Include chars:', webFont.chars);
+            write('Font id:', webFont.id);
+            write('CSS selector:', webFont.selectors.join(', '));
+            write('Font htmlF:');
+
+            webFont.files.forEach(function(file) {
+                if (fs.existsSync(file.source)) {
+                    write('File', color('cyan', path.relative('./', file.source)),
+                        'created:', color('green', file.size / 1000 + ' KB'));
+                } else {
+                    write(color('red', 'File ' + path.relative('./', file.source) + ' not created'));
+                }
+            });
+
+            write('');
+        });
+
+        return webFonts;
+    }).catch(onerror);
+}
 
 
 function write() {
