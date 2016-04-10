@@ -2,18 +2,13 @@
 
 var assert = require('assert');
 var spider = require('../src/spider');
-var concat = require('../src/concat');
 
 describe('font-spider', function() {
     it('spider&concat', function() {
 
         var htmlFiles = [__dirname + '/files/01.html', __dirname + '/files/02.html'];
-        return Promise.all(htmlFiles.map(function(htmlFile) {
-            return spider(htmlFile, {
-                silent: false
-            });
-        })).then(function(webFonts) {
-            return concat(webFonts);
+        return spider(htmlFiles, {
+            silent: false
         }).then(function(webFonts) {
 
             var testChars = {
