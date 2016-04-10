@@ -95,7 +95,7 @@ font-spider --ignore *-icon.css,*.eot dest/*.html
 
 - 仅支持固定的文本与样式，不支持 javascript 动态插入的元素与样式
 - .otf 字体需要转换成 .ttf 才能被压缩
-- 仅支持 `utf-8` 编码
+- 仅支持 `utf-8` 编码的 HTML 与 CSS 文件
 
 ## 字体兼容性参考
 
@@ -113,8 +113,6 @@ font-spider --ignore *-icon.css,*.eot dest/*.html
 - [@糖饼](https://github.com/aui) - [微博](http://www.weibo.com/planeart)
 - @fufu  - [微博](http://www.weibo.com/u/1715968673)
 - @kdd - [微博](http://www.weibo.com/kddie)
-
-字蛛愿以开放的心态和开源社区一起推动中文 WebFont 发展。
 
 ## 相关链接
 
