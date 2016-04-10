@@ -13,13 +13,30 @@ function Adapter(options) {
     for (var key in options) {
         this[key] = options[key];
     }
-
-    this._resourceCache = {};
 }
 
 Adapter.prototype = {
 
     constructor: Adapter,
+
+    /**
+     * 忽略加载的文件规则 - 与 resourceIgnore 参数互斥
+     * @see     https://github.com/kaelzhang/node-ignore
+     * @type    {Array<String>}
+     */
+    ignore: [],
+
+    /**
+     * 映射的文件规则-可以将远程字体文件映射到本地来（支持正则）
+     * @type    {Array<Array<String>>}
+     * @example [['http://font-spider.org/font', __diranme + '/font'], ...]
+     */
+    map: [],
+
+    /**
+     * 是否支持备份原字体
+     */
+    backup: true,
 
     /**
      * 是否对查询到的文本进行去重处理
@@ -31,32 +48,12 @@ Adapter.prototype = {
      */
     sort: true,
 
-    /**
-     * 忽略加载的文件规则
-     * @see     https://github.com/kaelzhang/node-ignore
-     * @type    {Array<String>}
-     */
-    ignore: [],
-
-    /**
-     * 映射的文件规则-支持正则
-     * @type    {Array<Array<String>>}
-     */
-    map: [],
-
-
-    /**
-     * 是否支持备份原字体
-     */
-    backup: true,
-
-
     /*---------- browser-x ----------*/
 
     /**
      * 文件基础路径
      */
-    baseURI: 'about:blank',
+    url: 'about:blank',
 
     /*
      * HTML 文本
@@ -69,7 +66,7 @@ Adapter.prototype = {
     loadCssFile: true,
 
     /**
-     * 解析时是否静默失败
+     * 是否忽略内部解析错误-打开它有利于开发调试
      * @type    {Boolean}
      */
     silent: true,
@@ -87,15 +84,13 @@ Adapter.prototype = {
     resourceMaxNumber: 64,
 
     /**
-     * 获取缓存
+     * 是否缓存请求成功的资源
      * @return  {Object}
      */
-    resourceCache: function() {
-        return this._resourceCache;
-    },
+    resourceCache: true,
 
     /**
-     * 映射资源路径
+     * 映射资源路径 - 与 map 参数互斥
      * @param   {String}    旧文件地址
      * @return  {String}    新文件地址
      */
@@ -111,7 +106,7 @@ Adapter.prototype = {
     },
 
     /**
-     * 忽略资源
+     * 忽略资源 - 与 ignore 参数互斥
      * @param   {String}    文件地址
      * @return  {Boolean}   如果返回`true`则忽略当当前文件的加载
      */
