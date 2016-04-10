@@ -15,7 +15,6 @@
         "url": "https://github.com/aui/font-spider/issues"
     },
     "bin": {
-        "fs": "bin/font-spider",
         "font-spider": "bin/font-spider"
     },
     "main": "./src/index.js",
