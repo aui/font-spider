@@ -159,6 +159,8 @@ Compress.prototype = {
                     var tempFile = path.join(temp, basename);
                     var out = file.source;
                     utils.rename(tempFile, out);
+
+                    file.size = fs.statSync(file.source).size;
                 });
 
 
@@ -174,12 +176,11 @@ Compress.prototype = {
 };
 
 
-
-module.exports = function(webFonts, options) {
-    if (!Array.isArray(webFonts)) {
-        webFonts = [webFonts];
-    }
-    return Promise.all(webFonts.map(function(webFont) {
-        return new Compress(webFont, options);
-    }));
+/**
+ * @param   {WebFont}
+ * @param   {Adapter}
+ * @return  {Promise}
+ */
+module.exports = function(webFont, options) {
+    return new Compress(webFont, options);
 };

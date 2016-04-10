@@ -156,6 +156,7 @@ function parseFontfamily(fontFamily) {
 // font-face 路径与字体类型描述信息类
 function FontFile(baseURI, source, format) {
 
+    String.call(this);
     var RE_SERVER = /^https?\:\/\//i;
 
     if (!RE_SERVER.test(source)) {
@@ -194,6 +195,8 @@ function FontFile(baseURI, source, format) {
     this.format = format;
 }
 
+FontFile.prototype = Object.create(String.prototype);
+FontFile.prototype.constructor = FontFile;
 
 FontFile.prototype.toString = function() {
     return this.source;
