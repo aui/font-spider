@@ -1,6 +1,7 @@
 'use strict';
 
 var WebFont = require('./web-font');
+var concat = require('./concat');
 var utils = require('./utils');
 var browser = require('browser-x');
 var Adapter = require('../adapter');
@@ -304,13 +305,34 @@ FontSpider.prototype = {
 
 /**
  * 启动爬虫
- * @param   {String}
+ * @param   {Array<String>}
  * @param   {Adapter}
- * @param   {Promise}
+ * @return  {Promise}
  */
-module.exports = function(htmlFile, adapter) {
+module.exports = function(htmlFiles, adapter) {
     adapter = new Adapter(adapter);
-    return browser.open(htmlFile, adapter).then(function(window) {
-        return new FontSpider(window);
+
+    if (!Array.isArray(htmlFiles)) {
+        htmlFiles = [htmlFiles];
+    }
+
+    return Promise.all(htmlFiles.map(function(htmlFile) {
+        var options = Object.create(adapter);
+        options.url = htmlFile;
+
+        if (typeof htmlFile === 'string') {
+            options.url = htmlFile;
+
+        } else if (htmlFile.path && htmlFile.contents) {
+            // 支持 gulp 的格式
+            options.url = htmlFile.path;
+            options.html = htmlFile.contents.toString();
+        }
+
+        return browser(options).then(function(window) {
+            return new FontSpider(window);
+        });
+    })).then(function(webFonts) {
+        return concat(webFonts, adapter);
     });
 };
