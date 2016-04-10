@@ -91,6 +91,12 @@ font-spider --ignore *-icon.css,*.eot dest/*.html
 - [grunt-font-spider](https://github.com/aui/grunt-font-spider)
 - [gulp-font-spider](https://github.com/aui/gulp-font-spider)
 
+## API
+
+font-spider 包括爬虫与压缩器模块，并且拥有丰富的可选项。
+
+文档参见：[API.md](./API.md)
+
 ## 限制
 
 - 仅支持固定的文本与样式，不支持 javascript 动态插入的元素与样式
