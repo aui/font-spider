@@ -171,8 +171,8 @@ function compressWebFont(htmlFiles, options) {
             write('Original size:', colors.green(webFont.originalSize / 1000 + ' KB'));
             write('Include chars:', webFont.chars);
             write('Font id:', webFont.id);
-            write('CSS selector:', webFont.selectors.join(', '));
-            write('Font htmlF:');
+            write('CSS selectors:', webFont.selectors.join(', '));
+            write('Font files:');
 
             webFont.files.forEach(function(file) {
                 if (fs.existsSync(file.source)) {
