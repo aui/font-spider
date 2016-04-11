@@ -318,13 +318,12 @@ module.exports = function(htmlFiles, adapter) {
 
     return Promise.all(htmlFiles.map(function(htmlFile) {
         var options = Object.create(adapter);
-        options.url = htmlFile;
 
         if (typeof htmlFile === 'string') {
             options.url = htmlFile;
 
         } else if (htmlFile.path && htmlFile.contents) {
-            // 支持 gulp 的格式
+            // 支持 gulp
             options.url = htmlFile.path;
             options.html = htmlFile.contents.toString();
         }

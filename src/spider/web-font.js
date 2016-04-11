@@ -91,9 +91,12 @@ WebFont.prototype.match = function(style) {
         return false;
     }
 
-    for (var i = 0, key; i < style.length; i++) {
-        key = style[i];
+    var key;
+    var index = -1;
+    var length = style.length;
 
+    while (++index < length) {
+        key = style[index];
         if (key === 'font-family') {
             fontFamilys = parseFontfamily(style[key]);
         } else if (key === 'font') {
@@ -156,7 +159,6 @@ function parseFontfamily(fontFamily) {
 // font-face 路径与字体类型描述信息类
 function FontFile(baseURI, source, format) {
 
-    String.call(this);
     var RE_SERVER = /^https?\:\/\//i;
 
     if (!RE_SERVER.test(source)) {
@@ -194,9 +196,6 @@ function FontFile(baseURI, source, format) {
     this.source = source;
     this.format = format;
 }
-
-FontFile.prototype = Object.create(String.prototype);
-FontFile.prototype.constructor = FontFile;
 
 FontFile.prototype.toString = function() {
     return this.source;

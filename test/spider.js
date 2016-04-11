@@ -3,8 +3,8 @@
 var assert = require('assert');
 var spider = require('../src/spider');
 
-describe('font-spider', function() {
-    it('spider&concat', function() {
+describe('spider', function() {
+    it('#spider', function() {
 
         var htmlFiles = [__dirname + '/files/01.html', __dirname + '/files/02.html'];
         return spider(htmlFiles, {

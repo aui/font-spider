@@ -19,9 +19,7 @@ var number = 0;
 
 function Compress(webFont, options) {
     options = new Adapter(options);
-
     return new Promise(function(resolve, reject) {
-
 
         if (webFont.length === 0) {
             resolve(webFont);
@@ -60,7 +58,7 @@ function Compress(webFont, options) {
         this.dirname = path.dirname(source);
         this.extname = path.extname(source);
         this.basename = path.basename(source, this.extname);
-
+        this.temp = path.join(this.dirname, TEMP + number);
 
         // 备份字体与恢复备份
         if (options.backup) {
@@ -108,19 +106,18 @@ Compress.prototype = {
         }
     },
 
-
-
     min: function(succeed, error) {
 
         var webFont = this.webFont;
         var source = this.source;
-        var dirname = this.dirname;
+        var temp = this.temp;
+        var that = this;
 
         var originalSize = fs.statSync(source).size;
 
 
         var fontmin = new Fontmin().src(source);
-        var temp = path.join(dirname, TEMP + number);
+
 
         if (webFont.chars) {
             fontmin.use(Fontmin.glyph({
@@ -150,6 +147,7 @@ Compress.prototype = {
         fontmin.run(function(errors /*, buffer*/ ) {
 
             if (errors) {
+                that.clear();
                 error(errors);
             } else {
 
@@ -163,8 +161,7 @@ Compress.prototype = {
                     file.size = fs.statSync(file.source).size;
                 });
 
-
-                utils.rmdir(temp);
+                that.clear();
 
                 // 添加新字段：记录原始文件大小
                 webFont.originalSize = originalSize;
@@ -172,6 +169,10 @@ Compress.prototype = {
                 succeed(webFont);
             }
         });
+    },
+
+    clear: function() {
+        utils.rmdir(this.temp);
     }
 };
 

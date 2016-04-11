@@ -1,5 +1,6 @@
 @charset: 'UTF-8';
 @import url('./font-face.css');
+@import url('bug.css');
 
 .webfont-a {
     font-family: 'webfont-a'

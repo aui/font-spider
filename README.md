@@ -101,6 +101,7 @@ font-spider 包括爬虫与压缩器模块的 API。
 - 仅支持固定的文本与样式，不支持 javascript 动态插入的元素与样式
 - .otf 字体需要转换成 .ttf 才能被压缩
 - 仅支持 `utf-8` 编码的 HTML 与 CSS 文件
+- CSS `content` 属性只支持普通文本，不支持属性、计数器等特性
 
 ## 字体兼容性参考
 
@@ -121,9 +122,13 @@ font-spider 包括爬虫与压缩器模块的 API。
 
 ## 相关链接
 
-- [fontmin](https://github.com/ecomfe/fontmin)
+- [字蛛开发计划](https://github.com/aui/font-spider/issues/2)
+- [更新日志](./CHANGELOG.md)
+
 - [Google: 网页字体优化](https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency/webfont-optimization?hl=zh-cn)
-- [思源黑体: ttf 版本](https://github.com/akiratw/kaigen-gothic/releases)
+- [思源黑体: ttf 版本](https://mega.nz/#!PZxFSYQI!ICvNugaFX_y4Mh003-S3fao1zU0uNpeSyprdmvHDnwc)
+- [fontmin](https://github.com/ecomfe/fontmin)
+
 
 ------
 
