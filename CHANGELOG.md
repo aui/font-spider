@@ -11,6 +11,7 @@
 * 修复设置 `font-family: inherit` 可能遗漏字符的 BUG [#44](https://github.com/aui/font-spider/issues/44)
 * 修复 Windows 下使用通配符路径报错的 BUG
 * 修复 CSS `content` 属性不支持 unicode 的 BUG
+* 修复 `<base href="#">` 设置可能导致资源加载失败的 BUG [#63](https://github.com/aui/font-spider/issues/63)
 * 对 `--info` 的 JSON 输出进行颜色高亮
 
 ## 0.3.8
