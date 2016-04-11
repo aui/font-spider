@@ -2,17 +2,16 @@
 
 [][node-version-url][![NPM Version][npm-image]][npm-url] [![NPM Downloads][downloads-image]][downloads-url] [![Node.js Version][node-version-image]][node-version-url]
 
-中文 WebFont 自动化压缩工具，它能自动分析页面使用的 WebFont 并进行按需压缩，并不需要指定字体与字符。
+字蛛是一个中文 WebFont 自动化压缩工具，它能自动分析页面使用的 WebFont 并进行按需压缩，无需手工配置。
 
 官方网站：<http://font-spider.org>
 
 ## 特性
 
-在网页中呈现艺术字体，WebFont 会比图片拥有更好的体验，它支持选中、搜索、翻译、朗读、缩放等。字蛛作为一个 WebFont 压缩转码工具，拥有如下特性：
-
-1. 按需压缩：数 MB 的中文字体可被压成几十 KB
-2. 简单可靠：完全基于 CSS 规则，无需 js 与服务端辅助
-3. 自动转码：支持 IE 与标准化的浏览器
+1. 按需压缩：从原字体中剔除没有用到的字符，可以将数 MB 大小的中文字体压缩成几十 KB
+2. 简单可靠：完全基于 HTML 与 CSS 分析进行本地处理，无需 js 与服务端辅助
+3. 自动转码：将字体转码成所有浏览器支持的格式，包括老旧的 IE6 与现代浏览器
+4. 图标字体：除了常规的字体支持外，还支持图标字体（字蛛 v1.0.0 新特性）
 
 ## 安装
 
@@ -93,7 +92,7 @@ font-spider --ignore *-icon.css,*.eot dest/*.html
 
 ## API
 
-font-spider 包括爬虫与压缩器模块，并且拥有丰富的可选项。
+font-spider 包括爬虫与压缩器模块的 API。
 
 文档参见：[API.md](./API.md)
 
