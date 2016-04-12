@@ -4,30 +4,51 @@
 var fontSpider = require('font-spider');
 ```
 
-## fontSpider(htmlFiles, options, callback)
+## fontSpider
 
 分析字体依赖并压缩字体。内部依次执行 `fontSpider.spider()` 与 `fontSpider.compressor()`
 
-* @param   {Array<String>}        网页地址列表
-* @param   {Object}                     选项
-* @param   {Function}                 回调函数，接收 WebFonts 描述信息
-* @return   {Promise}                  接收 WebFonts 描述信息
+* fontSpider(htmlFiles, options, callback)
 
-## fontSpider.spider(htmlFiles, options)
+### 参数
 
-分析字体依赖
+* htmlFiles   {Array<String>}        网页地址列表
+* options   {Object}                        选项
+* callback   {Function}                   回调函数，接收 WebFonts 描述信息
 
-* @param   {Array<String>}        网页地址列表
-* @param   {Object}                     选项
-* @return   {Promise}                  接收 WebFonts 描述信息
+### 返回值
 
-## fontSpider.compressor(webFonts, options)
+* {Promise}   接收 WebFonts 描述信息
 
-压缩字体
+## fontSpider.spider
 
-* @param   {Array<WebFont>}   WebFonts 描述信息
-* @param   {Object}                     选项
-* @return  {Promise}                   接收 WebFonts 描述信息
+分析字体依赖，得到 WebFonts 描述信息
+
+fontSpider.spider(htmlFiles, options)
+
+### 参数
+
+* htmlFiles   {Array<String>}        网页地址列表
+* options   {Object}                       选项
+
+### 返回值
+
+* {Promise}   接收 WebFonts 描述信息
+
+## fontSpider.compressor
+
+压缩、转码字体
+
+fontSpider.compressor(webFonts, options)
+
+### 参数
+
+* webFonts   {Array<WebFont>}   WebFonts 描述信息
+* options   {Object}                         选项
+
+### 返回值
+
+* {Promise}                                       接收 WebFonts 描述信息
 
 ## 选项
 
@@ -68,7 +89,7 @@ var fontSpider = require('font-spider');
     loadCssFile: true,
 
     /**
-     * 是否忽略内部解析错误-打开它有利于开发调试
+     * 是否忽略内部解析错误-关闭它有利于开发调试
      * @type    {Boolean}
      */
     silent: true,
@@ -128,13 +149,11 @@ var fontSpider = require('font-spider');
 
 ```javascript
 var fontSpider = require('font-spider');
-var options = {
-    silent: false,
-    backup: true
-};
-fontSpider.spider([__diranme + '/index.html'], {})
-.then(function(webFonts) {
-    return fontSpider.compressor(webFonts, options);
+
+fontSpider.spider([__diranme + '/index.html'], {
+    silent: false
+}).then(function(webFonts) {
+    return fontSpider.compressor(webFonts, {backup: true});
 }).then(function(webFonts) {
     console.log(webFonts);
 }).catch(function(errors) {

@@ -9,7 +9,7 @@
 ## 特性
 
 1. 按需压缩：从原字体中剔除没有用到的字符，可以将数 MB 大小的中文字体压缩成几十 KB
-2. 简单可靠：完全基于 HTML 与 CSS 分析进行本地处理，无需 js 与服务端辅助
+2. 本地处理：完全基于 HTML 与 CSS 分析进行本地处理，无需 js 与服务端辅助
 3. 自动转码：将字体转码成所有浏览器支持的格式，包括老旧的 IE6 与现代浏览器
 4. 图标字体：除了常规的字体支持外，还支持图标字体（字蛛 v1.0.0 新特性）
 
@@ -99,7 +99,7 @@ font-spider 包括爬虫与压缩器模块的 API。
 ## 限制
 
 - 仅支持固定的文本与样式，不支持 javascript 动态插入的元素与样式
-- .otf 字体需要转换成 .ttf 才能被压缩
+- .otf 字体需要转换成 .ttf 才能被压缩（[免费 ttf 字体资源](#字体资源)）
 - 仅支持 `utf-8` 编码的 HTML 与 CSS 文件
 - CSS `content` 属性只支持普通文本，不支持属性、计数器等特性
 
@@ -120,15 +120,19 @@ font-spider 包括爬虫与压缩器模块的 API。
 - @fufu  - [微博](http://www.weibo.com/u/1715968673)
 - @kdd - [微博](http://www.weibo.com/kddie)
 
+## 免费字体资源
+
+- [思源黑体: 简体中文 ttf 版本](https://github.com/aui/free-fonts/archive/1.001-SimplifiedChinese.zip)
+- [思源黑体: 繁体中文 ttf 版本](https://github.com/aui/free-fonts/archive/1.001-TraditionalChinese.zip)
+- [思源黑体: 中、日、韩 ttf 版本](https://mega.nz/#!PZxFSYQI!ICvNugaFX_y4Mh003-S3fao1zU0uNpeSyprdmvHDnwc)
+- [开源图标字体: fontawesome](http://fontawesome.io)
+
 ## 相关链接
 
 - [字蛛开发计划](https://github.com/aui/font-spider/issues/2)
-- [更新日志](./CHANGELOG.md)
-
+- [字蛛更新日志](./CHANGELOG.md)
 - [Google: 网页字体优化](https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency/webfont-optimization?hl=zh-cn)
-- [思源黑体: ttf 版本](https://mega.nz/#!PZxFSYQI!ICvNugaFX_y4Mh003-S3fao1zU0uNpeSyprdmvHDnwc)
 - [fontmin](https://github.com/ecomfe/fontmin)
-
 
 ------
 

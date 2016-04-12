@@ -4,13 +4,13 @@
 
 * 支持伪元素 `content` 继承的字体，支持 icon-font
 * 提高运行速度
-* 支持行内样式
-* 调整 API，不兼容老版本
+* 支持行内样式的 `font-family` 解析
+* 提供新版本的 API
 * 修复 CSS `font-weight` 可能导致遗漏字符的 BUG [#62](https://github.com/aui/font-spider/issues/62)
-* 修复 OSX 表情字符无法解析的问题 [#59](https://github.com/aui/font-spider/issues/59)
 * 修复设置 `font-family: inherit` 可能遗漏字符的 BUG [#44](https://github.com/aui/font-spider/issues/44)
+* 修复 OSX 表情字符无法解析的 BUG [#59](https://github.com/aui/font-spider/issues/59)
 * 修复 Windows 下使用通配符路径报错的 BUG
-* 修复 CSS `content` 属性不支持 unicode 的 BUG
+* 修复 CSS `content` 属性不支持 unicode 属性值的 BUG
 * 修复 `<base href="#">` 设置可能导致资源加载失败的 BUG [#63](https://github.com/aui/font-spider/issues/63)
 * 对 `--info` 的 JSON 输出进行颜色高亮
 
