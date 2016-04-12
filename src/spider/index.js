@@ -304,10 +304,10 @@ FontSpider.prototype = {
 
 
 /**
- * 启动爬虫
- * @param   {Array<String>}
- * @param   {Adapter}
- * @return  {Promise}
+ * 查找页面所使用的字体，得到 WebFonts 描述信息
+ * @param   {Array<String>}     网页路径列表
+ * @param   {Adapter}           选项
+ * @return  {Promise}           接收 `WebFonts` 描述信息
  */
 module.exports = function(htmlFiles, adapter) {
     adapter = new Adapter(adapter);
@@ -332,6 +332,8 @@ module.exports = function(htmlFiles, adapter) {
             return new FontSpider(window);
         });
     })).then(function(webFonts) {
+
+        // 合并字体、字符除重、字符排序、路径忽略、路径映射
         return concat(webFonts, adapter);
     });
 };

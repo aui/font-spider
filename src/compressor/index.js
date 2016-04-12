@@ -182,9 +182,9 @@ Compress.prototype = {
 
 
 /**
- * @param   {Array<WebFont>}
- * @param   {Adapter}
- * @return  {Promise}
+ * @param   {Array<WebFont>}    `WebFonts` 描述信息
+ * @param   {Adapter}           选项
+ * @return  {Promise}           接收 `WebFonts` 描述信息
  */
 module.exports = function(webFonts, adapter) {
     adapter = new Adapter(adapter);

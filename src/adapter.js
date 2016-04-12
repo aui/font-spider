@@ -20,14 +20,14 @@ Adapter.prototype = {
     constructor: Adapter,
 
     /**
-     * 忽略加载的文件规则 - 与 resourceIgnore 参数互斥
+     * 忽略加载的文件规则 - 与 `resourceIgnore` 参数互斥
      * @see     https://github.com/kaelzhang/node-ignore
      * @type    {Array<String>}
      */
     ignore: [],
 
     /**
-     * 映射的文件规则-可以将远程字体文件映射到本地来（支持正则）
+     * 映射的文件规则 - 与 `resourceMap` 参数互斥 - 可以将远程字体文件映射到本地来（支持正则）
      * @type    {Array<Array<String>>}
      * @example [['http://font-spider.org/font', __diranme + '/font'], ...]
      */
@@ -35,16 +35,19 @@ Adapter.prototype = {
 
     /**
      * 是否支持备份原字体
+     * @type    {Boolean}
      */
     backup: true,
 
     /**
      * 是否对查询到的文本进行去重处理
+     * @type    {Boolean}
      */
     unique: true,
 
     /**
      * 是否排序查找到的文本
+     * @type    {Boolean}
      */
     sort: true,
 
@@ -52,16 +55,19 @@ Adapter.prototype = {
 
     /**
      * 文件基础路径
+     * @type    {String}
      */
     url: 'about:blank',
 
     /*
      * HTML 文本
+     * @type    {String}
      */
     html: null,
 
     /**
      * 是否支持加载外部 CSS 文件
+     * @type    {Boolean}
      */
     loadCssFile: true,
 
@@ -85,12 +91,12 @@ Adapter.prototype = {
 
     /**
      * 是否缓存请求成功的资源
-     * @return  {Object}
+     * @type    {Boolean}
      */
     resourceCache: true,
 
     /**
-     * 映射资源路径 - 与 map 参数互斥
+     * 映射资源路径 - 与 `map` 参数互斥
      * @param   {String}    旧文件地址
      * @return  {String}    新文件地址
      */
@@ -106,9 +112,9 @@ Adapter.prototype = {
     },
 
     /**
-     * 忽略资源 - 与 ignore 参数互斥
+     * 忽略资源 - 与 `ignore` 参数互斥
      * @param   {String}    文件地址
-     * @return  {Boolean}   如果返回`true`则忽略当当前文件的加载
+     * @return  {Boolean}   如果返回 `true` 则忽略当当前文件的加载
      */
     resourceIgnore: function(file) { // jshint ignore:line
         var ignore = this.ignore;
