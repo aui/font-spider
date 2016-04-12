@@ -158,7 +158,11 @@ Compress.prototype = {
                     var out = file.source;
                     utils.rename(tempFile, out);
 
-                    file.size = fs.statSync(file.source).size;
+                    if (fs.existsSync(file.source)) {
+                        file.size = fs.statSync(file.source).size;
+                    } else {
+                        file.size = null;
+                    }
                 });
 
                 that.clear();
