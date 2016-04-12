@@ -14,7 +14,7 @@ function concat(webFonts, adapter) {
         webFonts = reduce(webFonts);
     }
 
-    var concatList = [];
+    var newWebFonts = [];
     var indexs = {};
 
 
@@ -22,17 +22,17 @@ function concat(webFonts, adapter) {
     webFonts.forEach(function(webFont) {
         var id = webFont.id;
         if (typeof indexs[id] === 'number') {
-            var item = concatList[indexs[id]];
+            var item = newWebFonts[indexs[id]];
             item.chars += webFont.chars;
             item.selectors = item.selectors.concat(webFont.selectors);
         } else {
-            indexs[id] = concatList.length;
-            concatList.push(webFont);
+            indexs[id] = newWebFonts.length;
+            newWebFonts.push(webFont);
         }
     });
 
 
-    concatList.forEach(function(font) {
+    newWebFonts.forEach(function(font) {
 
         var chars = font.chars.split('');
 
@@ -56,17 +56,19 @@ function concat(webFonts, adapter) {
 
         // 处理路径
         font.files = font.files.filter(function(file) {
-            var ignore = !adapter.resourceIgnore(file.source);
+            var ignore = adapter.resourceIgnore(file.source);
 
             if (!ignore) {
                 file.source = adapter.resourceMap(file.source);
             }
 
-            return ignore;
+            return !ignore;
         });
     });
 
-    return concatList;
+    indexs = null;
+
+    return newWebFonts;
 }
 
 
