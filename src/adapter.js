@@ -85,7 +85,7 @@ Adapter.prototype = {
 
     /**
      * 最大的文件加载数量限制
-     * @tyoe    {Number}    数量
+     * @type    {Number}    数量
      */
     resourceMaxNumber: 64,
 

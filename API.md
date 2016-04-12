@@ -1,6 +1,6 @@
 # font-spider API 文档
 
-```javascript
+``` javascript
 var fontSpider = require('font-spider');
 ```
 
@@ -12,6 +12,7 @@ var fontSpider = require('font-spider');
 /**
  * @param   {Array<String>}     网页路径列表
  * @param   {Object}            选项
+ * @param   {Function}          回调函数
  * @return  {Promise}           接收 `WebFonts` 描述信息
  */
 fontSpider(htmlFiles, options, callback)
@@ -41,6 +42,24 @@ fontSpider.spider(htmlFiles, options)
  * @return  {Promise}           接收 `WebFonts` 描述信息
  */
 fontSpider.compressor(webFonts, options)
+```
+
+## 示例
+
+fontSpider.spider + fontSpider.compressor
+
+``` javascript
+var fontSpider = require('font-spider');
+
+fontSpider.spider([__diranme + '/index.html'], {
+    silent: false
+}).then(function(webFonts) {
+    return fontSpider.compressor(webFonts, {backup: true});
+}).then(function(webFonts) {
+    console.log(webFonts);
+}).catch(function(errors) {
+    console.error(errors);
+});
 ```
 
 ## 选项
@@ -98,7 +117,7 @@ fontSpider.compressor(webFonts, options)
 
     /**
      * 最大的文件加载数量限制
-     * @tyoe    {Number}    数量
+     * @type    {Number}    数量
      */
     resourceMaxNumber: 64,
 
@@ -139,21 +158,5 @@ fontSpider.compressor(webFonts, options)
         };
     }
 }
-```
-
-## 示例
-
-``` javascript
-var fontSpider = require('font-spider');
-
-fontSpider.spider([__diranme + '/index.html'], {
-    silent: false
-}).then(function(webFonts) {
-    return fontSpider.compressor(webFonts, {backup: true});
-}).then(function(webFonts) {
-    console.log(webFonts);
-}).catch(function(errors) {
-    console.error(errors);
-});
 ```
 
