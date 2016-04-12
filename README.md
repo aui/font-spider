@@ -99,7 +99,7 @@ font-spider 包括爬虫与压缩器模块的 API。
 ## 限制
 
 - 仅支持固定的文本与样式，不支持 javascript 动态插入的元素与样式
-- .otf 字体需要转换成 .ttf 才能被压缩（[免费 ttf 字体资源](#字体资源)）
+- .otf 字体需要转换成 .ttf 才能被压缩（[免费 ttf 字体资源](#免费字体)）
 - 仅支持 `utf-8` 编码的 HTML 与 CSS 文件
 - CSS `content` 属性只支持普通文本，不支持属性、计数器等特性
 
@@ -120,7 +120,7 @@ font-spider 包括爬虫与压缩器模块的 API。
 - @fufu  - [微博](http://www.weibo.com/u/1715968673)
 - @kdd - [微博](http://www.weibo.com/kddie)
 
-## 免费字体资源
+## 免费字体
 
 - [思源黑体: 简体中文 ttf 版本](https://github.com/aui/free-fonts/archive/1.001-SimplifiedChinese.zip)
 - [思源黑体: 繁体中文 ttf 版本](https://github.com/aui/free-fonts/archive/1.001-TraditionalChinese.zip)
@@ -131,8 +131,9 @@ font-spider 包括爬虫与压缩器模块的 API。
 
 - [字蛛开发计划](https://github.com/aui/font-spider/issues/2)
 - [字蛛更新日志](./CHANGELOG.md)
+- [字蛛接口文档](./API.md)
 - [Google: 网页字体优化](https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency/webfont-optimization?hl=zh-cn)
-- [fontmin](https://github.com/ecomfe/fontmin)
+- [Baidu: fontmin](https://github.com/ecomfe/fontmin)
 
 ------
 

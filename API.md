@@ -8,7 +8,9 @@ var fontSpider = require('font-spider');
 
 分析字体依赖并压缩字体。内部依次执行 `fontSpider.spider()` 与 `fontSpider.compressor()`
 
-* fontSpider(htmlFiles, options, callback)
+``` javascript
+fontSpider(htmlFiles, options, callback)
+```
 
 ### 参数
 
@@ -24,7 +26,9 @@ var fontSpider = require('font-spider');
 
 分析字体依赖，得到 WebFonts 描述信息
 
+``` javascript
 fontSpider.spider(htmlFiles, options)
+```
 
 ### 参数
 
@@ -39,7 +43,9 @@ fontSpider.spider(htmlFiles, options)
 
 压缩、转码字体
 
+``` javascript
 fontSpider.compressor(webFonts, options)
+```
 
 ### 参数
 
