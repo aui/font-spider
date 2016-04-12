@@ -1,7 +1,7 @@
 {
     "name": "font-spider",
     "description": "Webfont optimizer",
-    "version": "1.0.0-beta1",
+    "version": "1.0.0-beta2",
     "homepage": "https://github.com/aui/font-spider",
     "author": {
         "name": "aui",
@@ -28,7 +28,7 @@
         "test": "mocha test/index.js && npm run demo"
     },
     "dependencies": {
-        "browser-x": "^0.0.1-beta1",
+        "browser-x": "^0.0.1-beta2",
         "colors": "^1.1.2",
         "commander": "^2.6.0",
         "css-font-parser": "^0.2.1",
