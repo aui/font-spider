@@ -30,7 +30,7 @@ describe('Adapter', function() {
 
     describe('#ignore', function() {
         var adapter = new Adapter({
-            ignore: ['xxx.ttf', '*.otf', 'xxx/bk/*.woff']
+            ignore: ['xxx.ttf$', '.*?.otf$', 'xxx/bk/.*?.woff$']
         });
         it('ignore', function() {
             assert.equal(false, adapter.resourceIgnore('http://font-spider.org/font/test.woff'));

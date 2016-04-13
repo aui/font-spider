@@ -1,7 +1,5 @@
 'use strict';
 
-var ignore = require('ignore');
-
 function Adapter(options) {
 
     options = options || {};
@@ -20,14 +18,13 @@ Adapter.prototype = {
     constructor: Adapter,
 
     /**
-     * 忽略加载的文件规则 - 与 `resourceIgnore` 参数互斥
-     * @see     https://github.com/kaelzhang/node-ignore
+     * 忽略加载的文件规则（支持正则）- 与 `resourceIgnore` 参数互斥
      * @type    {Array<String>}
      */
     ignore: [],
 
     /**
-     * 映射的文件规则 - 与 `resourceMap` 参数互斥 - 可以将远程字体文件映射到本地来（支持正则）
+     * 映射的文件规则（支持正则）- 与 `resourceMap` 参数互斥 - 可以将远程字体文件映射到本地来
      * @type    {Array<Array<String>>}
      * @example [['http://font-spider.org/font', __diranme + '/font'], ...]
      */
@@ -189,12 +186,12 @@ function mapFactory(params) {
  */
 function ignoreFactory(ignoreList) {
 
-    if (typeof ignoreList === 'function') {
-        return ignoreList;
-    }
+    ignoreList = ignoreList.map(function(item) {
+        if (typeof item === 'string') {
+            item = new RegExp(item, 'g');
+        }
 
-    var fn = ignore({
-        ignore: ignoreList || []
+        return item;
     });
 
     // @param   {String}
@@ -205,7 +202,15 @@ function ignoreFactory(ignoreList) {
             return false;
         }
 
-        return !fn.filter([src])[0];
+        var index = -1;
+        var length = ignoreList.length;
+        while (++index < length) {
+            if (ignoreList[index].test(src)) {
+                return true;
+            }
+        }
+
+        return false;
 
     } : function() {
         return false;
