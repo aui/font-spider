@@ -5,12 +5,12 @@
 var fs = require('fs');
 var path = require('path');
 
-var Adapter = require('../src/adapter');
 var program = require('commander');
 var glob = require('glob');
 var colors = require('colors/safe');
 var util = require('util');
 
+var Adapter = require('../src/adapter');
 var fontSpider = require('../');
 var spider = fontSpider.spider;
 var compressor = fontSpider.compressor;
@@ -27,7 +27,7 @@ program
 
 
 function list(args) {
-    return args.split(',');
+    return args.split(/\s?,\s?/);
 }
 
 function toMap(args) {
@@ -61,7 +61,7 @@ function reduce(array) {
 var htmlFiles = program.args;
 var options = new Adapter({
     resourceBeforeLoad: function(file) {
-        writeln('Load:', colors.cyan(file));
+        logIn('Load:', colors.cyan(file));
     }
 });
 
@@ -101,8 +101,9 @@ if (program.info) {
 }
 
 
+
 function onerror(errors) {
-    clearWriteln();
+    clearLonIn();
 
     var message = 'Error: ' + errors.message;
     var stack = errors.stack.toString();
@@ -116,100 +117,119 @@ function onerror(errors) {
         stack = colors.grey(stack);
     }
 
-    process.stderr.write(message + '\n');
-    process.stderr.write(stack + '\n');
+    stderr(message);
+    stderr(stack);
 
     // 可能有异步 http 任务运行，强制中断
     process.exit(1);
 }
 
 
+
 // 显示 webFont 信息
 function showWebFont(htmlFiles, options) {
 
-    writeln('Loading ..');
+    logIn('Loading ..');
 
     spider(htmlFiles, options).then(function(webFonts) {
 
         webFonts = JSON.stringify(webFonts, null, 4);
-        clearWriteln();
+        clearLonIn();
 
         if (process.stdout.isTTY) {
             webFonts = JSON.parse(webFonts);
-            process.stdout.write(util.inspect(webFonts, {
+            webFonts = util.inspect(webFonts, {
                 colors: true,
                 depth: null
-            }) + '\n');
-        } else {
-            process.stdout.write(webFonts + '\n');
+            });
         }
+
+        stdout(webFonts);
 
     }).catch(onerror);
 }
 
+
+
 // 压缩 webFont
 function compressWebFont(htmlFiles, options) {
 
-    writeln('Loading ..');
+    logIn('Loading ..');
 
     spider(htmlFiles, options).then(function(webFonts) {
 
         if (webFonts.length === 0) {
-            clearWriteln();
-            write('<web font not found>');
+            clearLonIn();
+            log('<web font not found>');
             return;
         }
 
-        writeln('Loading ...');
+        logIn('Loading ...');
 
         return compressor(webFonts, options);
     }).then(function(webFonts) {
 
+        clearLonIn();
         webFonts.forEach(function(webFont) {
-            clearWriteln();
-            write('Font family:', colors.green(webFont.family));
-            write('Original size:', colors.green(webFont.originalSize / 1000 + ' KB'));
-            write('Include chars:', webFont.chars);
-            write('Font id:', webFont.id);
-            write('CSS selectors:', webFont.selectors.join(', '));
-            write('Font files:');
+
+            log('Font family:', colors.green(webFont.family));
+            log('Original size:', colors.green(webFont.originalSize / 1000 + ' KB'));
+            log('Include chars:', webFont.chars);
+            log('Font id:', webFont.id);
+            log('CSS selectors:', webFont.selectors.join(', '));
+            log('Font files:');
 
             webFont.files.forEach(function(file) {
                 if (fs.existsSync(file.source)) {
-                    write('File', colors.cyan(path.relative('./', file.source)),
+                    log('File', colors.cyan(path.relative('./', file.source)),
                         'created:', colors.green(file.size / 1000 + ' KB'));
                 } else {
-                    write(colors.red('File ' + path.relative('./', file.source) + ' not created'));
+                    log(colors.red('File ' + path.relative('./', file.source) + ' not created'));
                 }
             });
 
-            write('');
+            log('');
         });
 
         return webFonts;
     }).catch(onerror);
 }
 
-
-function write() {
-    var stream = process.stdout;
-
-    if (stream.isTTY) {
-        stream.write(Array.prototype.join.call(arguments, ' ') + '\n');
-    }
+// 标准终端输出
+function stdout(message) {
+    process.stdout.write(message + '\n');
 }
 
 
-function writeln() {
-    var stream = process.stdout;
+// 错误输出
+function stderr(message) {
+    process.stdout.write(message + '\n');
+}
 
-    if (stream.isTTY) {
-        stream.clearLine();
-        stream.cursorTo(0);
-        stream.write(Array.prototype.join.call(arguments, ' '));
+
+// 输出日志
+function log() {
+    if (process.stdout.isTTY) {
+        process.stdout.write(Array.prototype.join.call(arguments, ' ') + '\n');
     }
 }
 
-function clearWriteln() {
-    writeln('');
+// 输出一行内可被覆盖的日志
+function logIn() {
+    if (process.stdout.isTTY) {
+        var message = Array.prototype.join.call(arguments, ' ');
+        if (!program.debug) {
+            process.stdout.clearLine();
+            process.stdout.cursorTo(0);
+            process.stdout.write(message);
+        } else {
+            process.stdout.write(message + '\n');
+        }
+
+    }
+}
+
+// 清除单行日志
+function clearLonIn() {
+    logIn('');
 }
