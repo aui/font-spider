@@ -1,12 +1,6 @@
 node_modules
 .DS_Store
-cache.manifest
-_draft/
-npm-debug.log
-.tmp
-.sass-cache
-.idea
-.markdowns
+*.log
 test/demo-release
 test/demo/home
 test/demo/kai-gen-gothic-sc
