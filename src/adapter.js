@@ -146,7 +146,7 @@ Adapter.prototype = {
 };
 
 
-/*
+/**
  * 映射器工厂
  * @param   {Array}     映射规则
  * @return  {Function}
@@ -182,7 +182,7 @@ function mapFactory(params) {
 
 
 
-/*
+/**
  * 忽略器工厂
  * @param   {Array}     规则
  * @return  {Function}

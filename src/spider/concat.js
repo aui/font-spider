@@ -4,15 +4,17 @@ var Adapter = require('../adapter');
 
 /**
  * 合并相同 webFont 的字符、选择器数据
- * @param   {Array<WebFont>}
+ * @param   {Array<Array<WebFont>>}
  * @param   {Adapter}
  * @return  {Array<WebFont>}
  */
 function concat(webFonts, adapter) {
-    adapter = new Adapter(adapter);
+
     if (Array.isArray(webFonts[0])) {
         webFonts = reduce(webFonts);
     }
+
+    adapter = new Adapter(adapter);
 
     var newWebFonts = [];
     var indexs = {};
@@ -32,9 +34,9 @@ function concat(webFonts, adapter) {
     });
 
 
-    newWebFonts.forEach(function(font) {
+    newWebFonts.forEach(function(webFont) {
 
-        var chars = font.chars.split('');
+        var chars = webFont.chars.split('');
 
         // 对字符进行除重操作
         if (adapter.unique) {
@@ -49,13 +51,13 @@ function concat(webFonts, adapter) {
         // 删除无用字符
         chars = chars.join('').replace(/[\n\r\t]*/g, '');
 
-        font.chars = chars;
+        webFont.chars = chars;
 
         // 选择器去重
-        font.selectors = unique(font.selectors);
+        webFont.selectors = unique(webFont.selectors);
 
         // 处理路径
-        font.files = font.files.filter(function(file) {
+        webFont.files = webFont.files.filter(function(file) {
             var ignore = adapter.resourceIgnore(file.source);
 
             if (!ignore) {

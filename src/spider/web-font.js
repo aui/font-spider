@@ -126,7 +126,7 @@ WebFont.prototype.match = function(style) {
  * 解析 @font-face src 值
  * @param   {String}    src
  * @param   {String}    baseURI
- * @param   {Array<Object>}
+ * @param   {Array<FontFile>}
  */
 function parseFontFaceSrc(value, baseURI) {
     var list = [];

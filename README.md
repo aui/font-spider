@@ -53,24 +53,10 @@ npm install font-spider -g
 font-spider [options] <htmlFile ...>
 ```
 
-#### 示例
-
-1\. 使用通配符压缩多个 HTML 文件关联的 WebFont：
+例如：
 
 ``` shell
-font-spider dest/*.html
-```
-
-2\. 使用 `--map <remotePath,localPath>` 参数将线上的页面的 WebFont 映射到本地来进行压缩：
-
-``` shell
-font-spider --map http://font-spider.org/font,./font http://font-spider.org/index.html
-```
-
-3\. 使用 `--ignore <pattern>` 忽略文件：
-
-``` shell
-font-spider --ignore *-icon.css,*.eot dest/*.html
+font-spider dest/news.html dest/index.html dest/about.html
 ```
 
 #### options
@@ -82,7 +68,27 @@ font-spider --ignore *-icon.css,*.eot dest/*.html
 --ignore <pattern>            忽略的文件配置（可以是字体、CSS、HTML）
 --map <remotePath,localPath>  映射 CSS 内部 HTTP 路径到本地（支持正则表达式）
 --no-backup                   关闭字体备份功能
---debug                       调试模式
+--debug                       调试模式，打开它可以显示 CSS 解析错误
+```
+
+#### 参数使用示例
+
+使用通配符压缩多个 HTML 文件关联的 WebFont：
+
+``` shell
+font-spider dest/*.html
+```
+
+使用 `--ignore <pattern>` 忽略文件：
+
+``` shell
+font-spider --ignore *-icon.css,*.eot dest/*.html
+```
+
+使用 `--map <remotePath,localPath>` 参数将线上的页面的 WebFont 映射到本地来进行压缩（本地路径必须使用绝对路径）：
+
+``` shell
+font-spider --map http://font-spider.org/font,/Website/font http://font-spider.org/index.html
 ```
 
 ## 构建插件
@@ -92,14 +98,12 @@ font-spider --ignore *-icon.css,*.eot dest/*.html
 
 ## API
 
-font-spider 包括爬虫与压缩器模块的 API。
-
-文档参见：[API.md](./API.md)
+font-spider 包括爬虫与压缩器模块，接口文档：[API.md](./API.md)
 
 ## 限制
 
 - 仅支持固定的文本与样式，不支持 javascript 动态插入的元素与样式
-- .otf 字体需要转换成 .ttf 才能被压缩（[免费 ttf 字体资源](#免费字体)）
+- .otf 字体需要转换成 .ttf 格式才能被压缩（[免费 ttf 字体资源](#免费字体)）
 - 仅支持 `utf-8` 编码的 HTML 与 CSS 文件
 - CSS `content` 属性只支持普通文本，不支持属性、计数器等特性
 
@@ -136,8 +140,6 @@ font-spider 包括爬虫与压缩器模块的 API。
 - [Baidu: fontmin](https://github.com/ecomfe/fontmin)
 
 ------
-
-*字体受版权保护，若在网页中使用商业字体，请联系相关字体厂商购买授权*
 
 [npm-image]: https://img.shields.io/npm/v/font-spider.svg
 [npm-url]: https://npmjs.org/package/font-spider
