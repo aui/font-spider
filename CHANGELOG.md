@@ -6,13 +6,14 @@
 * 支持伪元素 `content` 继承的字体，进而支持了采用此的图标字体库
 * 支持行内样式的 `font-family` 解析
 * 提供新的 API、更好的支持远程资源解析
-* 大幅度提高运行速度
+* 大幅度提高运行速度 
 * 修复 CSS `font-weight` 可能导致遗漏字符的 BUG [#62](https://github.com/aui/font-spider/issues/62)
 * 修复设置 `font-family: inherit` 可能遗漏字符的 BUG [#44](https://github.com/aui/font-spider/issues/44)
-* 修复 OSX 表情字符无法解析的 BUG [#59](https://github.com/aui/font-spider/issues/59)
 * 修复 Windows 下使用通配符路径报错的 BUG [#58](https://github.com/aui/font-spider/issues/58)
+* 修复 OSX 表情字符无法解析的 BUG [#59](https://github.com/aui/font-spider/issues/59)
 * 修复 CSS `content` 属性不支持 unicode 属性值的 BUG
 * 修复 `<base href="#">` 设置可能导致资源加载失败的 BUG [#63](https://github.com/aui/font-spider/issues/63)
+* 修复 `ignore` 配置参数无法处理远程路径的 BUG
 
 ## 0.3.8
 

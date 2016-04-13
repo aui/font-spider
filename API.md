@@ -73,14 +73,13 @@ fontSpider.spider([__diranme + '/index.html'], {
 ``` javascript
 {
     /**
-     * 忽略加载的文件规则 - 与 `resourceIgnore` 参数互斥
-     * @see     https://github.com/kaelzhang/node-ignore
+     * 忽略加载的文件规则（支持正则） - 与 `resourceIgnore` 参数互斥
      * @type    {Array<String>}
      */
     ignore: [],
 
     /**
-     * 映射的文件规则 - 与 `resourceMap` 参数互斥 - 可以将远程字体文件映射到本地来（支持正则）
+     * 映射的文件规则（支持正则） - 与 `resourceMap` 参数互斥 - 可以将远程字体文件映射到本地来
      * @type    {Array<Array<String>>}
      * @example [['http://font-spider.org/font', __diranme + '/font'], ...]
      */

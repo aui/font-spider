@@ -65,7 +65,7 @@ font-spider dest/news.html dest/index.html dest/about.html
 -h, --help                    输出帮助信息
 -V, --version                 输出当前版本号
 --info                        输出 WebFont 的 JSON 描述信息，不压缩与转码
---ignore <pattern>            忽略的文件配置（可以是字体、CSS、HTML）
+--ignore <pattern>            忽略的文件配置（支持正则表达式）
 --map <remotePath,localPath>  映射 CSS 内部 HTTP 路径到本地（支持正则表达式）
 --no-backup                   关闭字体备份功能
 --debug                       调试模式，打开它可以显示 CSS 解析错误
@@ -79,16 +79,22 @@ font-spider dest/news.html dest/index.html dest/about.html
 font-spider dest/*.html
 ```
 
-使用 `--ignore <pattern>` 忽略文件：
+`--info` 查看网站所应用的 WebFont：
 
 ``` shell
-font-spider --ignore *-icon.css,*.eot dest/*.html
+font-spider --info http://fontawesome.io
 ```
 
-使用 `--map <remotePath,localPath>` 参数将线上的页面的 WebFont 映射到本地来进行压缩（本地路径必须使用绝对路径）：
+`--ignore` 忽略文件：
 
 ``` shell
-font-spider --map http://font-spider.org/font,/Website/font http://font-spider.org/index.html
+font-spider --ignore "-icon.css$, .eot$" dest/*.html
+```
+
+`--map` 参数将线上的页面的 WebFont 映射到本地来进行压缩（本地路径必须使用绝对路径）：
+
+``` shell
+font-spider --map "http://font-spider.org/font, /Website/font" http://font-spider.org/index.html
 ```
 
 ## 构建插件
