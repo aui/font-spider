@@ -182,18 +182,38 @@ Compress.prototype = {
 
 
 /**
- * @param   {Array<WebFont>}    `WebFonts` 描述信息
+ * 压缩字体
+ * @param   {Array<WebFont>}    `WebFonts` 描述信息 @see ../spider/web-font.js
  * @param   {Adapter}           选项
- * @return  {Promise}           接收 `WebFonts` 描述信息
+ * @param   {Function}          回调函数
+ * @return  {Promise}
  */
-module.exports = function(webFonts, adapter) {
+module.exports = function(webFonts, adapter, callback) {
     adapter = new Adapter(adapter);
 
     if (!Array.isArray(webFonts)) {
         webFonts = [webFonts];
     }
 
-    return Promise.all(webFonts.map(function(webFont) {
+    webFonts = Promise.all(webFonts.map(function(webFont) {
         return new Compress(webFont, adapter);
     }));
+
+
+    if (typeof callback === 'function') {
+        webFonts.then(function(webFonts) {
+            process.nextTick(function() {
+                callback(null, webFonts);
+            });
+            return webFonts;
+        }).catch(function(errors) {
+            process.nextTick(function() {
+                callback(errors);
+            });
+            return Promise.reject(errors);
+        });
+    }
+
+
+    return webFonts;
 };

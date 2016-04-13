@@ -1,9 +1,9 @@
 'use strict';
 
+var browser = require('browser-x');
+var utils = require('./utils');
 var WebFont = require('./web-font');
 var concat = require('./concat');
-var utils = require('./utils');
-var browser = require('browser-x');
 var Adapter = require('../adapter');
 
 /**
@@ -19,6 +19,7 @@ FontSpider.prototype = {
     constructor: FontSpider,
     window: null,
     document: null,
+
 
 
     /**
@@ -161,11 +162,12 @@ FontSpider.prototype = {
     },
 
 
+
     /**
      * 根据选择器查找元素，支持伪类和伪元素
      * @param   {String}
-     * @param   {Boolean}       是否支持伪元素
-     * @return  {Array}         元素列表
+     * @param   {Boolean}        是否支持伪元素
+     * @return  {Array<Element>} 元素列表
      */
     getElements: function(selector, matchPseudoParent) {
         var that = this;
@@ -304,19 +306,20 @@ FontSpider.prototype = {
 
 
 /**
- * 查找页面所使用的字体，得到 WebFonts 描述信息
+ * 查找页面所使用的字体，得到 WebFonts 描述信息 @see ./web-font.js
  * @param   {Array<String>}     网页路径列表
  * @param   {Adapter}           选项
+ * @param   {Function}          回调函数
  * @return  {Promise}           接收 `WebFonts` 描述信息
  */
-module.exports = function(htmlFiles, adapter) {
+module.exports = function(htmlFiles, adapter, callback) {
     adapter = new Adapter(adapter);
 
     if (!Array.isArray(htmlFiles)) {
         htmlFiles = [htmlFiles];
     }
 
-    return Promise.all(htmlFiles.map(function(htmlFile) {
+    var webFonts = Promise.all(htmlFiles.map(function(htmlFile) {
         var options = Object.create(adapter);
 
         if (typeof htmlFile === 'string') {
@@ -331,9 +334,29 @@ module.exports = function(htmlFiles, adapter) {
         return browser(options).then(function(window) {
             return new FontSpider(window);
         });
-    })).then(function(webFonts) {
+    })).then(function(list) {
 
         // 合并字体、字符除重、字符排序、路径忽略、路径映射
-        return concat(webFonts, adapter);
+        return concat(list, adapter);
     });
+
+
+
+    if (typeof callback === 'function') {
+        webFonts.then(function(webFonts) {
+            process.nextTick(function() {
+                callback(null, webFonts);
+            });
+            return webFonts;
+        }).catch(function(errors) {
+            process.nextTick(function() {
+                callback(errors);
+            });
+            return Promise.reject(errors);
+        });
+    }
+
+
+
+    return webFonts;
 };
