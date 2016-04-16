@@ -136,8 +136,8 @@ font-spider 包括爬虫与压缩器模块，接口文档：[API.md](./API.md)
 
 ## 免费字体
 
-- [思源黑体: 简体中文 ttf 版本](https://github.com/aui/free-fonts/archive/1.001-SimplifiedChinese.zip)
-- [思源黑体: 繁体中文 ttf 版本](https://github.com/aui/free-fonts/archive/1.001-TraditionalChinese.zip)
+- [思源黑体: 简体中文 ttf 版本](https://github.com/aui/free-fonts/archive/KaiGenGothic-1.001-SimplifiedChinese.zip)
+- [思源黑体: 繁体中文 ttf 版本](https://github.com/aui/free-fonts/archive/KaiGenGothic-1.001-TraditionalChinese.zip)
 - [思源黑体: 中、日、韩 ttf 版本](https://mega.nz/#!PZxFSYQI!ICvNugaFX_y4Mh003-S3fao1zU0uNpeSyprdmvHDnwc)
 - [开源图标字体: fontawesome](http://fontawesome.io)
 
