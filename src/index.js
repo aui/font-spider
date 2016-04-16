@@ -1,47 +1,46 @@
-/* global require,module */
-
 'use strict';
 
-var glob = require('glob');
-var Promise = require('promise');
-var Spider = require('./spider');
-var Compress = require('./compress');
 
-var FontSpider = function (htmlFiles, options) {
+var spider = require('./spider');
+var compressor = require('./compressor');
+var Adapter = require('./adapter');
 
-    if (typeof htmlFiles === 'string') {
-        htmlFiles = glob.sync(htmlFiles);
-    } else if (Array.isArray(htmlFiles)) {
-        var srcs = [];
-        htmlFiles.forEach(function (item) {
-            srcs = srcs.concat(glob.sync(item));
+/**
+ * 分析并压缩字体
+ * @param   {Array<String>}     网页路径列表
+ * @param   {Adapter}           选项
+ * @param   {Function}          回调函数
+ * @return  {Promise}
+ */
+function runner(htmlFiles, options, callback) {
+
+    options = new Adapter(options);
+
+    var webFonts = spider(htmlFiles, options).then(function(webFonts) {
+        return compressor(webFonts, options);
+    });
+
+
+    if (typeof callback === 'function') {
+        webFonts.then(function(webFonts) {
+            process.nextTick(function() {
+                callback(null, webFonts);
+            });
+            return webFonts;
+        }).catch(function(errors) {
+            process.nextTick(function() {
+                callback(errors);
+            });
+            return Promise.reject(errors);
         });
-        htmlFiles = srcs;
     }
 
-    return new FontSpider.Spider(htmlFiles, options)
-    .then(function (webFonts) {
-        return Promise
-        .all(webFonts.map(function (webFont) {
-            return new FontSpider.Compress(webFont, options);
-        }));
-    });
-};
 
-
-
-FontSpider.Spider = Spider;
-FontSpider.Compress = Compress;
-
-FontSpider.defaults = {};
-mix(FontSpider.defaults, Spider.defaults);
-mix(FontSpider.defaults, Compress.defaults);
-
-function mix (target, object) {
-    Object.keys(object).forEach(function (key) {
-        target[key] = object[key];
-    });
+    return webFonts;
 }
 
 
-module.exports = FontSpider;
+runner.spider = spider;
+runner.compressor = compressor;
+
+module.exports = runner;

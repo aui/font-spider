@@ -1,0 +1,25 @@
+@charset: 'UTF-8';
+@import url('./font-face.css');
+@import url('bug.css');
+
+.webfont-a {
+    font-family: 'webfont-a'
+}
+.webfont-a-pseudo::before {
+    content: '代码'
+}
+body div.webfont-a-pseudo:hover::before {
+    content: '美丽'
+}
+.webfont-a-pseudo:after {
+    content: '如诗'
+}
+div.webfont-b-hover:hover {
+    font-family: 'webfont-b'
+}
+
+@media (max-width: 768px) {
+    .webfont-b-media {
+        font-family: 'webfont-b'
+    }
+}
