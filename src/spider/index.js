@@ -36,9 +36,14 @@ FontSpider.prototype = {
         this.document = document;
 
         var webFonts = [];
-        var elements = []; //Array<Array>
+
+        // 这是一个索引值与 webFonts 对应的二维数组，
+        // 用来记录 webFonts 所对应的元素列表
+        var elements = [];
+
         var pseudoCssStyleRules = [];
-        var inlineStyleElements = document.querySelectorAll('[style*="font"]');
+        var inlineStyleSelectors = 'body[style*="font"], body [style*="font"]';
+        var inlineStyleElements = document.querySelectorAll(inlineStyleSelectors);
 
         // 找到 fontFace
         this.eachCssFontFaceRule(function(cssRule) {
