@@ -26,44 +26,13 @@ program
     .parse(process.argv);
 
 
-function list(args) {
-    return args.split(/\s?,\s?/);
-}
-
-function toMap(args) {
-    args = list(args);
-
-    var map = [];
-    var p = 2;
-    var n = args.length / p;
-    for (var i = 0; i < n; i++) {
-        map.push([
-            args[p * i],
-            args[p * i + 1]
-        ]);
-    }
-
-    return map;
-}
-
-// 扁平化二维数组
-function reduce(array) {
-    var ret = [];
-
-    array.forEach(function(item) {
-        ret.push.apply(ret, item);
-    });
-
-    return ret;
-}
-
-
 var htmlFiles = program.args;
 var options = new Adapter({
     resourceBeforeLoad: function(file) {
         logIn('Load:', colors.cyan(file));
     }
 });
+
 
 
 if (!htmlFiles.length) {
@@ -98,6 +67,39 @@ if (program.info) {
     showWebFont(htmlFiles, options);
 } else {
     compressWebFont(htmlFiles, options);
+}
+
+
+
+function list(args) {
+    return args.split(/\s?,\s?/);
+}
+
+function toMap(args) {
+    args = list(args);
+
+    var map = [];
+    var p = 2;
+    var n = args.length / p;
+    for (var i = 0; i < n; i++) {
+        map.push([
+            args[p * i],
+            args[p * i + 1]
+        ]);
+    }
+
+    return map;
+}
+
+// 扁平化二维数组
+function reduce(array) {
+    var ret = [];
+
+    array.forEach(function(item) {
+        ret.push.apply(ret, item);
+    });
+
+    return ret;
 }
 
 
