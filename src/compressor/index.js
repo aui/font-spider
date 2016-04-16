@@ -27,10 +27,8 @@ function Compress(webFont, options) {
         }
 
 
-        number++;
-
-
         var source;
+        number++;
 
 
         webFont.files.forEach(function(file) {
@@ -80,7 +78,7 @@ Compress.defaults = {
 
 
 Compress.prototype = {
-
+    constructor: Compress,
 
 
     // 字体恢复与备份
