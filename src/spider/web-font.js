@@ -31,9 +31,12 @@ function WebFont(options) {
  */
 WebFont.parse = function parseFontFace(cssFontFaceRule) {
 
-    var parentStyleSheet = cssFontFaceRule.parentStyleSheet;
-    var baseURI = parentStyleSheet.href || parentStyleSheet.ownerNode.baseURI;
     var s = cssFontFaceRule.style;
+    var parentStyleSheet = cssFontFaceRule.parentStyleSheet;
+
+    // <link> || <style>
+    var baseURI = parentStyleSheet.href || parentStyleSheet.ownerNode.baseURI;
+
 
     var family = s['font-family'];
     var stretch = s['font-stretch'];
