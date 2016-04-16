@@ -1,162 +1,170 @@
-# font-spider
-
-font-spider 由爬虫模块与压缩模块组成，其接口基于 `Promise` 实现。
-
-## API
+# font-spider API 文档
 
 ``` javascript
-var FontSpider = require('font-spider');
+var fontSpider = require('font-spider');
 ```
 
-### new FontSpider.Spider(htmlFiles, options)
+## 接口
 
-爬虫模块
+### fontSpider
 
-#### 参数
-
-- `htmlFiles` 本地或远程 HTML 文件列表
-- `options` 爬虫选项
-
-#### 返回
-
-`Promise` 接收 webFont 描述信息列表
-
-#### 示例
+分析字体依赖并压缩字体。
 
 ``` javascript
-var FontSpider = require('font-spider');
-new FontSpider.Spider([__dirname + '/index.html'])
-.then(function (webFonts) {
+/**
+ * @param   {Array<String>}     网页路径列表
+ * @param   {Object}            选项
+ * @param   {Function}          回调函数。接收 `WebFonts` 描述信息
+ * @return  {Promise}
+ */
+fontSpider(htmlFiles, options, callback)
+```
+
+`fontSpider()` 内部会依次执行字体查询器与压缩转码器。也可以根据需要单独使用这两个 API：
+
+### fontSpider.spider
+
+字体查询器。获取 WebFonts 描述信息
+
+``` javascript
+/**
+ * @param   {Array<String>}     网页路径列表
+ * @param   {Object}            选项
+ * @param   {Function}          回调函数。接收 `WebFonts` 描述信息
+ * @return  {Promise}
+ */
+fontSpider.spider(htmlFiles, options, callback)
+```
+
+### fontSpider.compressor
+
+字体压缩转码器。根据 WebFonts 描述信息来处理字体文件
+
+``` javascript
+/**
+ * @param   {Array<WebFont>}    `WebFonts` 描述信息
+ * @param   {Object}            选项
+ * @param   {Function}          回调函数。接收 `WebFonts` 描述信息
+ * @return  {Promise}
+ */
+fontSpider.compressor(webFonts, options, callback)
+```
+
+## 示例
+
+压缩字体，并显示描述信息：
+
+``` javascript
+var fontSpider = require('font-spider');
+
+fontSpider.spider([__diranme + '/index.html'], {
+    silent: false
+}).then(function(webFonts) {
+    return fontSpider.compressor(webFonts, {backup: true});
+}).then(function(webFonts) {
     console.log(webFonts);
-})
-.catch(function (errors) {
-    console.error('Error:', errors.stack.toString());
+}).catch(function(errors) {
+    console.error(errors);
 });
 ```
 
-#### 选项
-
-- `ignore` 忽略列表，用来忽略路径或文件。[语法示例](https://github.com/kaelzhang/node-ignore)
-  - 类型：`Array` `Function`
-  - 示例：`['icon.css', '*.eot']`
-- `map` 映射规则（支持正则），用来映射远程路径到本地（远程字体需要映射到本地才能压缩）
-  - 类型：`Array` `Function`
-  - 示例：`[['http://font-spider.org/css', __dirname + '/css'], [...]]`
-- `maxImportCss` CSS `@import` 语法导入的文件数量限制，避免爬虫陷入死循环陷阱（默认值 `16`）
-- `resourceBeforeLoad` 事件：资源准备加载
-- `resourceLoad` 事件：资源加载成功
-- `resourceError` 事件：资源加载失败
-- `spiderBeforeLoad` 事件：爬虫准备解析
-- `spiderLoad` 事件：爬虫解析成功
-- `spiderError` 事件：爬虫解析失败
-
-> 事件第一个参数可以获取文件路径
-
-### new FontSpider.Compress(webFont, options)
-
-压缩与转码模块
-
-#### 参数
-
-- `webFont` webFont 描述信息（可以通过 `FontSpider.Spider` 获取到）
-- `options` 压缩器选项
-
-#### 返回
-
-webFont 描述信息
-
-#### 示例
+## 选项
 
 ``` javascript
-var FontSpider = require('font-spider');
-new FontSpider.Spider([__dirname + '/index.html'])
-.then(function (webFonts) {
-    webFonts.forEach(function (item) {
-        new FontSpider.Compress(item, {
-            backup: true
-        });
-    });
-})
-.catch(function (errors) {
-    console.error('Error:', errors.stack.toString());
-});
+{
+    /**
+     * 忽略加载的文件规则（支持正则） - 与 `resourceIgnore` 参数互斥
+     * @type    {Array<String>}
+     */
+    ignore: [],
+
+    /**
+     * 映射的文件规则（支持正则） - 与 `resourceMap` 参数互斥 - 可以将远程字体文件映射到本地来
+     * @type    {Array<Array<String>>}
+     * @example [['http://font-spider.org/font', __diranme + '/font'], ...]
+     */
+    map: [],
+
+    /**
+     * 是否支持备份原字体
+     * @type    {Boolean}
+     */
+    backup: true,
+
+    /**
+     * 是否对查询到的文本进行去重处理
+     * @type    {Boolean}
+     */
+    unique: true,
+
+    /**
+     * 是否排序查找到的文本
+     * @type    {Boolean}
+     */
+    sort: true,
+
+    /**
+     * 是否支持加载外部 CSS 文件
+     */
+    loadCssFile: true,
+
+    /**
+     * 是否忽略内部解析错误-关闭它有利于开发调试
+     * @type    {Boolean}
+     */
+    silent: true,
+
+    /**
+     * 请求超时限制
+     * @type    {Number}    毫秒
+     */
+    resourceTimeout: 8000,
+
+    /**
+     * 最大的文件加载数量限制
+     * @type    {Number}    数量
+     */
+    resourceMaxNumber: 64,
+
+    /**
+     * 是否缓存请求成功的资源
+     * @type    {Boolean}
+     */
+    resourceCache: true,
+
+    /**
+     * 映射资源路径 - 与 `map` 参数互斥
+     * @param   {String}    旧文件地址
+     * @return  {String}    新文件地址
+     */
+    resourceMap: function(file) {},
+
+    /**
+     * 忽略资源 - 与 `ignore` 参数互斥
+     * @param   {String}    文件地址
+     * @return  {Boolean}   如果返回 `true` 则忽略当当前文件的加载
+     */
+    resourceIgnore: function(file) {},
+
+    /**
+     * 资源加载前的事件
+     * @param   {String}    文件地址
+     */
+    resourceBeforeLoad: function(file) {},
+
+    /**
+     * 加载远程资源的自定义请求头
+     * @param   {String}    文件地址
+     * @return  {Object}
+     */
+    resourceRequestHeaders: function(file) {
+        return {
+            'accept-encoding': 'gzip,deflate'
+        };
+    }
+}
 ```
 
-#### 选项
+## 调试
 
-- `backup` 是否开启备份功能（开启备份功能后支持反复压缩字体）
-
-## 完整示例
-
-使用 font-spider 构造一个 CDN 字体动态压缩服务的示例（脚本与字体文件在同一台服务器）：
-
-``` javascript
-'use strict';
-
-var fs = require('fs');
-var path = require('path');
-var FontSpider = require('font-spider');
-
-new FontSpider
-
-// 分析 WebFont
-.Spider([
-        'http://font-spider.org/index.html',
-        'http://font-spider.org/install.html'
-    ], {
-
-    // 忽略的文件规则。语法 @see https://github.com/kaelzhang/node-ignore
-    ignore: ['*.eot', 'icons.css', 'font?name=*'],
-
-    // 路径映射规则。映射远程路径到本地（远程字体文件必须映射到本地才能压缩）
-    // 也可以自定义 map 函数，来限制目录的访问
-    map: [
-    	['http://font-spider.org/font', __dirname + '/../release/font']
-    ],
-
-    // 资源加载成功事件
-    resourceLoad: function (file) {
-        console.log('Load', file);
-    }
-})
-
-// 压缩字体
-.then(function (webFonts) {
-    return Promise
-    .all(webFonts.map(function (webFont) {
-        return new FontSpider.Compress(webFont, {
-            // 是否备份原始字体
-            backup: true
-        });
-    }));
-})
-
-// 显示压缩结果
-.then(function (webFonts) {
-    if (webFonts.length === 0) {
-        console.log('web font not found');
-        return;
-    }
-
-    webFonts.forEach(function (webFont) {
-        console.log('Font name:', webFont.name);
-        console.log('Font id:', webFont.id);
-        console.log('Original size:', webFont.originalSize / 1000, 'KB');
-        console.log('Include chars:', webFont.chars);
-
-        webFont.files.forEach(function (file) {
-            if (fs.existsSync(file)) {
-                console.log('File', path.relative('./', file),
-                    'created:', fs.statSync(file).size / 1000, 'KB');
-            } else {
-                console.error('File', path.relative('./', file), 'not created');
-            }
-        });
-    });
-})
-.catch(function (errors) {
-    console.error('Error:', errors.stack.toString());
-});
-```
-
-> 本文档针对 font-spider v0.3+ 撰写
+字体处理不准确？可能有 CSS 加载或解析错误被忽略，可以设置 `silent: false` 来调试。

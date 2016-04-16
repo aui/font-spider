@@ -1,18 +1,21 @@
 # 字蛛
 
-[][node-version-url][![NPM Version][npm-image]][npm-url] [![NPM Downloads][downloads-image]][downloads-url] [![Node.js Version][node-version-image]][node-version-url]
+[![NPM Version][npm-image]][npm-url]
+[![NPM Downloads][downloads-image]][downloads-url]
+[![Node.js Version][node-version-image]][node-version-url]
+[![Build Status][travis-ci-image]][travis-ci-url]
 
-中文 WebFont 自动化压缩工具，它能自动分析页面使用的 WebFont 并进行按需压缩，并不需要指定字体与字符。
+字蛛是一个中文 WebFont 自动化压缩工具，它能自动分析页面使用的 WebFont 并进行按需压缩，无需手工配置。
 
 官方网站：<http://font-spider.org>
 
 ## 特性
 
-在网页中呈现艺术字体，WebFont 会比图片拥有更好的体验，它支持选中、搜索、翻译、朗读、缩放等。字蛛作为一个 WebFont 压缩转码工具，拥有如下特性：
+1. 按需压缩：从原字体中剔除没有用到的字符，可以将数 MB 大小的中文字体压缩成几十 KB
+2. 本地处理：完全基于 HTML 与 CSS 分析进行本地处理，无需 js 与服务端辅助
+3. 自动转码：将字体转码成所有浏览器支持的格式，包括老旧的 IE6 与现代浏览器
 
-1. 按需压缩：数 MB 的中文字体可被压成几十 KB
-2. 简单可靠：完全基于 CSS 规则，无需 js 与服务端辅助
-3. 自动转码：支持 IE 与标准化的浏览器
+> New: 字蛛 v1.0.0 版本支持图标字体！[更新日志](./CHANGELOG.md)
 
 ## 安装
 
@@ -54,24 +57,10 @@ npm install font-spider -g
 font-spider [options] <htmlFile ...>
 ```
 
-#### 示例
-
-1\. 使用通配符压缩多个 HTML 文件关联的 WebFont：
+例如：
 
 ``` shell
-font-spider dest/*.html
-```
-
-2\. 使用 `--map <remotePath,localPath>` 参数将线上的页面的 WebFont 映射到本地来进行压缩：
-
-``` shell
-font-spider --map http://font-spider.org/font,./font http://font-spider.org/index.html
-```
-
-3\. 使用 `--ignore <pattern>` 忽略文件：
-
-``` shell
-font-spider --ignore *-icon.css,*.eot dest/*.html
+font-spider dest/news.html dest/index.html dest/about.html
 ```
 
 #### options
@@ -80,10 +69,36 @@ font-spider --ignore *-icon.css,*.eot dest/*.html
 -h, --help                    输出帮助信息
 -V, --version                 输出当前版本号
 --info                        输出 WebFont 的 JSON 描述信息，不压缩与转码
---ignore <pattern>            忽略的文件配置（可以是字体、CSS、HTML）
+--ignore <pattern>            忽略的文件配置（支持正则表达式）
 --map <remotePath,localPath>  映射 CSS 内部 HTTP 路径到本地（支持正则表达式）
 --no-backup                   关闭字体备份功能
---debug                       调试模式
+--debug                       调试模式，打开它可以显示 CSS 解析错误
+```
+
+#### 参数使用示例
+
+使用通配符压缩多个 HTML 文件关联的 WebFont：
+
+``` shell
+font-spider dest/*.html
+```
+
+`--info` 查看网站所应用的 WebFont：
+
+``` shell
+font-spider --info http://fontawesome.io
+```
+
+`--ignore` 忽略文件：
+
+``` shell
+font-spider --ignore "-icon.css$, .eot$" dest/*.html
+```
+
+`--map` 参数将线上的页面的 WebFont 映射到本地来进行压缩（本地路径必须使用绝对路径）：
+
+``` shell
+font-spider --map "http://font-spider.org/font, /Website/font" http://font-spider.org/index.html
 ```
 
 ## 构建插件
@@ -93,18 +108,14 @@ font-spider --ignore *-icon.css,*.eot dest/*.html
 
 ## API
 
-使用 font-spider 的 API，可以构建在线动态字体压缩服务。
-
-文档参见：[API.md](./API.md)
+font-spider 包括爬虫与压缩器模块，接口文档：[API.md](./API.md)
 
 ## 限制
 
-- 仅支持 `link` 与 `style` 标签引入的样式，不支持元素行内样式
 - 仅支持固定的文本与样式，不支持 javascript 动态插入的元素与样式
-- 不支持字体继承（例如 CSS `content` 属性插入的字符需要声明 `font-family`）
-- .otf 字体需要转换成 .ttf 才能被压缩
-- 仅支持 `utf-8` 编码
-- 不支持 CSS `unicode-range` 属性
+- .otf 字体需要转换成 .ttf 格式才能被压缩（[免费 ttf 字体资源](#免费字体)）
+- 仅支持 `utf-8` 编码的 HTML 与 CSS 文件
+- CSS `content` 属性只支持普通文本，不支持属性、计数器等特性
 
 ## 字体兼容性参考
 
@@ -123,24 +134,20 @@ font-spider --ignore *-icon.css,*.eot dest/*.html
 - @fufu  - [微博](http://www.weibo.com/u/1715968673)
 - @kdd - [微博](http://www.weibo.com/kddie)
 
-### 鸣谢
+## 免费字体
 
-字蛛的发展离不开以下开源项目的支持：
-
-- [fontmin](https://github.com/ecomfe/fontmin) 来自百度前端团队的字体压缩库*（字蛛 v0.2 版本使用它取代了内置的字体压缩库 [#18](https://github.com/aui/font-spider/issues/18)）*
-- [cssom](https://github.com/NV/CSSOM) 标准化的 CSS 解析库*（字蛛 v0.3 版本使用它取代了 [css](https://github.com/reworkcss/css)）*
-- [cheerio](https://github.com/cheeriojs/cheerio) 轻量的 HTML 解析库*（字蛛 v0.2 版本使用它取代了 [jsdom](https://github.com/tmpvar/jsdom)）*
-
-字蛛愿以开放的心态和开源社区一起推动中文 WebFont 发展。
+- [思源黑体: 简体中文 ttf 版本](https://github.com/aui/free-fonts/archive/1.001-SimplifiedChinese.zip)
+- [思源黑体: 繁体中文 ttf 版本](https://github.com/aui/free-fonts/archive/1.001-TraditionalChinese.zip)
+- [思源黑体: 中、日、韩 ttf 版本](https://mega.nz/#!PZxFSYQI!ICvNugaFX_y4Mh003-S3fao1zU0uNpeSyprdmvHDnwc)
+- [开源图标字体: fontawesome](http://fontawesome.io)
 
 ## 相关链接
 
+- [字蛛开发计划](https://github.com/aui/font-spider/issues/2)
+- [字蛛更新日志](./CHANGELOG.md)
+- [字蛛接口文档](./API.md)
 - [Google: 网页字体优化](https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency/webfont-optimization?hl=zh-cn)
-- [思源黑体: ttf 版本](https://github.com/akiratw/kaigen-gothic/releases)
-
-------
-
-*字体受版权保护，若在网页中使用商业字体，请联系相关字体厂商购买授权*
+- [Baidu: fontmin](https://github.com/ecomfe/fontmin)
 
 [npm-image]: https://img.shields.io/npm/v/font-spider.svg
 [npm-url]: https://npmjs.org/package/font-spider
@@ -148,3 +155,5 @@ font-spider --ignore *-icon.css,*.eot dest/*.html
 [node-version-url]: http://nodejs.org/download/
 [downloads-image]: https://img.shields.io/npm/dm/font-spider.svg
 [downloads-url]: https://npmjs.org/package/font-spider
+[travis-ci-image]: https://travis-ci.org/aui/font-spider.svg?branch=master
+[travis-ci-url]: https://travis-ci.org/aui/font-spider

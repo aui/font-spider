@@ -1,61 +1,54 @@
 {
-  "name": "font-spider",
-  "description": "Webfont optimizer",
-  "version": "0.3.8",
-  "homepage": "https://github.com/aui/font-spider",
-  "author": {
-    "name": "aui",
-    "email": "sugarpie.tang@gmail.com"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/aui/font-spider.git"
-  },
-  "bugs": {
-    "url": "https://github.com/aui/font-spider/issues"
-  },
-  "bin": {
-    "fs": "bin/font-spider",
-    "font-spider": "bin/font-spider"
-  },
-  "main": "./src/index.js",
-  "engines": {
-    "node": ">= 0.8.0"
-  },
-  "scripts": {
-    "_remove": "rm -rf release",
-    "_copy": "mkdir release && cp -R demo/* release",
-    "_http": "node release/spider-http.js",
-    "demo": "npm run _remove && npm run _copy && node bin/font-spider release/*.html",
-    "test": "mocha test/test.js && npm run demo"
-  },
-  "dependencies": {
-    "cheerio": "^0.18.0",
-    "commander": "^2.6.0",
-    "cssom": "^0.3.0",
-    "fontmin": "^0.9.0-alpha-3",
-    "glob": "^4.4.0",
-    "ignore": "^2.2.15",
-    "promise": "^6.1.0",
-    "verror": "^1.6.0"
-  },
-  "devDependencies": {
-    "mocha": "=2.2.5"
-  },
-  "license": {
-    "type": "MIT",
-    "url": "http://creativecommons.org/licenses/MIT/"
-  },
-  "keywords": [
-    "font",
-    "fontforge",
-    "font-face",
-    "woff",
-    "ttf",
-    "svg",
-    "eot",
-    "truetype",
-    "css",
-    "webfont"
-  ]
+    "name": "font-spider",
+    "description": "Webfont optimizer",
+    "version": "1.0.0-beta3",
+    "homepage": "https://github.com/aui/font-spider",
+    "author": {
+        "name": "aui",
+        "email": "sugarpie.tang@gmail.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/aui/font-spider.git"
+    },
+    "bugs": {
+        "url": "https://github.com/aui/font-spider/issues"
+    },
+    "bin": {
+        "font-spider": "bin/font-spider"
+    },
+    "main": "./src/index.js",
+    "engines": {
+        "node": ">= 4.0.0"
+    },
+    "scripts": {
+        "_remove": "rm -rf test/demo-release",
+        "_copy": "mkdir test/demo-release && cp -R test/demo/* test/demo-release",
+        "demo": "npm run _remove && npm run _copy && node bin/font-spider --ignore '\\.woff2$' --no-backup test/demo-release/**/*.html",
+        "test": "mocha test/index.js && npm run demo"
+    },
+    "dependencies": {
+        "browser-x": "^0.0.1-beta5",
+        "colors": "^1.1.2",
+        "commander": "^2.9.0",
+        "css-font-parser": "^0.2.1",
+        "fontmin": "^0.9.4",
+        "glob": "^7.0.3"
+    },
+    "devDependencies": {
+        "mocha": "=2.2.5"
+    },
+    "license": "MIT",
+    "keywords": [
+        "font",
+        "fontforge",
+        "font-face",
+        "woff",
+        "ttf",
+        "svg",
+        "eot",
+        "truetype",
+        "css",
+        "webfont"
+    ]
 }
