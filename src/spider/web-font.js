@@ -124,8 +124,8 @@ WebFont.prototype.match = function(style) {
 
 /**
  * 解析 @font-face src 值
- * @param   {String}    src
- * @param   {String}    baseURI
+ * @param   {String}    src 值
+ * @param   {String}    基础路径
  * @param   {Array<FontFile>}
  */
 function parseFontFaceSrc(value, baseURI) {
@@ -156,7 +156,12 @@ function parseFontfamily(fontFamily) {
 }
 
 
-// font-face 路径与字体类型描述信息类
+/**
+ * font-face 路径描述信息类
+ * @param   {String}    基础路径
+ * @param   {String}    地址
+ * @param   {String}    格式
+ */
 function FontFile(baseURI, source, format) {
 
     var RE_SERVER = /^https?\:\/\//i;
