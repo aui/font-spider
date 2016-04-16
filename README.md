@@ -63,6 +63,10 @@ font-spider [options] <htmlFile ...>
 font-spider dest/news.html dest/index.html dest/about.html
 ```
 
+#### htmlFiles
+
+一个或多个页面地址，使用空格分开；支持 http 形式。
+
 #### options
 
 ``` shell

@@ -51,13 +51,13 @@ Adapter.prototype = {
     /*---------- browser-x ----------*/
 
     /**
-     * 文件基础路径
+     * 文件基础路径 - 仅内部可使用
      * @type    {String}
      */
     url: 'about:blank',
 
     /*
-     * HTML 文本
+     * HTML 文本 - 仅内部可使用
      * @type    {String}
      */
     html: null,
