@@ -13,7 +13,7 @@
 * 修复 OSX 表情字符无法解析的 BUG [#59](https://github.com/aui/font-spider/issues/59)
 * 修复 CSS `content` 属性不支持 unicode 属性值的 BUG
 * 修复 `<base href="#">` 设置可能导致资源加载失败的 BUG [#63](https://github.com/aui/font-spider/issues/63)
-* 修复 `ignore` 配置参数无法处理远程路径的 BUG
+* 修复 `ignore` 配置参数无法处理远程路径的 BUG，同时规则不再支持`*`号形式，请使用正则代替
 
 ## 0.3.8
 
