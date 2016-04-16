@@ -1,6 +1,9 @@
 # 字蛛
 
-[][node-version-url][![NPM Version][npm-image]][npm-url] [![NPM Downloads][downloads-image]][downloads-url] [![Node.js Version][node-version-image]][node-version-url]
+[![NPM Version][npm-image]][npm-url]
+[![NPM Downloads][downloads-image]][downloads-url]
+[![Node.js Version][node-version-image]][node-version-url]
+[![Build Status][travis-ci-image]][travis-ci-url]
 
 字蛛是一个中文 WebFont 自动化压缩工具，它能自动分析页面使用的 WebFont 并进行按需压缩，无需手工配置。
 
@@ -146,11 +149,11 @@ font-spider 包括爬虫与压缩器模块，接口文档：[API.md](./API.md)
 - [Google: 网页字体优化](https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency/webfont-optimization?hl=zh-cn)
 - [Baidu: fontmin](https://github.com/ecomfe/fontmin)
 
-------
-
 [npm-image]: https://img.shields.io/npm/v/font-spider.svg
 [npm-url]: https://npmjs.org/package/font-spider
 [node-version-image]: https://img.shields.io/node/v/font-spider.svg
 [node-version-url]: http://nodejs.org/download/
 [downloads-image]: https://img.shields.io/npm/dm/font-spider.svg
 [downloads-url]: https://npmjs.org/package/font-spider
+[travis-ci-image]: https://travis-ci.org/aui/font-spider.svg?branch=master
+[travis-ci-url]: https://travis-ci.org/aui/font-spider
