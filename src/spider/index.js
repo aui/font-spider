@@ -7,8 +7,9 @@ var concat = require('./concat');
 var Adapter = require('../adapter');
 
 /**
- * @param   {Window}
- * @return  {Array<WebFont>}
+ * 蜘蛛类
+ * @param   {Window}            浏览器全局对象 @see browser-x
+ * @return  {Array<WebFont>}    WebFont 描述信息 @see ./web-font.js
  */
 function FontSpider(window) {
     return this.parse(window);
