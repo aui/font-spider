@@ -1,6 +1,5 @@
 'use strict';
 
-var Adapter = require('../adapter');
 
 /**
  * 合并相同 webFont 的字符、选择器数据
@@ -14,7 +13,6 @@ function concat(webFonts, adapter) {
         webFonts = reduce(webFonts);
     }
 
-    adapter = new Adapter(adapter);
 
     var newWebFonts = [];
     var indexs = {};
