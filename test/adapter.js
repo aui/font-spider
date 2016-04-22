@@ -29,16 +29,23 @@ describe('Adapter', function() {
     });
 
     describe('#ignore', function() {
-        var adapter = new Adapter({
-            ignore: ['xxx.ttf$', '.*?.otf$', 'xxx/bk/.*?.woff$']
-        });
-        it('ignore', function() {
+        it('basic', function() {
+            var adapter = new Adapter({
+                ignore: ['xxx.ttf$', '.*?.otf$', 'xxx/bk/.*?.woff$']
+            });
             assert.equal(false, adapter.resourceIgnore('http://font-spider.org/font/test.woff'));
             assert.equal(true, adapter.resourceIgnore('http://font-spider.org/font/xxx.ttf'));
             assert.equal(true, adapter.resourceIgnore('ssssss.otf'));
             assert.equal(true, adapter.resourceIgnore('xxx/bk/bbb.woff'));
             assert.equal(false, adapter.resourceIgnore('xxx/bk/bbb.ttf'));
         });
+        // it('windows path', function() {
+        //     var adapter = new Adapter({
+        //         ignore: ['file/font/test.ttf$']
+        //     });
+        //     assert.equal(true, adapter.resourceIgnore('/Document/aui/file/font/test.ttf'));
+        //     assert.equal(true, adapter.resourceIgnore('\\Document\\aui\\file\\font\\test.ttf'));
+        // });
     });
 
 });

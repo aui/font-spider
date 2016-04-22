@@ -5,7 +5,7 @@
 [![Node.js Version][node-version-image]][node-version-url]
 [![Build Status][travis-ci-image]][travis-ci-url]
 
-字蛛是一个中文 WebFont 自动化压缩工具，它能自动分析页面使用的 WebFont 并进行按需压缩，无需手工配置。
+字蛛是一个中文 WebFont 自动化压缩工具，它能智能分析页面使用的 WebFont 并进行按需压缩。
 
 官方网站：<http://font-spider.org>
 
@@ -54,14 +54,20 @@ npm install font-spider -g
 ### 二、压缩 WebFont
 
 ``` shell
-font-spider [options] <htmlFile ...>
+font-spider [options] <htmlFile1 htmlFile2 ...>
 ```
+
+#### htmlFiles
+
+一个或多个页面地址，支持 http 形式。
 
 例如：
 
 ``` shell
 font-spider dest/news.html dest/index.html dest/about.html
 ```
+
+> 如果有多个页面依赖相同的字体，请都用 `--htmlFiles` 传递进来
 
 #### options
 
@@ -92,13 +98,13 @@ font-spider --info http://fontawesome.io
 `--ignore` 忽略文件：
 
 ``` shell
-font-spider --ignore "-icon.css$, .eot$" dest/*.html
+font-spider --ignore "icon\\.css$" dest/*.html
 ```
 
 `--map` 参数将线上的页面的 WebFont 映射到本地来进行压缩（本地路径必须使用绝对路径）：
 
 ``` shell
-font-spider --map "http://font-spider.org/font, /Website/font" http://font-spider.org/index.html
+font-spider --map "http://font-spider.org/font,/Website/font" http://font-spider.org/index.html
 ```
 
 ## 构建插件
@@ -131,7 +137,7 @@ font-spider 包括爬虫与压缩器模块，接口文档：[API.md](./API.md)
 ## 贡献者
 
 - [@糖饼](https://github.com/aui) - [微博](http://www.weibo.com/planeart)
-- @fufu  - [微博](http://www.weibo.com/u/1715968673)
+- [@fufu](https://github.com/milansnow)  - [微博](http://www.weibo.com/u/1715968673)
 - @kdd - [微博](http://www.weibo.com/kddie)
 
 ## 免费字体
@@ -139,13 +145,15 @@ font-spider 包括爬虫与压缩器模块，接口文档：[API.md](./API.md)
 - [思源黑体: 简体中文 ttf 版本](https://github.com/aui/free-fonts/archive/KaiGenGothic-1.001-SimplifiedChinese.zip)
 - [思源黑体: 繁体中文 ttf 版本](https://github.com/aui/free-fonts/archive/KaiGenGothic-1.001-TraditionalChinese.zip)
 - [思源黑体: 中、日、韩 ttf 版本](https://mega.nz/#!PZxFSYQI!ICvNugaFX_y4Mh003-S3fao1zU0uNpeSyprdmvHDnwc)
-- [开源图标字体: fontawesome](http://fontawesome.io)
+- [开源图标字体: Font Awesome](http://fontawesome.io)
 
 ## 相关链接
 
 - [字蛛开发计划](https://github.com/aui/font-spider/issues/2)
 - [字蛛更新日志](./CHANGELOG.md)
 - [字蛛接口文档](./API.md)
+- [grunt-font-spider](https://github.com/aui/grunt-font-spider)
+- [gulp-font-spider](https://github.com/aui/gulp-font-spider)
 - [Google: 网页字体优化](https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency/webfont-optimization?hl=zh-cn)
 - [Baidu: fontmin](https://github.com/ecomfe/fontmin)
 

@@ -1,5 +1,8 @@
 'use strict';
 
+var path = require('path');
+var RE_SEP = new RegExp('\\' + path.sep, 'g');
+
 function Adapter(options) {
 
     options = options || {};
@@ -51,13 +54,13 @@ Adapter.prototype = {
     /*---------- browser-x ----------*/
 
     /**
-     * 文件基础路径
+     * 文件基础路径 - 仅内部可使用
      * @type    {String}
      */
     url: 'about:blank',
 
     /*
-     * HTML 文本
+     * HTML 文本 - 仅内部可使用
      * @type    {String}
      */
     html: null,
@@ -166,6 +169,8 @@ function mapFactory(params) {
             return src;
         }
 
+        src = src.replace(RE_SEP, '/'); // windows path
+
         regs.forEach(function(reg) {
             src = src.replace.apply(src, reg);
         });
@@ -201,6 +206,8 @@ function ignoreFactory(ignoreList) {
         if (!src) {
             return false;
         }
+
+        src = src.replace(RE_SEP, '/'); // windows path
 
         var index = -1;
         var length = ignoreList.length;

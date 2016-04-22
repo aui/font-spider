@@ -15,7 +15,7 @@ var fontSpider = require('font-spider');
  * @param   {Array<String>}     网页路径列表
  * @param   {Object}            选项
  * @param   {Function}          回调函数。接收 `WebFonts` 描述信息
- * @return  {Promise}
+ * @return  {Promise}           如果没有 `callback` 参数则返回 `Promise` 对象
  */
 fontSpider(htmlFiles, options, callback)
 ```
@@ -31,7 +31,7 @@ fontSpider(htmlFiles, options, callback)
  * @param   {Array<String>}     网页路径列表
  * @param   {Object}            选项
  * @param   {Function}          回调函数。接收 `WebFonts` 描述信息
- * @return  {Promise}
+ * @return  {Promise}           如果没有 `callback` 参数则返回 `Promise` 对象
  */
 fontSpider.spider(htmlFiles, options, callback)
 ```
@@ -45,7 +45,7 @@ fontSpider.spider(htmlFiles, options, callback)
  * @param   {Array<WebFont>}    `WebFonts` 描述信息
  * @param   {Object}            选项
  * @param   {Function}          回调函数。接收 `WebFonts` 描述信息
- * @return  {Promise}
+ * @return  {Promise}           如果没有 `callback` 参数则返回 `Promise` 对象
  */
 fontSpider.compressor(webFonts, options, callback)
 ```
