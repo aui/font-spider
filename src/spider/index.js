@@ -2,9 +2,10 @@
 
 var browser = require('browser-x');
 var utils = require('./utils');
+var Adapter = require('../adapter');
 var WebFont = require('./web-font');
 var concat = require('./concat');
-var Adapter = require('../adapter');
+
 
 /**
  * 蜘蛛类
@@ -45,6 +46,8 @@ FontSpider.prototype = {
         var inlineStyleSelectors = 'body[style*="font"], body [style*="font"]';
         var inlineStyleElements = document.querySelectorAll(inlineStyleSelectors);
 
+
+
         // 找到 fontFace
         this.eachCssFontFaceRule(function(cssRule) {
             var webFont = WebFont.parse(cssRule);
@@ -52,6 +55,7 @@ FontSpider.prototype = {
                 webFonts.push(webFont);
             }
         });
+
 
 
         webFonts.forEach(function(webFont, index) {
@@ -279,30 +283,36 @@ FontSpider.prototype = {
         var CSSMediaRule = window.CSSMediaRule;
 
         function styleSheetListFor(styleSheetList, callback) {
-            for (var i = 0; i < styleSheetList.length; i++) {
-                var cssStyleSheet = styleSheetList[i];
-                var cssRuleList = cssStyleSheet.cssRules || [];
+            var index = -1;
+            var length = styleSheetList.length;
+            var cssStyleSheet, cssRuleList;
+
+            while (++index < length) {
+                cssStyleSheet = styleSheetList[index];
+                cssRuleList = cssStyleSheet.cssRules || [];
                 cssRuleListFor(cssRuleList, callback);
             }
         }
 
         function cssRuleListFor(cssRuleList, callback) {
-            for (var n = 0; n < cssRuleList.length; n++) {
-                var cssRule = cssRuleList[n];
+            var index = -1;
+            var length = cssRuleList.length;
+            var cssRule, cssStyleSheet;
+
+            while (++index < length) {
+                cssRule = cssRuleList[index];
 
                 if (cssRule instanceof CSSImportRule) {
-                    var cssStyleSheet = cssRule.styleSheet;
+                    cssStyleSheet = cssRule.styleSheet;
                     cssRuleListFor(cssStyleSheet.cssRules || [], callback);
                 } else if (cssRule instanceof CSSMediaRule) {
                     cssRuleListFor(cssRule.cssRules || [], callback);
                 } else {
-
                     callback(cssRule);
-
                 }
-
             }
         }
+
 
         styleSheetListFor(document.styleSheets, callback);
     }
@@ -316,7 +326,7 @@ FontSpider.prototype = {
  * @param   {Array<String>}     网页路径列表
  * @param   {Adapter}           选项
  * @param   {Function}          回调函数
- * @return  {Promise}           接收 `WebFonts` 描述信息
+ * @return  {Promise}           如果没有 `callback` 参数则返回 `Promise` 对象
  */
 module.exports = function(htmlFiles, adapter, callback) {
     adapter = new Adapter(adapter);
@@ -360,9 +370,8 @@ module.exports = function(htmlFiles, adapter, callback) {
             });
             return Promise.reject(errors);
         });
+    } else {
+        return webFonts;
     }
 
-
-
-    return webFonts;
 };

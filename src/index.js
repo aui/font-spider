@@ -10,7 +10,7 @@ var Adapter = require('./adapter');
  * @param   {Array<String>}     网页路径列表
  * @param   {Adapter}           选项
  * @param   {Function}          回调函数
- * @return  {Promise}
+ * @return  {Promise}           如果没有 `callback` 参数则返回 `Promise` 对象
  */
 function runner(htmlFiles, options, callback) {
 
@@ -33,10 +33,9 @@ function runner(htmlFiles, options, callback) {
             });
             return Promise.reject(errors);
         });
+    } else {
+        return webFonts;
     }
-
-
-    return webFonts;
 }
 
 

@@ -142,7 +142,9 @@ Compress.prototype = {
 
         fontmin.dest(temp);
 
-        fontmin.run(function(errors /*, buffer*/ ) {
+        fontmin.run(function(errors, buffer) {
+
+            console.log(Array.isArray(buffer))
 
             if (errors) {
                 that.clear();
@@ -184,7 +186,7 @@ Compress.prototype = {
  * @param   {Array<WebFont>}    `WebFonts` 描述信息 @see ../spider/web-font.js
  * @param   {Adapter}           选项
  * @param   {Function}          回调函数
- * @return  {Promise}
+ * @return  {Promise}           如果没有 `callback` 参数则返回 `Promise` 对象
  */
 module.exports = function(webFonts, adapter, callback) {
     adapter = new Adapter(adapter);
@@ -210,8 +212,8 @@ module.exports = function(webFonts, adapter, callback) {
             });
             return Promise.reject(errors);
         });
+    } else {
+        return webFonts;
     }
 
-
-    return webFonts;
 };
