@@ -4,6 +4,7 @@
 
 * 重构爬虫模块，使用 [browser-x](https://github.com/aui/browser-x) 来虚拟浏览器环境
 * 支持伪元素 `content` 继承的字体，进而支持了采用此的图标字体库
+* 支持伪元素 `content: 'prefix'` 和 `content: attr(value)` 模式
 * 支持行内样式的 `font-family` 解析
 * 提供新的 API、更好的支持远程资源解析
 * 大幅度提高运行速度 
