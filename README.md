@@ -43,7 +43,7 @@ npm install font-spider -g
   font-style: normal;
 }
 
-/*使用选择器指定字体*/
+/*使用指定字体*/
 .home h1, .demo > .test {
     font-family: 'pinghei';
 }
@@ -125,20 +125,20 @@ font-spider 包括爬虫与压缩器模块，接口文档：[API.md](./API.md)
 
 ## 字体兼容性参考
 
-| 格式      | IE   | Firefox | Chrome | Safari | Opera | iOS Safari | Android Browser | Chrome for Android | 
-| ------- | ---- | ------- | ------ | ------ | ----- | ---------- | --------------- | ------------------ | 
-| `.eot`  | 6    | --      | --     | --     | --    | --         | --              | --                 | 
-| `.woff` | 9    | 3.6     | 5      | 5.1    | 11.1  | 5.1        | 4.4             | 36                 | 
-| `.ttf`  | --   | 3.5     | 4      | 3.1    | 10.1  | 4.3        | 2.2             | 36                 | 
-| `.svg`  | --   | --      | 4      | 3.2    | 9.6   | 3.2        | 3               | 36                 | 
+| 格式      | IE   | Firefox | Chrome | Safari | Opera | iOS Safari | Android Browser | Chrome for Android |
+| ------- | ---- | ------- | ------ | ------ | ----- | ---------- | --------------- | ------------------ |
+| `.eot`  | 6    | --      | --     | --     | --    | --         | --              | --                 |
+| `.woff` | 9    | 3.6     | 5      | 5.1    | 11.1  | 5.1        | 4.4             | 36                 |
+| `.ttf`  | --   | 3.5     | 4      | 3.1    | 10.1  | 4.3        | 2.2             | 36                 |
+| `.svg`  | --   | --      | 4      | 3.2    | 9.6   | 3.2        | 3               | 36                 |
 
 来源：<http://caniuse.com/#feat=fontface>
 
 ## 贡献者
 
-- [@糖饼](https://github.com/aui) - [微博](http://www.weibo.com/planeart)
-- [@fufu](https://github.com/milansnow)  - [微博](http://www.weibo.com/u/1715968673)
-- @kdd - [微博](http://www.weibo.com/kddie)
+- [@糖饼](https://github.com/aui) - 前端工程师（厦门[欢乐逛](http://www.huanleguang.com)） - [微博](http://www.weibo.com/planeart)
+- [@fufu](https://github.com/milansnow) - UI 工程师（腾讯，[ISUX](http://isux.tencent.com)） - [微博](http://www.weibo.com/u/1715968673)
+- @kdd - 视觉设计师（腾讯，[ISUX](http://isux.tencent.com)）- [微博](http://www.weibo.com/kddie)
 
 ## 免费字体
 
@@ -152,8 +152,8 @@ font-spider 包括爬虫与压缩器模块，接口文档：[API.md](./API.md)
 - [字蛛开发计划](https://github.com/aui/font-spider/issues/2)
 - [字蛛更新日志](./CHANGELOG.md)
 - [字蛛接口文档](./API.md)
-- [grunt-font-spider](https://github.com/aui/grunt-font-spider)
-- [gulp-font-spider](https://github.com/aui/gulp-font-spider)
+- [字蛛 grunt 版本](https://github.com/aui/grunt-font-spider)
+- [字蛛 gulp 版本](https://github.com/aui/gulp-font-spider)
 - [Google: 网页字体优化](https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency/webfont-optimization?hl=zh-cn)
 - [Baidu: fontmin](https://github.com/ecomfe/fontmin)
 
