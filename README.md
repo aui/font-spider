@@ -149,6 +149,7 @@ font-spider 包括爬虫与压缩器模块，接口文档：[API.md](./API.md)
 
 ## 相关链接
 
+- [字蛛文档翻译计划：征集日文、韩文翻译志愿者](https://github.com/aui/font-spider/issues/71)
 - [字蛛开发计划](https://github.com/aui/font-spider/issues/2)
 - [字蛛更新日志](./CHANGELOG.md)
 - [字蛛接口文档](./API.md)
