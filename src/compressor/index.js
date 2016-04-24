@@ -142,9 +142,7 @@ Compress.prototype = {
 
         fontmin.dest(temp);
 
-        fontmin.run(function(errors, buffer) {
-
-            console.log(Array.isArray(buffer))
+        fontmin.run(function(errors/*, buffer*/) {
 
             if (errors) {
                 that.clear();
