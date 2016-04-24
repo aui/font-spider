@@ -70,7 +70,7 @@ FontSpider.prototype = {
 
                     if (that.hasContent(cssStyleRule)) {
                         // 伪元素直接拿 content 字段
-                        webFont.chars += that.parsePseudoContent(cssStyleRule);
+                        webFont.chars += that.parseContent(cssStyleRule);
                     } else {
 
                         // 通过选择器查找元素拥有的文本节点
@@ -114,7 +114,7 @@ FontSpider.prototype = {
                 webFonts.forEach(function(webFont, index) {
                     if (containsPseudo(elements[index], pseudoElement)) {
                         var selector = cssStyleRule.selectorText;
-                        var char = that.parsePseudoContent(cssStyleRule);
+                        var char = that.parseContent(cssStyleRule);
                         webFont.selectors.push(selector);
                         webFont.chars += char;
                     }
@@ -153,22 +153,38 @@ FontSpider.prototype = {
 
 
     /**
-     * 解析伪元素 content 属性值
+     * 解析伪元素 content 属性值。
+     * 仅支持 `content: 'prefix'` 和 `content: attr(value)` 这两种形式
+     * @see https://developer.mozilla.org/zh-CN/docs/Web/CSS/content
      * @param   {CSSStyleRule}
      * @return  {String}
      */
-    parsePseudoContent: function(cssStyleRule) {
+    parseContent: function(cssStyleRule) {
+
         var content = cssStyleRule.style.content;
+        var string = '';
+        var exec, value, index, elements, length;
 
-        // TODO 支持 content 所有规则，如属性描述符
-        if (/^("[^"]*?"|'[^']*?')$/.test(content)) {
+        var RE_CONTENT = /("(?:\\"|[^"])*"|'(?:\\'|[^']*)'|\battr\([^\)]*\))/ig;
+        var RE_STRING = /^["'](.*)["']$/;
+        var RE_ATTR = /^attr\(([^\)]*)\)$/i;
 
-            content = content.replace(/^["']|["']$/g, '');
+        RE_CONTENT.lastIndex = 0;
 
-            return content;
-        } else {
-            return '';
+        while ((exec = RE_CONTENT.exec(content)) !== null) {
+            if (value = exec[0].match(RE_STRING)) {
+                string += value[1];
+            } else if (value = exec[0].match(RE_ATTR)) {
+                elements = this.getElements(cssStyleRule.selectorText, true);
+                index = -1;
+                length = elements.length;
+                while (++ index < length) {
+                    string += elements[index].getAttribute(value[1]) || '';
+                }
+            }
         }
+
+        return string;
     },
 
 

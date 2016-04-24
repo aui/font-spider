@@ -6,14 +6,24 @@ var fs = require('fs');
 
 describe('spider', function() {
 
-    it('#spider', function() {
+    it('css content', function() {
+        var htmlFiles = [__dirname + '/files/parse-element-content.html'];
+        return spider(htmlFiles, {
+            silent: false
+        }).then(function(webFonts) {
+            assert.equal(' 你大好海糖饼🍎', webFonts[0].chars);
+            return webFonts;
+        });
+    });
+
+    it('html content + css content', function() {
         var htmlFiles = [__dirname + '/files/01.html', __dirname + '/files/02.html'];
         return spider(htmlFiles, {
             silent: false
         }).then(done);
     });
 
-    it('#spider gulp', function() {
+    it('gulp: html content + css content', function() {
         var htmlFiles = [__dirname + '/files/01.html', __dirname + '/files/02.html'];
         return spider(htmlFiles.map(function(file) {
             return {
