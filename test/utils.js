@@ -52,5 +52,68 @@ describe('Utils', function() {
         it('Arial,Helvetica,"Microsoft Yahei","\\","', function() {
             assert.deepEqual(['Arial', 'Helvetica', '"Microsoft Yahei"', '"\\","'], split('Arial,Helvetica,"Microsoft Yahei","\\","'));
         });
+        it('', function() {
+            assert.deepEqual([], split('  '));
+        });
+        it('abc"def\'', function() {
+            assert.deepEqual(['abc"def\''], split('abc"def\''));
+        });
+        it('"abc\\\\", "', function() {
+            assert.deepEqual(['"abc\\\\"', '"'], split('"abc\\\\", "'));
+        });
+
+    });
+
+    describe('#cssContentParser', function() {
+        it('"hello world"', function() {
+            assert.deepEqual([{
+                type: 'string',
+                value: "hello world"
+            }], utils.cssContentParser('"hello world"'));
+        });
+        it("'hello world'", function() {
+            assert.deepEqual([{
+                type: 'string',
+                value: "hello world"
+            }], utils.cssContentParser("'hello world'"));
+        });
+        it("\"hello \\\" world\"", function() {
+            assert.deepEqual([{
+                type: 'string',
+                value: "hello \" world"
+            }], utils.cssContentParser("\"hello \\\" world\""));
+        });
+        it("\"hello \\\\' world\"", function() {
+            assert.deepEqual([{
+                type: 'string',
+                value: "hello \\' world"
+            }], utils.cssContentParser("\"hello \\\\' world\""));
+        });
+        it("\"hello \\\\\\\" world\"", function() {
+            assert.deepEqual([{
+                type: 'string',
+                value: "hello \\\" world"
+            }], utils.cssContentParser("\"hello \\\\\\\" world\""));
+        });
+        it('"hello" attr(data-name) "world"', function() {
+            assert.deepEqual([{
+                type: 'string',
+                value: "hello"
+            }, {
+                type: 'attr',
+                value: "data-name"
+            }, {
+                type: 'string',
+                value: "world"
+            }], utils.cssContentParser('"hello" attr(data-name) "world"'));
+        });
+        it('"hello" attr($data) "world"', function() {
+            try{
+                utils.cssContentParser('"hello" attr($data) "world"')
+            } catch(e) {
+                return;
+            }
+            throw new Error('Parser');
+        });
     });
 });

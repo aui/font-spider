@@ -3,7 +3,6 @@
 var path = require('path');
 var url = require('url');
 var crypto = require('crypto');
-var cssFontParser = require('css-font-parser');
 var utils = require('./utils');
 
 
@@ -97,24 +96,28 @@ WebFont.prototype.match = function(style) {
     var key;
     var index = -1;
     var length = style.length;
+    var cfp, fs;
 
     while (++index < length) {
         key = style[index];
         if (key === 'font-family') {
             fontFamilys = parseFontfamily(style[key]);
         } else if (key === 'font') {
-            var s = cssFontParser(style[key]);
-            if (s) {
-                var f = s['font-family'];
-                if (Array.isArray(f)) {
-                    fontFamilys = f;
+            try {
+                cfp = utils.cssFontParser(style[key]);
+            } catch(e) {}
+
+            if (cfp) {
+                fs = cfp['font-family'];
+                if (Array.isArray(fs)) {
+                    fontFamilys = fs;
                 }
             }
         }
     }
 
 
-    // 虽然仅使用字体名称来匹配会可能产生冗余，但能能避免压缩后缺少字形的问题
+    // 虽然仅使用字体名称来匹配会可能产生冗余，但比较安全。
     // TODO 完善匹配算法 fontFamily | fontStretch | fontStyle | fontWeight
     if (fontFamilys.indexOf(this.family) !== -1) {
         return true;
@@ -135,12 +138,12 @@ function parseFontFaceSrc(value, baseURI) {
     var list = [];
     var src;
 
-    var RE_FONT_URL = /url\(["']?(.*?)["']?\)(?:\s*format\(["']?(.*?)["']?\))?/ig;
+    var RE_FONT_URL = /url\(("|')?(.*?)\1?\)(?:\s*format\(("|')?(.*?)\3?\))?/ig;
 
     RE_FONT_URL.lastIndex = 0;
 
     while ((src = RE_FONT_URL.exec(value)) !== null) {
-        list.push(new FontFile(baseURI, src[1], src[2]));
+        list.push(new FontFile(baseURI, src[2], src[4]));
     }
 
     return list;
@@ -154,7 +157,7 @@ function parseFontFaceSrc(value, baseURI) {
  */
 function parseFontfamily(fontFamily) {
     return utils.split(fontFamily).map(function(value) {
-        return value.replace(/^["']|["']$/g, '');
+        return value.replace(/(?:^"|"$)|(?:^'|'$)/g, '');
     });
 }
 
