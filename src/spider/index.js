@@ -1,7 +1,7 @@
 'use strict';
 
 var browser = require('browser-x');
-var utils = require('./utils');
+var parsers = require('./parsers');
 var Adapter = require('../adapter');
 var WebFont = require('./web-font');
 var concat = require('./concat');
@@ -166,7 +166,7 @@ FontSpider.prototype = {
         var tokens = [];
 
         try {
-            tokens = utils.cssContentParser(content);
+            tokens = parsers.cssContentParser(content);
         } catch(e) {
         }
 
@@ -204,7 +204,7 @@ FontSpider.prototype = {
         if (selector.indexOf(',') !== -1) {
 
             var elements = [];
-            var selectors = utils.split(selector);
+            var selectors = parsers.split(selector);
 
             selectors.forEach(function(selector) {
                 elements = elements.concat(that.getElements(selector, matchPseudoParent));

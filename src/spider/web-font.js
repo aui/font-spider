@@ -1,9 +1,7 @@
 'use strict';
 
-var path = require('path');
-var url = require('url');
 var crypto = require('crypto');
-var utils = require('./utils');
+var parsers = require('./parsers');
 
 
 /**
@@ -47,7 +45,7 @@ WebFont.parse = function parseFontFace(cssFontFaceRule) {
     }
 
     var src = s.src;
-    var files = parseFontFaceSrc(src, baseURI);
+    var files = parsers.cssFontFaceSrcParser(src, baseURI);
 
 
     if (!files.length) {
@@ -55,7 +53,7 @@ WebFont.parse = function parseFontFace(cssFontFaceRule) {
     }
 
 
-    family = parseFontfamily(family)[0];
+    family = parsers.cssFontfamilyParser(family)[0];
 
     var id = crypto
         .createHash('md5')
@@ -72,11 +70,6 @@ WebFont.parse = function parseFontFace(cssFontFaceRule) {
     });
 };
 
-
-
-WebFont.FontFile = FontFile;
-WebFont.parseFontFaceSrc = parseFontFaceSrc;
-WebFont.parseFontfamily = parseFontfamily;
 
 
 /**
@@ -101,10 +94,10 @@ WebFont.prototype.match = function(style) {
     while (++index < length) {
         key = style[index];
         if (key === 'font-family') {
-            fontFamilys = parseFontfamily(style[key]);
+            fontFamilys = parsers.cssFontfamilyParser(style[key]);
         } else if (key === 'font') {
             try {
-                cfp = utils.cssFontParser(style[key]);
+                cfp = parsers.cssFontParser(style[key]);
             } catch(e) {}
 
             if (cfp) {
@@ -117,99 +110,13 @@ WebFont.prototype.match = function(style) {
     }
 
 
-    // 虽然仅使用字体名称来匹配会可能产生冗余，但比较安全。
+    // 虽然仅使用字体名称来匹配会可能产生冗余，但比较安全
     // TODO 完善匹配算法 fontFamily | fontStretch | fontStyle | fontWeight
     if (fontFamilys.indexOf(this.family) !== -1) {
         return true;
     } else {
         return false;
     }
-};
-
-
-
-/**
- * 解析 @font-face src 值
- * @param   {String}    src 值
- * @param   {String}    基础路径
- * @param   {Array<FontFile>}
- */
-function parseFontFaceSrc(value, baseURI) {
-    var list = [];
-    var src;
-
-    var RE_FONT_URL = /url\(("|')?(.*?)\1?\)(?:\s*format\(("|')?(.*?)\3?\))?/ig;
-
-    RE_FONT_URL.lastIndex = 0;
-
-    while ((src = RE_FONT_URL.exec(value)) !== null) {
-        list.push(new FontFile(baseURI, src[2], src[4]));
-    }
-
-    return list;
-}
-
-
-/**
- * 解析 font-family 值
- * @param   {String}
- * @return  {Array<String>}
- */
-function parseFontfamily(fontFamily) {
-    return utils.split(fontFamily).map(function(value) {
-        return value.replace(/(?:^"|"$)|(?:^'|'$)/g, '');
-    });
-}
-
-
-/**
- * font-face 路径描述信息类
- * @param   {String}    基础路径
- * @param   {String}    地址
- * @param   {String}    格式
- */
-function FontFile(baseURI, source, format) {
-
-    var RE_SERVER = /^https?\:\/\//i;
-
-    if (!RE_SERVER.test(source)) {
-        source = url.resolve(baseURI, source);
-    }
-
-    if (RE_SERVER.test(source)) {
-        source = source.replace(/[#].*$/, '');
-    } else {
-        source = source.replace(/[?#].*$/, '');
-    }
-
-    if (!format) {
-        switch (path.extname(source.replace(/\?.*$/, '')).toLowerCase()) {
-            case '.eot':
-                format = 'embedded-opentype';
-                break;
-            case '.woff2':
-                format = 'woff2';
-                break;
-            case '.woff':
-                format = 'woff';
-                break;
-            case '.ttf':
-                format = 'truetype';
-                break;
-            case '.svg':
-                format = 'svg';
-                break;
-        }
-    } else {
-        format = format.toLowerCase();
-    }
-
-    this.source = source;
-    this.format = format;
-}
-
-FontFile.prototype.toString = function() {
-    return this.source;
 };
 
 
