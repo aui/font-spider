@@ -96,31 +96,6 @@ module.exports = {
      */
     cssContentParser: function(input) {
 
-        // var exec, value;
-        // var tokens = [];
-
-        // var RE_CONTENT = /("(?:\\"|[^"])*"|'(?:\\'|[^']*)'|\battr\([^\)]*\))/ig;
-        // var RE_STRING = /^("|')(.*)\1$/;
-        // var RE_ATTR = /^attr\(([^\)]*)\)$/i;
-
-        // RE_CONTENT.lastIndex = 0;
-
-        // while ((exec = RE_CONTENT.exec(input)) !== null) {
-        //     if (value = exec[0].match(RE_STRING)) {
-        //         tokens.push({
-        //             type: 'string',
-        //             value: parseString(value[2])
-        //         });
-        //     } else if (value = exec[0].match(RE_ATTR)) {
-        //         tokens.push({
-        //             type: 'attr',
-        //             value: value[1]
-        //         });
-        //     }
-        // }
-
-        // return tokens;
-
         var tokens = tokenizer(input);
 
         var ret = [];
