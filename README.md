@@ -67,7 +67,7 @@ font-spider [options] <htmlFile1 htmlFile2 ...>
 font-spider dest/news.html dest/index.html dest/about.html
 ```
 
-> 如果有多个页面依赖相同的字体，请都用 `--htmlFiles` 传递进来
+> 如果有多个页面依赖相同的字体，请都传递进来
 
 #### options
 
@@ -118,7 +118,7 @@ font-spider 包括爬虫与压缩器模块，接口文档：[API.md](./API.md)
 
 ## 限制
 
-- 仅支持固定的文本与样式，不支持 javascript 动态插入的元素与样式
+- 不支持 javascript 动态插入的元素与样式
 - .otf 字体需要转换成 .ttf 格式才能被压缩（[免费 ttf 字体资源](#免费字体)）
 - 仅支持 `utf-8` 编码的 HTML 与 CSS 文件
 - CSS `content` 仅支持 `content: 'prefix'` 和 `content: attr(value)` 这两种形式
