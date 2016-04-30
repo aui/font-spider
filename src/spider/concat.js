@@ -56,10 +56,10 @@ function concat(webFonts, adapter) {
 
         // 处理路径
         webFont.files = webFont.files.filter(function(file) {
-            var ignore = adapter.resourceIgnore(file.source);
+            var ignore = adapter.resourceIgnore(file.url);
 
             if (!ignore) {
-                file.source = adapter.resourceMap(file.source);
+                file.url = adapter.resourceMap(file.url);
             }
 
             return !ignore;
