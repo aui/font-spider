@@ -11,7 +11,7 @@ describe('spider', function() {
         return spider(htmlFiles, {
             silent: false
         }).then(function(webFonts) {
-            assert.equal(' 你大好海糖饼🍎', webFonts[0].chars);
+            assert.equal(' "你大好海糖饼🍎', webFonts[0].chars);
             return webFonts;
         });
     });

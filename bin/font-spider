@@ -29,6 +29,9 @@ program
 var htmlFiles = program.args;
 var options = new Adapter({
     resourceBeforeLoad: function(file) {
+        if (!/https?/.test(file)) {
+            file = path.relative('./', file);
+        }
         logIn('Load:', colors.cyan(file));
     }
 });
@@ -182,11 +185,11 @@ function compressWebFont(htmlFiles, options) {
             log('Font files:');
 
             webFont.files.forEach(function(file) {
-                if (fs.existsSync(file.source)) {
-                    log('File', colors.cyan(path.relative('./', file.source)),
+                if (fs.existsSync(file.url)) {
+                    log('File', colors.cyan(path.relative('./', file.url)),
                         'created:', colors.green(file.size / 1000 + ' KB'));
                 } else {
-                    log(colors.red('File ' + path.relative('./', file.source) + ' not created'));
+                    log(colors.red('File ' + path.relative('./', file.url) + ' not created'));
                 }
             });
 

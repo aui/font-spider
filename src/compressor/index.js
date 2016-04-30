@@ -32,12 +32,12 @@ function Compress(webFont, options) {
 
 
         webFont.files.forEach(function(file) {
-            if (RE_SERVER.test(file.source)) {
+            if (RE_SERVER.test(file.url)) {
                 throw new Error('does not support remote path "' + file + '"');
             }
 
             if (file.format === 'truetype') {
-                source = file.source;
+                source = file.url;
             }
         });
 
@@ -151,13 +151,13 @@ Compress.prototype = {
 
                 // 从临时目录把压缩后的字体剪切出来
                 webFont.files.forEach(function(file) {
-                    var basename = path.basename(file.source);
+                    var basename = path.basename(file.url);
                     var tempFile = path.join(temp, basename);
-                    var out = file.source;
+                    var out = file.url;
                     utils.rename(tempFile, out);
 
-                    if (fs.existsSync(file.source)) {
-                        file.size = fs.statSync(file.source).size;
+                    if (fs.existsSync(file.url)) {
+                        file.size = fs.statSync(file.url).size;
                     } else {
                         file.size = null;
                     }
