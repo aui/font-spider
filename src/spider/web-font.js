@@ -28,23 +28,23 @@ function WebFont(options) {
  */
 WebFont.parse = function parseFontFace(cssFontFaceRule) {
 
-    var s = cssFontFaceRule.style;
+    var ruleStyle = cssFontFaceRule.style;
     var parentStyleSheet = cssFontFaceRule.parentStyleSheet;
 
     // <link> || <style>
     var baseURI = parentStyleSheet.href || parentStyleSheet.ownerNode.baseURI;
 
 
-    var family = s['font-family'];
-    var stretch = s['font-stretch'];
-    var style = s['font-style'];
-    var weight = s['font-weight'];
+    var family = ruleStyle['font-family'];
+    var stretch = ruleStyle['font-stretch'];
+    var style = ruleStyle['font-style'];
+    var weight = ruleStyle['font-weight'];
 
     if (!family) {
         return null;
     }
 
-    var src = s.src;
+    var src = ruleStyle.src;
     var files = parsers.cssFontFaceSrcParser(src, baseURI);
 
 

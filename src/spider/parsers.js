@@ -339,6 +339,7 @@ FontFile.prototype.toString = function() {
 
 module.exports = {
     split: split,
+    tokenizer: tokenizer,
     cssFontParser: cssFontParser,
     cssContentParser: cssContentParser,
     cssFontfamilyParser: cssFontfamilyParser,
