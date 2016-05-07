@@ -1,7 +1,7 @@
 {
     "name": "font-spider",
     "description": "Webfont optimizer",
-    "version": "1.0.0-beta7",
+    "version": "1.0.0-beta8",
     "homepage": "https://github.com/aui/font-spider",
     "author": {
         "name": "aui",
@@ -22,9 +22,8 @@
         "node": ">= 4.0.0"
     },
     "scripts": {
-        "_remove": "rm -rf test/demo-release",
-        "_copy": "mkdir test/demo-release && cp -R test/demo/* test/demo-release",
-        "demo": "npm run _remove && npm run _copy && node bin/font-spider --ignore '\\.woff2$' --no-backup test/demo-release/**/*.html",
+        "clearup": "gulp clearup",
+        "demo": "npm run clearup && node bin/font-spider --ignore '\\.woff2$' --no-backup test/demo-release/**/*.html",
         "test": "mocha test/index.js && npm run demo"
     },
     "dependencies": {
@@ -32,10 +31,10 @@
         "colors": "^1.1.2",
         "commander": "^2.9.0",
         "css-font-parser": "^0.2.1",
-        "fontmin": "^0.9.4",
-        "glob": "^7.0.3"
+        "fontmin": "^0.9.5"
     },
     "devDependencies": {
+        "gulp": "^3.9.1",
         "mocha": "=2.2.5"
     },
     "license": "MIT",
