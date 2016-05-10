@@ -136,9 +136,9 @@ font-spider 包括爬虫与压缩器模块，接口文档：[API.md](./API.md)
 
 ## 贡献者
 
-- [@糖饼](https://github.com/aui) - 前端工程师（厦门[欢乐逛](http://www.huanleguang.com)） - [微博](http://www.weibo.com/planeart)
-- [@fufu](https://github.com/milansnow) - UI 工程师（腾讯，[ISUX](http://isux.tencent.com)） - [微博](http://www.weibo.com/u/1715968673)
-- @kdd - 视觉设计师（腾讯，[ISUX](http://isux.tencent.com)）- [微博](http://www.weibo.com/kddie)
+- [@糖饼](https://github.com/aui) - 前端工程师，[厦门欢乐逛](http://www.huanleguang.com)，[微博](http://www.weibo.com/planeart)
+- [@fufu](https://github.com/milansnow) - UI 工程师，[腾讯ISUX](http://isux.tencent.com)，[微博](http://www.weibo.com/u/1715968673)
+- @kdd - 视觉设计师，[腾讯ISUX](http://isux.tencent.com)，[微博](http://www.weibo.com/kddie)
 
 ## 免费字体
 
