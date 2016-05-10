@@ -327,7 +327,7 @@ function FontFile(baseURI, url, format) {
         format = format.toLowerCase();
     }
 
-    this.url = url;
+    this.url = decodeURIComponent(url);
     this.format = format;
 }
 
