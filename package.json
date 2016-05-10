@@ -27,7 +27,7 @@
     "test": "mocha test/index.js && npm run demo"
   },
   "dependencies": {
-    "browser-x": "^0.0.1-beta5",
+    "browser-x": "^0.0.1-beta6",
     "colors": "^1.1.2",
     "commander": "^2.9.0",
     "css-font-parser": "^0.2.1",
