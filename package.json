@@ -1,53 +1,54 @@
 {
-    "name": "font-spider",
-    "description": "Webfont optimizer",
-    "version": "1.0.0-beta8",
-    "homepage": "https://github.com/aui/font-spider",
-    "author": {
-        "name": "aui",
-        "email": "sugarpie.tang@gmail.com"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git://github.com/aui/font-spider.git"
-    },
-    "bugs": {
-        "url": "https://github.com/aui/font-spider/issues"
-    },
-    "bin": {
-        "font-spider": "bin/font-spider"
-    },
-    "main": "./src/index.js",
-    "engines": {
-        "node": ">= 4.0.0"
-    },
-    "scripts": {
-        "clearup": "gulp clearup",
-        "demo": "npm run clearup && node bin/font-spider --ignore '\\.woff2$' --no-backup test/demo-release/**/*.html",
-        "test": "mocha test/index.js && npm run demo"
-    },
-    "dependencies": {
-        "browser-x": "^0.0.1-beta5",
-        "colors": "^1.1.2",
-        "commander": "^2.9.0",
-        "css-font-parser": "^0.2.1",
-        "fontmin": "^0.9.5"
-    },
-    "devDependencies": {
-        "gulp": "^3.9.1",
-        "mocha": "=2.2.5"
-    },
-    "license": "MIT",
-    "keywords": [
-        "font",
-        "fontforge",
-        "font-face",
-        "woff",
-        "ttf",
-        "svg",
-        "eot",
-        "truetype",
-        "css",
-        "webfont"
-    ]
+  "name": "font-spider",
+  "description": "Webfont optimizer",
+  "version": "1.0.0",
+  "homepage": "https://github.com/aui/font-spider",
+  "author": {
+    "name": "aui",
+    "email": "sugarpie.tang@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/aui/font-spider.git"
+  },
+  "bugs": {
+    "url": "https://github.com/aui/font-spider/issues"
+  },
+  "bin": {
+    "font-spider": "bin/font-spider"
+  },
+  "main": "./src/index.js",
+  "engines": {
+    "node": ">= 4.0.0"
+  },
+  "scripts": {
+    "clearup": "gulp clearup",
+    "demo": "npm run clearup && node bin/font-spider --ignore '\\.woff2$' --no-backup test/demo-release/**/*.html",
+    "test": "mocha test/index.js && npm run demo"
+  },
+  "dependencies": {
+    "browser-x": "^0.0.1-beta5",
+    "colors": "^1.1.2",
+    "commander": "^2.9.0",
+    "css-font-parser": "^0.2.1",
+    "fontmin": "^0.9.5",
+    "glob": "^7.0.3"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "mocha": "=2.2.5"
+  },
+  "license": "MIT",
+  "keywords": [
+    "font",
+    "fontforge",
+    "font-face",
+    "woff",
+    "ttf",
+    "svg",
+    "eot",
+    "truetype",
+    "css",
+    "webfont"
+  ]
 }
