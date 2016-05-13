@@ -5,6 +5,7 @@ var path = require('path');
 var Fontmin = require('fontmin');
 var utils = require('./utils');
 var Adapter = require('../adapter');
+var ttf2woff2 = require('gulp-ttf2woff2');
 
 
 
@@ -15,6 +16,11 @@ var RE_SERVER = /^https?\:/i;
 var TEMP = '.FONT_SPIDER_TEMP';
 var number = 0;
 
+
+// @see https://github.com/ecomfe/fontmin/issues/30
+if (typeof Fontmin.ttf2woff2 !== 'function') {
+    Fontmin.ttf2woff2 = ttf2woff2;
+}
 
 
 function Compress(webFont, options) {
