@@ -32,20 +32,21 @@ npm install font-spider -g
 ``` css
 /*声明 WebFont*/
 @font-face {
-  font-family: 'pinghei';
-  src: url('../font/pinghei.eot');
+  font-family: 'pingfang';
+  src: url('../font/pingfang.eot');
   src:
-    url('../font/pinghei.eot?#font-spider') format('embedded-opentype'),
-    url('../font/pinghei.woff') format('woff'),
-    url('../font/pinghei.ttf') format('truetype'),
-    url('../font/pinghei.svg') format('svg');
+    url('../font/pingfang.eot?#font-spider') format('embedded-opentype'),
+    url('../font/pingfang.woff2') format('woff2'),
+    url('../font/pingfang.woff') format('woff'),
+    url('../font/pingfang.ttf') format('truetype'),
+    url('../font/pingfang.svg') format('svg');
   font-weight: normal;
   font-style: normal;
 }
 
 /*使用指定字体*/
 .home h1, .demo > .test {
-    font-family: 'pinghei';
+    font-family: 'pingfang';
 }
 ```
 
@@ -126,11 +127,12 @@ font-spider 包括爬虫与压缩器模块，接口文档：[API.md](./API.md)
 ## 字体兼容性参考
 
 | 格式      | IE   | Firefox | Chrome | Safari | Opera | iOS Safari | Android Browser | Chrome for Android |
-| ------- | ---- | ------- | ------ | ------ | ----- | ---------- | --------------- | ------------------ |
-| `.eot`  | 6    | --      | --     | --     | --    | --         | --              | --                 |
-| `.woff` | 9    | 3.6     | 5      | 5.1    | 11.1  | 5.1        | 4.4             | 36                 |
-| `.ttf`  | --   | 3.5     | 4      | 3.1    | 10.1  | 4.3        | 2.2             | 36                 |
-| `.svg`  | --   | --      | 4      | 3.2    | 9.6   | 3.2        | 3               | 36                 |
+| -------  | ---- | ------- | ------ | ------ | ----- | ---------- | --------------- | ------------------ |
+| `.eot`   | 6    | \-\-    | \-\-   | \-\-   | \-\-  | \-\-       | \-\-            | \-\-               |
+| `.woff`  | 9    | 3.6     | 5      | 5.1    | 11.1  | 5.1        | 4.4             | 36                 |
+| `.woff2` | 14   | 39      | 36     | \-\-   | 23    | \-\-       | 50              | 50                 |
+| `.ttf`   | \-\- | 3.5     | 4      | 3.1    | 10.1  | 4.3        | 2.2             | 36                 |
+| `.svg`   | \-\- | \-\-    | 4      | 3.2    | 9.6   | 3.2        | 3               | 36                 |
 
 来源：<http://caniuse.com/#feat=fontface>
 
