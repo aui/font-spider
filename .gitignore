@@ -3,5 +3,5 @@ node_modules
 *.log
 test/demo-release
 test/demo/home
-test/demo/kai-gen-gothic-sc
+test/demo/source-han-sans
 
