@@ -130,12 +130,24 @@ Compress.prototype = {
             'svg': 'ttf2svg'
         };
 
-        Object.keys(types).forEach(function(index) {
-            var key = types[index];
-            if (typeof Fontmin[key] === 'function') {
-                fontmin.use(Fontmin[key]({
+
+
+        webFont.files.forEach(function(file) {
+            var format = file.format;
+            var fn = types[format];
+
+            if (format === 'truetype') {
+                return;
+            }
+
+            if (typeof Fontmin[fn] === 'function') {
+                fontmin.use(Fontmin[fn]({
                     clone: true
                 }));
+            } else {
+                if (process.stdout.isTTY) {
+                    console.warn('Warn: compressor does not support `' + format + '`');
+                }
             }
         });
 
