@@ -130,12 +130,23 @@ Compress.prototype = {
             'svg': 'ttf2svg'
         };
 
-        Object.keys(types).forEach(function(index) {
-            var key = types[index];
-            if (typeof Fontmin[key] === 'function') {
-                fontmin.use(Fontmin[key]({
+
+
+        webFont.files.forEach(function(file) {
+            var format = file.format;
+            var fn = types[format];
+
+            if (format === 'truetype') {
+                return;
+            }
+
+            if (typeof Fontmin[fn] === 'function') {
+                fontmin.use(Fontmin[fn]({
                     clone: true
                 }));
+            } else {
+                throw new TypeError('compressing the ' + format + ' format fonts is not supported, ' +
+                    'please delete it in the CSS file: "' + file.url + '"');
             }
         });
 

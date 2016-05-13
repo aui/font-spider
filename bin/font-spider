@@ -166,7 +166,7 @@ function compressWebFont(htmlFiles, options) {
         if (webFonts.length === 0) {
             clearLonIn();
             log('<web font not found>');
-            return;
+            return webFonts;
         }
 
         logIn('Loading ...');
