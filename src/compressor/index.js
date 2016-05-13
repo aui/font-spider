@@ -146,7 +146,7 @@ Compress.prototype = {
                 }));
             } else {
                 throw new TypeError('compressing the ' + format + ' format fonts is not supported, ' +
-                    'please delete it in the CSS file: ' + file.url);
+                    'please delete it in the CSS file: "' + file.url + '"');
             }
         });
 
