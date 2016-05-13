@@ -145,9 +145,8 @@ Compress.prototype = {
                     clone: true
                 }));
             } else {
-                if (process.stdout.isTTY) {
-                    console.warn('Warn: compressor does not support `' + format + '`');
-                }
+                throw new TypeError('compressing the ' + format + ' format fonts is not supported, ' +
+                    'please delete it in the CSS file: ' + file.url);
             }
         });
 
