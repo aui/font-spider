@@ -299,17 +299,18 @@ FontSpider.prototype = {
         var CSSImportRule = window.CSSImportRule;
         var CSSMediaRule = window.CSSMediaRule;
 
-        function styleSheetListFor(styleSheetList, callback) {
-            var index = -1;
-            var length = styleSheetList.length;
-            var cssStyleSheet, cssRuleList;
 
-            while (++index < length) {
-                cssStyleSheet = styleSheetList[index];
-                cssRuleList = cssStyleSheet.cssRules || [];
-                cssRuleListFor(cssRuleList, callback);
-            }
+        var index = -1;
+        var styleSheetList = document.styleSheets;
+        var length = styleSheetList.length;
+        var cssStyleSheet, cssRuleList;
+
+        while (++index < length) {
+            cssStyleSheet = styleSheetList[index];
+            cssRuleList = cssStyleSheet.cssRules || [];
+            cssRuleListFor(cssRuleList, callback);
         }
+
 
         function cssRuleListFor(cssRuleList, callback) {
             var index = -1;
@@ -329,9 +330,6 @@ FontSpider.prototype = {
                 }
             }
         }
-
-
-        styleSheetListFor(document.styleSheets, callback);
     }
 
 };
