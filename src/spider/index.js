@@ -42,30 +42,32 @@ FontSpider.prototype = {
     parse: function() {
         var that = this;
         var document = this.document;
-        var webFonts = [];
-
-        // 这是一个索引值与 webFonts 对应的二维数组，
-        // 用来记录 webFonts 所对应的元素列表
-        var elements = [];
+        var webFonts = this.getWebFonts();
 
         var pseudoCssStyleRules = [];
         var inlineStyleSelectors = 'body[style*="font"], body [style*="font"]';
         var inlineStyleElements = document.querySelectorAll(inlineStyleSelectors);
 
+        // 存储使用对应字体的元素
+        var webFontCache = {
+            cache: {},
+            push: function(id, element) {
 
+                if (!this.cache[id]) {
+                    this.cache[id] = [];
+                }
 
-        // 找到 fontFace
-        this.eachCssFontFaceRule(function(cssRule) {
-            var webFont = WebFont.parse(cssRule);
-            if (webFont) {
-                webFonts.push(webFont);
+                if (this.cache[id].indexOf(element) === -1) {
+                    this.cache[id].push(element);
+                }
+            },
+            get: function(id) {
+                return this.cache[id];
             }
-        });
+        };
 
 
-
-        webFonts.forEach(function(webFont, index) {
-            elements[index] = [];
+        webFonts.forEach(function(webFont) {
 
             that.eachCssStyleRule(function(cssStyleRule) {
 
@@ -73,29 +75,31 @@ FontSpider.prototype = {
                 if (webFont.match(cssStyleRule.style)) {
 
                     parsers.split(cssStyleRule.selectorText).forEach(function(selector) {
-                        webFont.selectors.push(selector);
+                        var chars = '';
 
                         if (/\:\:?(?:before|after)$/i.test(selector)) {
+
                             // 伪元素直接拿 content 字段
-                            webFont.chars += that.getContent(selector, cssStyleRule.style.content);
+                            chars = that.getContent(selector, cssStyleRule.style.content);
+
                         } else {
 
                             // 通过选择器查找元素拥有的文本节点
                             that.getElements(selector).forEach(function(element) {
-                                webFont.chars += element.textContent;
-
-                                if (that.debug) {
-                                    console.log(colors.yellow('DEBUG'), [
-                                        'family: ' + colors.green(webFont.family),
-                                        'selectors: ' + colors.green(selector),
-                                        'chars: ' + colors.green(element.textContent)
-                                    ].join('; '));
-                                }
-
-                                if (elements[index].indexOf(element) === -1) {
-                                    elements[index].push(element);
-                                }
+                                chars += element.textContent;
+                                webFontCache.push(webFont.id, element);
                             });
+                        }
+
+                        webFont.selectors.push(selector);
+                        webFont.chars += chars;
+
+                        if (that.debug) {
+                            console.log(colors.yellow('DEBUG'), [
+                                'family: ' + colors.green(webFont.family),
+                                'selectors: ' + colors.green(selector),
+                                'chars: ' + colors.green(chars)
+                            ].join('; '));
                         }
                     });
 
@@ -113,7 +117,7 @@ FontSpider.prototype = {
         // 行内样式
         Array.prototype.forEach.call(inlineStyleElements, function(element) {
             var style = element.style;
-            webFonts.forEach(function(webFont, index) {
+            webFonts.forEach(function(webFont) {
                 if (webFont.match(style)) {
                     webFont.chars += element.textContent;
 
@@ -125,9 +129,7 @@ FontSpider.prototype = {
                         ].join('; '));
                     }
 
-                    if (elements[index].indexOf(element) === -1) {
-                        elements[index].push(element);
-                    }
+                    webFontCache.push(webFont.id, element);
                 }
             });
         });
@@ -139,8 +141,9 @@ FontSpider.prototype = {
             parsers.split(cssStyleRule.selectorText).forEach(function(selector) {
 
                 that.getElements(selector, true).forEach(function(pseudoElement) {
-                    webFonts.forEach(function(webFont, index) {
-                        if (containsPseudo(elements[index], pseudoElement)) {
+                    webFonts.forEach(function(webFont) {
+                        if (containsPseudo(webFontCache.get(webFont.id), pseudoElement)) {
+
                             var char = that.getContent(selector, cssStyleRule.style.content);
                             webFont.selectors.push(selector);
                             webFont.chars += char;
@@ -152,6 +155,7 @@ FontSpider.prototype = {
                                     'chars: ' + colors.green(char)
                                 ].join('; '));
                             }
+
                         }
                     });
                 });
@@ -163,7 +167,7 @@ FontSpider.prototype = {
 
 
         function containsPseudo(elements, element) {
-            if (!elements.length) {
+            if (!elements || !elements.length) {
                 return false;
             }
 
@@ -180,7 +184,7 @@ FontSpider.prototype = {
 
 
 
-        elements = null;
+        webFontCache = null;
         pseudoCssStyleRules = null;
         inlineStyleElements = null;
 
@@ -255,17 +259,23 @@ FontSpider.prototype = {
 
 
     /**
-     * 遍历每一条字体声明规则
-     * @param   {Function}
+     * 获取 WebFonts
+     * @param   {Array<WebFont>}
      */
-    eachCssFontFaceRule: function(callback) {
+    getWebFonts: function() {
         var window = this.window;
         var CSSFontFaceRule = window.CSSFontFaceRule;
+        var webFonts = [];
         this.eachCssRuleList(function(cssRule) {
             if (cssRule instanceof CSSFontFaceRule) {
-                callback(cssRule);
+                var webFont = WebFont.parse(cssRule);
+                if (webFont) {
+                    webFonts.push(webFont);
+                }
             }
         });
+
+        return webFonts;
     },
 
 
