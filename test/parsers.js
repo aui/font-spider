@@ -5,13 +5,13 @@ var assert = require('assert');
 
 var split = parsers.split;
 
-describe('Utils', function() {
+describe('parsers', function() {
     describe('#split', function() {
         it('.class', function() {
             assert.deepEqual(['.class'], split('.class'));
         });
-        it('.class, .class2', function() {
-            assert.deepEqual(['.class', '.class2'], split('.class, .class2'));
+        it('.class, .class2, .class3 .class4', function() {
+            assert.deepEqual(['.class', '.class2', '.class3 .class4'], split('.class, .class2, .class3 .class4'));
         });
         it('.class, [attr]', function() {
             assert.deepEqual(['.class', '[attr]'], split('.class, [attr]'));
@@ -53,7 +53,7 @@ describe('Utils', function() {
             assert.deepEqual(['Arial', 'Helvetica', '"Microsoft Yahei"', '"\\","'], split('Arial,Helvetica,"Microsoft Yahei","\\","'));
         });
         it('', function() {
-            assert.deepEqual([], split('  '));
+            assert.deepEqual([''], split('  '));
         });
         it('abc"def\'', function() {
             assert.deepEqual(['abc"def\''], split('abc"def\''));

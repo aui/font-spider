@@ -6,6 +6,16 @@ var fs = require('fs');
 
 describe('spider', function() {
 
+    it('selectors', function() {
+        var htmlFiles = [__dirname + '/files/selectors.html'];
+        return spider(htmlFiles, {
+            silent: false
+        }).then(function(webFonts) {
+            assert.equal('abcdefg', webFonts[0].chars);
+            return webFonts;
+        });
+    });
+
     it('css content', function() {
         var htmlFiles = [__dirname + '/files/parse-element-content.html'];
         return spider(htmlFiles, {
