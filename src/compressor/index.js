@@ -123,11 +123,10 @@ Compress.prototype = {
         var fontmin = new Fontmin().src(source);
 
 
-        if (webFont.chars) {
-            fontmin.use(Fontmin.glyph({
-                text: webFont.chars
-            }));
-        }
+        fontmin.use(Fontmin.glyph({
+            text: webFont.chars || '#' // 传入任意字符避免 fontmin@0.9.5 BUG
+        }));
+
 
         var types = {
             'embedded-opentype': 'ttf2eot',
@@ -159,7 +158,7 @@ Compress.prototype = {
 
         fontmin.dest(temp);
 
-        fontmin.run(function(errors/*, buffer*/) {
+        fontmin.run(function(errors /*, buffer*/ ) {
 
             if (errors) {
                 that.clear();
