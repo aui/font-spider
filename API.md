@@ -104,6 +104,12 @@ fontSpider.spider([__diranme + '/index.html'], {
     sort: true,
 
     /**
+     * 是否开启调试模式
+     * @type    {Boolean}
+     */
+    debug: false,
+
+    /**
      * 是否支持加载外部 CSS 文件
      */
     loadCssFile: true,

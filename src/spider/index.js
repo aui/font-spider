@@ -5,14 +5,25 @@ var parsers = require('./parsers');
 var Adapter = require('../adapter');
 var WebFont = require('./web-font');
 var concat = require('./concat');
-
+var colors = require('colors/safe');
 
 /**
  * 蜘蛛类
  * @param   {Window}            浏览器全局对象 @see browser-x
+ * @param   {Boolean}           是否开启 debug 模式
  * @return  {Array<WebFont>}    WebFont 描述信息 @see ./web-font.js
  */
-function FontSpider(window) {
+function FontSpider(window, debug) {
+    this.window = window;
+    this.document = window.document;
+    this.debug = debug;
+
+    if (debug) {
+        console.log(colors.yellow('DEBUG'), [
+            'document.URL: ' + colors.green(window.document.URL)
+        ].join('; '));
+    }
+
     return this.parse(window);
 }
 
@@ -26,16 +37,11 @@ FontSpider.prototype = {
 
     /**
      * parser
-     * @param   {Window}
      * @return  {Array<WebFont>}
      */
-    parse: function(window) {
+    parse: function() {
         var that = this;
-        var document = window.document;
-
-        this.window = window;
-        this.document = document;
-
+        var document = this.document;
         var webFonts = [];
 
         // 这是一个索引值与 webFonts 对应的二维数组，
@@ -66,23 +72,35 @@ FontSpider.prototype = {
                 // 如果当前规则包含已知的 webFont
                 if (webFont.match(cssStyleRule.style)) {
 
-                    webFont.selectors.push(cssStyleRule.selectorText);
+                    parsers.split(cssStyleRule.selectorText).forEach(function(selector) {
+                        webFont.selectors.push(selector);
 
-                    if (that.hasContent(cssStyleRule)) {
-                        // 伪元素直接拿 content 字段
-                        webFont.chars += that.getContent(cssStyleRule);
-                    } else {
+                        if (/\:\:?(?:before|after)$/i.test(selector)) {
+                            // 伪元素直接拿 content 字段
+                            webFont.chars += that.getContent(selector, cssStyleRule.style.content);
+                        } else {
 
-                        // 通过选择器查找元素拥有的文本节点
-                        that.getElements(cssStyleRule.selectorText).forEach(function(element) {
-                            webFont.chars += element.textContent;
-                            if (elements[index].indexOf(element) === -1) {
-                                elements[index].push(element);
-                            }
-                        });
-                    }
+                            // 通过选择器查找元素拥有的文本节点
+                            that.getElements(selector).forEach(function(element) {
+                                webFont.chars += element.textContent;
 
-                } else if (that.hasContent(cssStyleRule)) {
+                                if (that.debug) {
+                                    console.log(colors.yellow('DEBUG'), [
+                                        'family: ' + colors.green(webFont.family),
+                                        'selectors: ' + colors.green(selector),
+                                        'chars: ' + colors.green(element.textContent)
+                                    ].join('; '));
+                                }
+
+                                if (elements[index].indexOf(element) === -1) {
+                                    elements[index].push(element);
+                                }
+                            });
+                        }
+                    });
+
+
+                } else if (cssStyleRule.style.content) {
                     // 暂存伪元素，以便进一步分析
                     pseudoCssStyleRules.push(cssStyleRule);
                 }
@@ -98,6 +116,15 @@ FontSpider.prototype = {
             webFonts.forEach(function(webFont, index) {
                 if (webFont.match(style)) {
                     webFont.chars += element.textContent;
+
+                    if (that.debug) {
+                        console.log(colors.yellow('DEBUG'), [
+                            'family: ' + colors.green(webFont.family),
+                            'selectors: ' + colors.green('FONTSPIDER, ' + inlineStyleSelectors),
+                            'chars: ' + colors.green(element.textContent)
+                        ].join('; '));
+                    }
+
                     if (elements[index].indexOf(element) === -1) {
                         elements[index].push(element);
                     }
@@ -106,19 +133,29 @@ FontSpider.prototype = {
         });
 
 
-
         // 分析伪元素所继承的字体
         pseudoCssStyleRules.forEach(function(cssStyleRule) {
-            var pseudoElements = that.getElements(cssStyleRule.selectorText, true);
-            pseudoElements.forEach(function(pseudoElement) {
-                webFonts.forEach(function(webFont, index) {
-                    if (containsPseudo(elements[index], pseudoElement)) {
-                        var selector = cssStyleRule.selectorText;
-                        var char = that.getContent(cssStyleRule);
-                        webFont.selectors.push(selector);
-                        webFont.chars += char;
-                    }
+
+            parsers.split(cssStyleRule.selectorText).forEach(function(selector) {
+
+                that.getElements(selector, true).forEach(function(pseudoElement) {
+                    webFonts.forEach(function(webFont, index) {
+                        if (containsPseudo(elements[index], pseudoElement)) {
+                            var char = that.getContent(selector, cssStyleRule.style.content);
+                            webFont.selectors.push(selector);
+                            webFont.chars += char;
+
+                            if (that.debug) {
+                                console.log(colors.yellow('DEBUG'), [
+                                    'family: ' + colors.green(webFont.family),
+                                    'selectors: ' + colors.green(selector),
+                                    'chars: ' + colors.green(char)
+                                ].join('; '));
+                            }
+                        }
+                    });
                 });
+
             });
 
         });
@@ -156,25 +193,24 @@ FontSpider.prototype = {
      * 解析伪元素 content 属性值
      * 仅支持 `content: 'prefix'` 和 `content: attr(value)` 这两种或组合的形式
      * @see https://developer.mozilla.org/zh-CN/docs/Web/CSS/content
-     * @param   {CSSStyleRule}
+     * @param   {String}
+     * @param   {String}
      * @return  {String}
      */
-    getContent: function(cssStyleRule) {
+    getContent: function(selector, content) {
 
-        var content = cssStyleRule.style.content;
         var string = '';
         var tokens = [];
 
         try {
             tokens = parsers.cssContentParser(content);
-        } catch(e) {
-        }
+        } catch (e) {}
 
         tokens.map(function(token) {
             if (token.type === 'string') {
                 string += token.value;
             } else if (token.type === 'attr') {
-                var elements = this.getElements(cssStyleRule.selectorText, true);
+                var elements = this.getElements(selector, true);
                 var index = -1;
                 var length = elements.length;
                 while (++index < length) {
@@ -195,23 +231,8 @@ FontSpider.prototype = {
      * @return  {Array<Element>} 元素列表
      */
     getElements: function(selector, matchPseudoParent) {
-        var that = this;
         var document = this.document;
         var RE_DPSEUDOS = /\:(link|visited|target|active|focus|hover|checked|disabled|enabled|selected|lang\(([-\w]{2,})\)|not\(([^()]*|.*)\))?(.*)/i;
-
-
-        // 将多个语句拆开进行查询，避免其中有失败导致所有规则失效
-        if (selector.indexOf(',') !== -1) {
-
-            var elements = [];
-            var selectors = parsers.split(selector);
-
-            selectors.forEach(function(selector) {
-                elements = elements.concat(that.getElements(selector, matchPseudoParent));
-            });
-
-            return elements;
-        }
 
         // 伪类
         selector = selector.replace(RE_DPSEUDOS, '');
@@ -228,25 +249,6 @@ FontSpider.prototype = {
             return Array.prototype.slice.call(document.querySelectorAll(selector));
         } catch (e) {
             return [];
-        }
-    },
-
-
-
-    /**
-     * 判断是否有 content 属性，且有效
-     * @param   {CSSStyleRule}
-     * @return  {Boolean}
-     */
-    hasContent: function(cssStyleRule) {
-        var selectorText = cssStyleRule.selectorText;
-        var style = cssStyleRule.style;
-        var content = style.content;
-
-        if (content && /\:\:?(?:before|after)$/i.test(selectorText)) {
-            return true;
-        } else {
-            return false;
         }
     },
 
@@ -363,7 +365,7 @@ module.exports = function(htmlFiles, adapter, callback) {
         }
 
         return browser(options).then(function(window) {
-            return new FontSpider(window);
+            return new FontSpider(window, adapter.debug);
         });
     })).then(function(list) {
 

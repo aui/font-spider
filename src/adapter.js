@@ -51,6 +51,12 @@ Adapter.prototype = {
      */
     sort: true,
 
+    /**
+     * 是否开启调试模式
+     * @type    {Boolean}
+     */
+    debug: false,
+
     /*---------- browser-x ----------*/
 
     /**

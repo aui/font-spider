@@ -6,12 +6,12 @@ var nodePath = require('path');
 
 
 /**
- * 按 /\s?,\s?/ 分割字符串
+ * 按逗号分割字符串
  * @param   {String}
  * @return  {Array<String>}
  * @example
- *      split('.class, [data-name=",\\""], .class2')
- *      >>>     ['.class', '[data-name=",\\""]', '.class2']
+ *      split('.class  a, [data-name=",\\""], .class2')
+ *      >>>     ['.class  a', '[data-name=",\\""]', '.class2']
  *
  *      split('Arial, Helvetica, "Microsoft Yahei"')
  *      >>>     ['Arial', 'Helvetica', '"Microsoft Yahei"']
@@ -23,7 +23,7 @@ function split(input) {
     var length = input.length;
     var char, value, quotation;
     var SPLIT = /,/;
-    var WHITESPACE = /\s/;
+    //var WHITESPACE = /\s/;
     var STRING = /["']/;
 
     while (current < length) {
@@ -38,10 +38,10 @@ function split(input) {
         }
 
         // 空白
-        if (WHITESPACE.test(char)) {
-            current++;
-            continue;
-        }
+        // if (WHITESPACE.test(char)) {
+        //     current++;
+        //     continue;
+        // }
 
         // 字符串
         if (STRING.test(char)) {
@@ -80,8 +80,10 @@ function split(input) {
         array[array.length - 1] += char;
     }
 
-
-    return array;
+    // TODO 待优化
+    return array.map(function(string) {
+        return string.trim();
+    });
 }
 
 
