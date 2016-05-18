@@ -1,6 +1,6 @@
 'use strict';
 
-var parsers = require('../src/spider/parsers.js');
+var parsers = require('../src/spider/parsers-utils.js');
 var assert = require('assert');
 
 var split = parsers.split;
