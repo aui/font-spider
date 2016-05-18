@@ -1,4 +1,4 @@
-# font-spider API 文档
+# font-spider 接口文档
 
 ``` javascript
 var fontSpider = require('font-spider');
@@ -6,23 +6,7 @@ var fontSpider = require('font-spider');
 
 ## 接口
 
-### fontSpider
-
-分析字体依赖并压缩字体。
-
-``` javascript
-/**
- * @param   {Array<String>}     网页路径列表
- * @param   {Object}            选项
- * @param   {Function}          回调函数。接收 `WebFonts` 描述信息
- * @return  {Promise}           如果没有 `callback` 参数则返回 `Promise` 对象
- */
-fontSpider(htmlFiles, options, callback)
-```
-
-`fontSpider()` 内部会依次执行字体查询器与压缩转码器。也可以根据需要单独使用这两个 API：
-
-### fontSpider.spider
+### fontSpider.spider()
 
 字体查询器。获取 WebFonts 描述信息
 
@@ -36,7 +20,7 @@ fontSpider(htmlFiles, options, callback)
 fontSpider.spider(htmlFiles, options, callback)
 ```
 
-### fontSpider.compressor
+### fontSpider.compressor()
 
 字体压缩转码器。根据 WebFonts 描述信息来处理字体文件
 
@@ -173,4 +157,4 @@ fontSpider.spider([__diranme + '/index.html'], {
 
 ## 调试
 
-字体处理不准确？可能有 CSS 加载或解析错误被忽略，可以设置 `silent: false` 来调试。
+字体处理不准确？可能有 CSS 加载或解析错误被忽略，可以设置 `silent: false, debug: true` 来调试。
