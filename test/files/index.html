@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <style>
+        @font-face {
+            font-family: 'a';
+            src: url('a.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'b';
+            src: url('b.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'c';
+            src: url('c.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'd';
+            src: url('d.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'e';
+            src: url('e.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'f';
+            src: url('f.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'g';
+            src: url('g.woff2') format('woff2');
+        }
+
+        /*普通选择器+显式 font-family 声明*/
+        #font-a .basic-element {
+            font-family: 'a';
+        }
+
+        /*伪元素选择器+显式 font-family 声明*/
+        #font-a .pseudo-element::before {
+            font-family: 'a';
+            content: 'b';
+        }
+        #font-a .pseudo-element::after {
+            font-family: 'a';
+            content: 'c';
+        }
+
+
+
+        /*普通选择器+显式 font(缩写) 声明*/
+        #font-b .basic-element {
+            font: 16px 'b';
+        }
+
+        /*伪元素选择器+显式 font(缩写) 声明*/
+        #font-b .pseudo-element::before {
+            font: 16px 'b';
+            content: 'b';
+        }
+        #font-b .pseudo-element::after {
+            font: 16px 'b';
+            content: 'c';
+        }
+
+
+        /*伪类选择器*/
+        #font-c:hover .basic-element {
+            font-family: 'c';
+        }
+
+        /*伪元素选择器+显式 font-family 声明*/
+        #font-c:focus .pseudo-element::before {
+            font-family: 'c';
+            content: 'b';
+        }
+        #font-c .pseudo-element:hover::after {
+            font-family: 'c';
+            content: 'c';
+        }
+
+        /*行内样式*/
+        #font-d .basic-element {
+            font-family: 'd';
+        }
+
+
+        /*伪元素字体继承*/
+        #font-e {
+            font-family: 'e';
+        }
+        #font-e .pseudo-element::before {
+            content: 'b';
+        }
+        #font-e .pseudo-element::after {
+            font-family: inherit;
+            content: 'c';
+        }
+    </style>
+</head>
+<body>
+
+    <div id="font-a">
+        <div class="basic-element">a</div>
+        <div class="pseudo-element">d</div>
+    </div>
+
+
+    <div id="font-b">
+        <div class="basic-element">a</div>
+        <div class="pseudo-element">d</div>
+    </div>
+
+    <div id="font-c">
+        <div class="basic-element">a</div>
+        <div class="pseudo-element">d</div>
+    </div>
+
+    <div id="font-d">
+        <div style="font-family:'d'">a</div>
+        <div style="font-family:'d'">b</div>
+        <div class="basic-element">c</div>
+    </div>
+
+    <div id="font-e">
+        <div class="basic-element">a</div>
+        <div class="pseudo-element">d</div>
+    </div>
+
+</body>
+</html>

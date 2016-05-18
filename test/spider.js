@@ -7,11 +7,52 @@ var fs = require('fs');
 describe('spider', function() {
 
     it('selectors', function() {
-        var htmlFiles = [__dirname + '/files/selectors.html'];
+        var htmlFiles = [__dirname + '/files/index.html'];
         return spider(htmlFiles, {
             silent: false
         }).then(function(webFonts) {
-            assert.equal('abcdefg', webFonts[0].chars);
+
+            assert.equal('a', webFonts[0].family);
+            assert.equal('abc', webFonts[0].chars);
+            assert.deepEqual([
+                '#font-a .basic-element',
+                '#font-a .pseudo-element::before',
+                '#font-a .pseudo-element::after'
+            ], webFonts[0].selectors);
+
+
+            assert.equal('b', webFonts[1].family);
+            assert.equal('abc', webFonts[1].chars);
+            assert.deepEqual([
+                '#font-b .basic-element',
+                '#font-b .pseudo-element::before',
+                '#font-b .pseudo-element::after'
+            ], webFonts[1].selectors);
+
+
+            assert.equal('c', webFonts[2].family);
+            assert.equal(' abcd', webFonts[2].chars);
+            assert.deepEqual([
+                '#font-c:hover .basic-element',
+                '#font-c:focus .pseudo-element::before',
+                '#font-c .pseudo-element:hover::after'
+            ], webFonts[2].selectors);
+
+
+            assert.equal('d', webFonts[3].family);
+            assert.equal('abc', webFonts[3].chars);
+            assert.deepEqual(['#font-d .basic-element'], webFonts[3].selectors);
+
+
+            assert.equal('e', webFonts[4].family);
+            assert.equal(' abcd', webFonts[4].chars);
+            assert.deepEqual([
+                '#font-e',
+                '#font-e .pseudo-element::before',
+                '#font-e .pseudo-element::after'
+            ], webFonts[4].selectors);
+
+
             return webFonts;
         });
     });
