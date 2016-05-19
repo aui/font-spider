@@ -5,6 +5,8 @@
 [![Node.js Version][node-version-image]][node-version-url]
 [![Build Status][travis-ci-image]][travis-ci-url]
 
+![font-spider cli](https://cloud.githubusercontent.com/assets/1791748/15239094/22090b16-1912-11e6-9d7e-ca551f4a02c9.png)
+
 字蛛是一个智能 WebFont 压缩工具，它能自动分析出页面使用的 WebFont 并进行按需压缩。
 
 官方网站：<http://font-spider.org>
