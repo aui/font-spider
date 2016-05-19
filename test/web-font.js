@@ -2,6 +2,8 @@
 
 var WebFont = require('../src/spider/web-font.js');
 var assert = require('assert');
+var cssom = require('cssom');
+var CSSStyleDeclaration = cssom.CSSStyleDeclaration;
 
 describe('WebFont', function() {
 
@@ -125,6 +127,17 @@ describe('WebFont', function() {
     });
 
 
+    describe('#split', function() {
+        it('serif', function() {
+            assert.deepEqual(['serif'], WebFont.split('serif'));
+        });
+        it('web-font-a, web-font-b, web-font-c', function() {
+            assert.deepEqual(['web-font-a', 'web-font-b', 'web-font-c'], WebFont.split('web-font-a, web-font-b, web-font-c'));
+        });
+        it('web-font-a, "web-font,b"', function() {
+            assert.deepEqual(['web-font-a', 'web-font,b'], WebFont.split('web-font-a, "web-font,b"'));
+        });
+    });
 
     describe('#getFontFamilys', function() {
         it('serif', function() {
@@ -147,6 +160,86 @@ describe('WebFont', function() {
         });
     });
 
+
+    describe('#getFontFamilys', function() {
+        it('web-font-a', function() {
+            assert.deepEqual(['"web-font-a"'], WebFont.getFontFamilys('web-font-a'));
+        });
+        it("web-font-a", function() {
+            assert.deepEqual(['"web-font-a"'], WebFont.getFontFamilys('"web-font-a"'));
+        });
+        it("web-font-a", function() {
+            assert.deepEqual(['"web-font-a"'], WebFont.getFontFamilys('\'web-font-a\''));
+        });
+        it('serif, sans-serif, monospace, cursive, fantasy', function() {
+            assert.deepEqual(['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy'], WebFont.getFontFamilys('serif, sans-serif, monospace, cursive, fantasy'));
+        });
+        it('inherit', function() {
+            assert.deepEqual(['inherit'], WebFont.getFontFamilys('inherit'));
+        });
+        it('web-font-a, "web-font-b",  \'web-font-c\',web-font-d, serif', function() {
+            assert.deepEqual(['"web-font-a"', '"web-font-b"', '"web-font-c"', '"web-font-d"', 'serif'], WebFont.getFontFamilys('web-font-a, "web-font-b",  \'web-font-c\',web-font-d, serif'));
+        });
+    });
+
+
+    describe('#getComputedFontFamilys', function() {
+        it('font-family: web-font-a', function() {
+            var style = new CSSStyleDeclaration();
+            style.cssText = 'font-family: web-font-a';
+            assert.deepEqual(['"web-font-a"'], WebFont.getComputedFontFamilys(style));
+        });
+        it('font-family: web-font-a, web-font-b, serif', function() {
+            var style = new CSSStyleDeclaration();
+            style.cssText = 'font-family: web-font-a, web-font-b, serif';
+            assert.deepEqual(['"web-font-a"', '"web-font-b"', 'serif'], WebFont.getComputedFontFamilys(style));
+        });
+        it('font-family: \'web-font-a\'', function() {
+            var style = new CSSStyleDeclaration();
+            style.cssText = 'font-family: \'web-font-a\'';
+            assert.deepEqual(['"web-font-a"'], WebFont.getComputedFontFamilys(style));
+        });
+        it('font-family: "web-font-a"', function() {
+            var style = new CSSStyleDeclaration();
+            style.cssText = 'font-family: "web-font-a"';
+            assert.deepEqual(['"web-font-a"'], WebFont.getComputedFontFamilys(style));
+        });
+        it('font: 16px web-font-a', function() {
+            var style = new CSSStyleDeclaration();
+            style.cssText = 'font: 16px web-font-a';
+            assert.deepEqual(['"web-font-a"'], WebFont.getComputedFontFamilys(style));
+        });
+        it('font: 16px \'web-font-a\'', function() {
+            var style = new CSSStyleDeclaration();
+            style.cssText = 'font: 16px \'web-font-a\'';
+            assert.deepEqual(['"web-font-a"'], WebFont.getComputedFontFamilys(style));
+        });
+        it('font: 16px "web-font-a"', function() {
+            var style = new CSSStyleDeclaration();
+            style.cssText = 'font: 16px "web-font-a"';
+            assert.deepEqual(['"web-font-a"'], WebFont.getComputedFontFamilys(style));
+        });
+        it('font-family: web-font-a; font:16px web-font-b', function() {
+            var style = new CSSStyleDeclaration();
+            style.cssText = 'font-family: web-font-a; font:16px web-font-b';
+            assert.deepEqual(['"web-font-b"'], WebFont.getComputedFontFamilys(style));
+        });
+        it('font-family: web-font-a!important; font:16px web-font-b', function() {
+            var style = new CSSStyleDeclaration();
+            style.cssText = 'font-family: web-font-a!important; font:16px web-font-b';
+            assert.deepEqual(['"web-font-a"'], WebFont.getComputedFontFamilys(style));
+        });
+        it('font-family: inherit', function() {
+            var style = new CSSStyleDeclaration();
+            style.cssText = 'font-family: inherit';
+            assert.deepEqual([], WebFont.getComputedFontFamilys(style));
+        });
+        it('<no font-family>', function() {
+            var style = new CSSStyleDeclaration();
+            style.cssText = '';
+            assert.deepEqual([], WebFont.getComputedFontFamilys(style));
+        });
+    });
 
 
     describe('#getFiles', function() {
