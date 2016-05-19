@@ -7,125 +7,6 @@ var CSSStyleDeclaration = cssom.CSSStyleDeclaration;
 
 describe('WebFont', function() {
 
-    describe('#File', function() {
-        it('toString()', function() {
-            assert.deepEqual('/Document/font/test.ttf', (new WebFont.File(
-                '/Document/css/style.css',
-                '../font/test.ttf'
-            )).toString());
-        });
-        it('format: truetype', function() {
-            assert.deepEqual({
-                url: '/Document/font/test.ttf',
-                format: 'truetype'
-            }, new WebFont.File(
-                '/Document/css/style.css',
-                '../font/test.ttf'
-            ));
-        });
-        it('format: woff2', function() {
-            assert.deepEqual({
-                url: '/Document/font/test.woff2',
-                format: 'woff2'
-            }, new WebFont.File(
-                '/Document/css/style.css',
-                '../font/test.woff2'
-            ));
-        });
-        it('format: woff', function() {
-            assert.deepEqual({
-                url: '/Document/font/test.woff',
-                format: 'woff'
-            }, new WebFont.File(
-                '/Document/css/style.css',
-                '../font/test.woff'
-            ));
-        });
-        it('format: embedded-opentype', function() {
-            assert.deepEqual({
-                url: '/Document/font/test.eot',
-                format: 'embedded-opentype'
-            }, new WebFont.File(
-                '/Document/css/style.css',
-                '../font/test.eot'
-            ));
-        });
-        it('format: svg', function() {
-            assert.deepEqual({
-                url: '/Document/font/test.svg',
-                format: 'svg'
-            }, new WebFont.File(
-                '/Document/css/style.css',
-                '../font/test.svg'
-            ));
-        });
-        it('set format: truetype', function() {
-            assert.deepEqual({
-                url: '/Document/font/test.ttf',
-                format: 'truetype'
-            }, new WebFont.File(
-                '/Document/css/style.css',
-                '../font/test.ttf',
-                'truetype'
-            ));
-        });
-        it('set format: woff', function() {
-            assert.deepEqual({
-                url: '/Document/font/test.ttf',
-                format: 'woff'
-            }, new WebFont.File(
-                '/Document/css/style.css',
-                '../font/test.ttf',
-                'woff'
-            ));
-        });
-        it('local file', function() {
-            assert.deepEqual({
-                url: '/Document/font/test.woff2',
-                format: 'woff2'
-            }, new WebFont.File(
-                '/Document/css/style.css',
-                '../font/test.woff2?v=3#sfdsfs'
-            ));
-        });
-        it('local file2', function() {
-            assert.deepEqual({
-                url: '/font/test.woff2',
-                format: 'woff2'
-            }, new WebFont.File(
-                '/Document/css/style.css',
-                '/font/test.woff2?v=3#sfdsfs'
-            ));
-        });
-        it('remote file', function() {
-            assert.deepEqual({
-                url: 'http://font-spider.org/font/test.woff2?v=3',
-                format: 'woff2'
-            }, new WebFont.File(
-                'http://font-spider.org/css/style.css',
-                '../font/test.woff2?v=3#sfdsfs'
-            ));
-        });
-        it('remote file2', function() {
-            assert.deepEqual({
-                url: 'http://font-spider.org/font/test.woff2?v=3',
-                format: 'woff2'
-            }, new WebFont.File(
-                'http://font-spider.org/css/style.css',
-                '/font/test.woff2?v=3#sfdsfs'
-            ));
-        });
-        it('remote file3', function() {
-            assert.deepEqual({
-                url: 'http://font-spider.org/font/test.woff2?v=3',
-                format: 'woff2'
-            }, new WebFont.File(
-                '/Document/css/style.css',
-                'http://font-spider.org/font/test.woff2?v=3#sfdsfs'
-            ));
-        });
-    });
-
 
     describe('#split', function() {
         it('serif', function() {
@@ -249,6 +130,137 @@ describe('WebFont', function() {
             var style = new CSSStyleDeclaration();
             style.cssText = '';
             assert.deepEqual([], WebFont.getComputedFontFamilys(style));
+        });
+    });
+
+
+    describe('#File', function() {
+        it('toString()', function() {
+            assert.deepEqual('/Document/font/test.ttf', (new WebFont.File(
+                '../font/test.ttf',
+                null,
+                '/Document/css/style.css'
+            )).toString());
+        });
+        it('format: truetype', function() {
+            assert.deepEqual({
+                url: '/Document/font/test.ttf',
+                format: 'truetype'
+            }, new WebFont.File(
+                '../font/test.ttf',
+                null,
+                '/Document/css/style.css'
+            ));
+        });
+        it('format: woff2', function() {
+            assert.deepEqual({
+                url: '/Document/font/test.woff2',
+                format: 'woff2'
+            }, new WebFont.File(
+                '../font/test.woff2',
+                null,
+                '/Document/css/style.css'
+            ));
+        });
+        it('format: woff', function() {
+            assert.deepEqual({
+                url: '/Document/font/test.woff',
+                format: 'woff'
+            }, new WebFont.File(
+                '../font/test.woff',
+                null,
+                '/Document/css/style.css'
+            ));
+        });
+        it('format: embedded-opentype', function() {
+            assert.deepEqual({
+                url: '/Document/font/test.eot',
+                format: 'embedded-opentype'
+            }, new WebFont.File(
+                '../font/test.eot',
+                null,
+                '/Document/css/style.css'
+            ));
+        });
+        it('format: svg', function() {
+            assert.deepEqual({
+                url: '/Document/font/test.svg',
+                format: 'svg'
+            }, new WebFont.File(
+                '../font/test.svg',
+                null,
+                '/Document/css/style.css'
+            ));
+        });
+        it('set format: truetype', function() {
+            assert.deepEqual({
+                url: '/Document/font/test.ttf',
+                format: 'truetype'
+            }, new WebFont.File(
+                '../font/test.ttf',
+                'truetype',
+                '/Document/css/style.css'
+            ));
+        });
+        it('set format: woff', function() {
+            assert.deepEqual({
+                url: '/Document/font/test.ttf',
+                format: 'woff'
+            }, new WebFont.File(
+                '../font/test.ttf',
+                'woff',
+                '/Document/css/style.css'
+            ));
+        });
+        it('local file', function() {
+            assert.deepEqual({
+                url: '/Document/font/test.woff2',
+                format: 'woff2'
+            }, new WebFont.File(
+                '../font/test.woff2?v=3#sfdsfs',
+                null,
+                '/Document/css/style.css'
+            ));
+        });
+        it('local file2', function() {
+            assert.deepEqual({
+                url: '/font/test.woff2',
+                format: 'woff2'
+            }, new WebFont.File(
+                '/font/test.woff2?v=3#sfdsfs',
+                null,
+                '/Document/css/style.css'
+            ));
+        });
+        it('remote file', function() {
+            assert.deepEqual({
+                url: 'http://font-spider.org/font/test.woff2?v=3',
+                format: 'woff2'
+            }, new WebFont.File(
+                '../font/test.woff2?v=3#sfdsfs',
+                null,
+                'http://font-spider.org/css/style.css'
+            ));
+        });
+        it('remote file2', function() {
+            assert.deepEqual({
+                url: 'http://font-spider.org/font/test.woff2?v=3',
+                format: 'woff2'
+            }, new WebFont.File(
+                '/font/test.woff2?v=3#sfdsfs',
+                null,
+                'http://font-spider.org/css/style.css'
+            ));
+        });
+        it('remote file3', function() {
+            assert.deepEqual({
+                url: 'http://font-spider.org/font/test.woff2?v=3',
+                format: 'woff2'
+            }, new WebFont.File(
+                'http://font-spider.org/font/test.woff2?v=3#sfdsfs',
+                null,
+                '/Document/css/style.css'
+            ));
         });
     });
 

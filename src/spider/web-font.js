@@ -263,7 +263,7 @@ WebFont.getFiles = function(input, baseURI) {
     RE_FONT_URL.lastIndex = 0;
 
     while ((src = RE_FONT_URL.exec(input)) !== null) {
-        list.push(new WebFont.File(baseURI, src[2], src[4]));
+        list.push(new WebFont.File(src[2], src[4], baseURI));
     }
 
     return list;
@@ -272,11 +272,11 @@ WebFont.getFiles = function(input, baseURI) {
 
 /**
  * font-face 路径描述信息类
- * @param   {String}    基础路径
  * @param   {String}    地址
  * @param   {String}    格式
+ * @param   {String}    基础路径
  */
-WebFont.File = function(baseURI, url, format) {
+WebFont.File = function(url, format, baseURI) {
 
     var RE_SERVER = /^https?\:\/\//i;
 
