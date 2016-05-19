@@ -1,9 +1,4 @@
 'use strict';
-var cssFontParser = require('css-font-parser');
-var nodeUrl = require('url');
-var nodePath = require('path');
-
-
 
 /**
  * 按逗号分割字符串
@@ -164,20 +159,6 @@ function cssContentParser(input) {
 }
 
 
-
-
-/**
- * 解析 font-family 值
- * @param   {String}
- * @return  {Array<String>}
- */
-function cssFontfamilyParser(input) {
-    return split(input).map(function(value) {
-        return value.replace(/(?:^"|"$)|(?:^'|'$)/g, '');
-    });
-}
-
-
 /**
  * 获取 CSS value 的 tokens
  * @param   {String}
@@ -263,87 +244,8 @@ function tokenizer(input) {
 
 
 
-/**
- * 解析 @font-face src 值
- * @param   {String}    src 值
- * @param   {String}    基础路径
- * @param   {Array<FontFile>}
- */
-function cssFontFaceSrcParser(input, baseURI) {
-    var list = [];
-    var src;
-
-    var RE_FONT_URL = /url\(("|')?(.*?)\1?\)(?:\s*format\(("|')?(.*?)\3?\))?/ig;
-
-    RE_FONT_URL.lastIndex = 0;
-
-    while ((src = RE_FONT_URL.exec(input)) !== null) {
-        list.push(new FontFile(baseURI, src[2], src[4]));
-    }
-
-    return list;
-}
-
-cssFontFaceSrcParser.FontFile = FontFile;
-
-
-/**
- * font-face 路径描述信息类
- * @param   {String}    基础路径
- * @param   {String}    地址
- * @param   {String}    格式
- */
-function FontFile(baseURI, url, format) {
-
-    var RE_SERVER = /^https?\:\/\//i;
-
-    if (!RE_SERVER.test(url)) {
-        url = nodeUrl.resolve(baseURI, url);
-    }
-
-    if (RE_SERVER.test(url)) {
-        url = url.replace(/[#].*$/, '');
-    } else {
-        url = url.replace(/[?#].*$/, '');
-    }
-
-    if (!format) {
-        switch (nodePath.extname(url.replace(/\?.*$/, '')).toLowerCase()) {
-            case '.eot':
-                format = 'embedded-opentype';
-                break;
-            case '.woff2':
-                format = 'woff2';
-                break;
-            case '.woff':
-                format = 'woff';
-                break;
-            case '.ttf':
-                format = 'truetype';
-                break;
-            case '.svg':
-                format = 'svg';
-                break;
-        }
-    } else {
-        format = format.toLowerCase();
-    }
-
-    this.url = decodeURIComponent(url);
-    this.format = format;
-}
-
-FontFile.prototype.toString = function() {
-    return this.url;
-};
-
-
-
 module.exports = {
     split: split,
     tokenizer: tokenizer,
-    cssFontParser: cssFontParser,
-    cssContentParser: cssContentParser,
-    cssFontfamilyParser: cssFontfamilyParser,
-    cssFontFaceSrcParser: cssFontFaceSrcParser,
+    cssContentParser: cssContentParser
 };
