@@ -1,5 +1,10 @@
 # 字蛛更新日志
 
+## 1.1.3
+
+* 修复使用 `!important` 后计算 `font-family` 最终值计算不正确的 BUG
+* 支持 `font-family` 关键字 `serif`、`sans-serif`、`monospace`、`cursive`、`fantasy`、`initial`、`inherit'`
+
 ## 1.1.2
 
 * 修复 `font` 缩写的 BUG
