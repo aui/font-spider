@@ -5,13 +5,13 @@
 [![Node.js Version][node-version-image]][node-version-url]
 [![Build Status][travis-ci-image]][travis-ci-url]
 
-字蛛是一个中文 WebFont 自动化压缩工具，它能智能分析页面使用的 WebFont 并进行按需压缩。
+字蛛是一个智能 WebFont 压缩工具，它能自动分析出页面使用的 WebFont 并进行按需压缩。
 
 官方网站：<http://font-spider.org>
 
 ## 特性
 
-1. 按需压缩：从原字体中剔除没有用到的字符，可以将数 MB 大小的中文字体压缩成几十 KB
+1. 按需压缩：从原字体中剔除没有用到的字符，可以将数 MB 大小的字体压缩成几十 KB
 2. 本地处理：完全基于 HTML 与 CSS 分析进行本地处理，无需 js 与服务端辅助
 3. 自动转码：将字体转码成所有浏览器支持的格式，包括老旧的 IE6 与现代浏览器
 
