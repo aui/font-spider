@@ -36,8 +36,9 @@
     "gulp-ttf2woff2": "^2.0.2"
   },
   "devDependencies": {
+    "cssom": "^0.3.1",
     "gulp": "^3.9.1",
-    "mocha": "=2.2.5"
+    "mocha": "^2.2.5"
   },
   "license": "MIT",
   "keywords": [
