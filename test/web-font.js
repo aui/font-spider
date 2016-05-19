@@ -135,7 +135,7 @@ describe('WebFont', function() {
             assert.deepEqual(['web-font-a', 'web-font-b', 'web-font-c'], WebFont.split('web-font-a, web-font-b, web-font-c'));
         });
         it('web-font-a, "web-font,b"', function() {
-            assert.deepEqual(['web-font-a', 'web-font,b'], WebFont.split('web-font-a, "web-font,b"'));
+            assert.deepEqual(['web-font-a', '"web-font,b"'], WebFont.split('web-font-a, "web-font,b"'));
         });
     });
 
@@ -234,6 +234,17 @@ describe('WebFont', function() {
             style.cssText = 'font-family: inherit';
             assert.deepEqual([], WebFont.getComputedFontFamilys(style));
         });
+        // 不支持大写
+        // it('FONT-FAMILY: web-font-a', function() {
+        //     var style = new CSSStyleDeclaration();
+        //     style.cssText = 'FONT-FAMILY: web-font-a';
+        //     assert.deepEqual(['"web-font-a"'], WebFont.getComputedFontFamilys(style));
+        // });
+        // it('FONT: 16px web-font-a', function() {
+        //     var style = new CSSStyleDeclaration();
+        //     style.cssText = 'FONT: 16px web-font-a';
+        //     assert.deepEqual(['"web-font-a"'], WebFont.getComputedFontFamilys(style));
+        // });
         it('<no font-family>', function() {
             var style = new CSSStyleDeclaration();
             style.cssText = '';
