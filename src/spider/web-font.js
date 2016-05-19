@@ -5,7 +5,7 @@ var nodeUrl = require('url');
 var nodePath = require('path');
 var parsers = require('./parsers-utils');
 var cssFontParser = require('css-font-parser');
-var KEYWORDS = ['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'inherit'];
+var KEYWORDS = ['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'initial', 'inherit'];
 var RE_QUOTATION = /(?:^"|"$)|(?:^'|'$)/g;
 
 
@@ -179,8 +179,7 @@ WebFont.prototype = {
 
 /**
  * 获取当前 CSSStyleDeclaration 计算后的 font-family
- * @TODO    !important 语句支持，以及 CSSOM 模块重名 key + !important BUG 修复
- * @TODO    serif | sans-serif | monospace | cursive | fantasy | inherit
+ * @TODO    CSSOM 模块的重名 key + !important BUG 修复
  * @param   {CSSStyleDeclaration}
  * @return  {Array<String>}
  */
@@ -189,10 +188,9 @@ WebFont.getComputedFontFamilys = function(style) {
         return [];
     }
 
-    var key, ast, fontFamilys;
+    var key, ast, important, fontFamilys;
     var index = -1;
     var length = style.length;
-    var importants = {};
 
     while (++index < length) {
         key = style[index];
@@ -210,12 +208,11 @@ WebFont.getComputedFontFamilys = function(style) {
 
 
     function setFontFamilys(key, value) {
-        var important = style.getPropertyPriority(key);
-        if (important || !importants[key] || !fontFamilys) {
+        var propertyPriority = style.getPropertyPriority(key);
+        if (propertyPriority || !important || !fontFamilys) {
             fontFamilys = WebFont.getFontFamilys(value);
         }
-
-        importants[key] = important;
+        important = propertyPriority;
     }
 
 
