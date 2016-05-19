@@ -23,7 +23,7 @@
   },
   "scripts": {
     "clearup": "gulp clearup",
-    "demo": "npm run clearup && node bin/font-spider --no-backup test/demo-release/**/*.html",
+    "demo": "npm run clearup && node bin/font-spider --no-backup --debug test/demo-release/**/*.html",
     "test": "mocha test/index.js && npm run demo"
   },
   "dependencies": {
