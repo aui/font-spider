@@ -19,7 +19,7 @@ function FontSpider(window, debug) {
     this.debug = debug;
 
     if (debug) {
-        debugInfo({
+        this.debugInfo({
             url: window.document.URL
         });
     }
@@ -57,11 +57,13 @@ FontSpider.prototype = {
 
         cssStyleRules.forEach(function(cssStyleRule) {
             var style = cssStyleRule.style;
+            var selectors = cssStyleRule.selectorText;
             webFonts.forEach(function(webFont) {
+
                 // 如果当前规则包含已知的 webFont
                 if (webFont.matchStyle(style)) {
 
-                    that.getSelectors(cssStyleRule.selectorText).forEach(function(selector) {
+                    that.getSelectors(selectors).forEach(function(selector) {
                         var chars = '';
 
                         if (pseudoSelector.test(selector)) {
@@ -83,7 +85,7 @@ FontSpider.prototype = {
                         webFont.addSelector(selector);
 
                         if (that.debug) {
-                            debugInfo({
+                            that.debugInfo({
                                 family: webFont.family,
                                 selector: selector,
                                 chars: chars,
@@ -114,7 +116,7 @@ FontSpider.prototype = {
                         webFont.addElement(element);
 
                         if (that.debug) {
-                            debugInfo({
+                            that.debugInfo({
                                 family: webFont.family,
                                 selector: selector,
                                 chars: chars,
@@ -131,7 +133,8 @@ FontSpider.prototype = {
         // 分析伪元素所继承的字体
         pseudoCssStyleRules.forEach(function(cssStyleRule) {
             var content = cssStyleRule.style.content;
-            that.getSelectors(cssStyleRule.selectorText).filter(function(selector) {
+            var selectors = cssStyleRule.selectorText;
+            that.getSelectors(selectors).filter(function(selector) {
                 return pseudoSelector.test(selector);
             }).forEach(function(selector) {
 
@@ -147,7 +150,7 @@ FontSpider.prototype = {
                         webFont.addSelector(selector);
 
                         if (that.debug) {
-                            debugInfo({
+                            that.debugInfo({
                                 family: webFont.family,
                                 selector: selector,
                                 chars: chars,
@@ -336,27 +339,27 @@ FontSpider.prototype = {
                 }
             }
         }
+    },
+
+
+
+    /**
+     * 显示调试信息
+     * @param   {Object}
+     */
+    debugInfo: function(message) {
+        console.log(
+            colors.yellow('DEBUG'),
+            '{',
+            Object.keys(message).map(function(key) {
+                var value = message[key];
+                return JSON.stringify(key) + ': ' + colors.green(JSON.stringify(value));
+            }).join(', '),
+            '}'
+        );
     }
 
 };
-
-
-
-/**
- * 显示调试信息
- * @param   {Object}
- */
-function debugInfo(message) {
-    console.log(
-        colors.yellow('DEBUG'),
-        '{',
-        Object.keys(message).map(function(key) {
-            var value = message[key];
-            return JSON.stringify(key) + ': ' + colors.green(JSON.stringify(value));
-        }).join(', '),
-        '}'
-    );
-}
 
 
 
