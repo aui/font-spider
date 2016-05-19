@@ -20,7 +20,7 @@ function FontSpider(window, debug) {
 
     if (debug) {
         debugInfo({
-            'document.URL': window.document.URL
+            url: window.document.URL
         });
     }
 
@@ -59,7 +59,7 @@ FontSpider.prototype = {
             var style = cssStyleRule.style;
             webFonts.forEach(function(webFont) {
                 // 如果当前规则包含已知的 webFont
-                if (webFont.match(style)) {
+                if (webFont.matchStyle(style)) {
 
                     that.getSelectors(cssStyleRule.selectorText).forEach(function(selector) {
                         var chars = '';
@@ -107,7 +107,7 @@ FontSpider.prototype = {
             that.getElements(selector).forEach(function(element) {
                 var style = element.style;
                 webFonts.forEach(function(webFont) {
-                    if (webFont.match(style)) {
+                    if (webFont.matchStyle(style)) {
                         var chars = element.textContent;
 
                         webFont.addChar(chars);
@@ -163,9 +163,9 @@ FontSpider.prototype = {
 
 
         pseudoCssStyleRules = null;
-        webFonts.forEach(function(webFont) {
-            // 清理缓存
-            webFont.clearup();
+
+        webFonts.map(function(webFont) {
+            return webFont.toData();
         });
 
 
