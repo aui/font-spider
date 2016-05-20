@@ -11,7 +11,7 @@
 
 ## 特性
 
-<img alt="font-spider 命令行界面" width="670" src="https://cloud.githubusercontent.com/assets/1791748/15415036/5533cc14-1e72-11e6-84fd-d610be6d6d72.png">
+<img alt="font-spider 命令行界面" width="670" src="https://cloud.githubusercontent.com/assets/1791748/15415130/41d32204-1e73-11e6-973f-075e317884f3.png">
 
 1. 按需压缩：从原字体中剔除没有用到的字符，可以将数 MB 大小的字体压缩成几十 KB
 2. 本地处理：完全基于 HTML 与 CSS 分析进行本地处理，无需 js 与服务端辅助
