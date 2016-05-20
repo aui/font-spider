@@ -180,6 +180,7 @@ function compressWebFont(htmlFiles, options) {
             log('Font family:', colors.green(webFont.family));
             log('Original size:', colors.green(webFont.originalSize / 1000 + ' KB'));
             log('Include chars:', webFont.chars);
+            log('Chars length:', colors.green(webFont.chars.length));
             log('Font id:', webFont.id);
             log('CSS selectors:', webFont.selectors.join(', '));
             log('Font files:');
