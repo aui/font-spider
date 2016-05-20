@@ -1,7 +1,7 @@
 'use strict';
 
 var browser = require('browser-x');
-var parsers = require('./parsers-utils');
+var utils = require('./utils');
 var Adapter = require('../adapter');
 var WebFont = require('./web-font');
 var concat = require('./concat');
@@ -191,7 +191,7 @@ FontSpider.prototype = {
         var tokens = [];
 
         try {
-            tokens = parsers.cssContentParser(content);
+            tokens = utils.cssContentParser(content);
         } catch (e) {}
 
         tokens.map(function(token) {
@@ -250,7 +250,9 @@ FontSpider.prototype = {
      * @return  {Array<String>}
      */
     getSelectors: function(selector) {
-        return parsers.split(selector);
+        return utils.split(selector).map(function(selector) {
+            return selector.trim();
+        });
     },
 
 
@@ -349,7 +351,7 @@ FontSpider.prototype = {
      */
     debugInfo: function(message) {
         console.log(
-            colors.yellow('DEBUG'),
+            colors.bgYellow('DEBUG'),
             '{',
             Object.keys(message).map(function(key) {
                 var value = message[key];

@@ -1,15 +1,9 @@
 'use strict';
 
 /**
- * 按逗号分割字符串
+ * 按逗号分割字符串（引号包裹的逗号不参与分割）
  * @param   {String}
  * @return  {Array<String>}
- * @example
- *      split('.class  a, [data-name=",\\""], .class2')
- *      >>>     ['.class  a', '[data-name=",\\""]', '.class2']
- *
- *      split('Arial, Helvetica, "Microsoft Yahei"')
- *      >>>     ['Arial', 'Helvetica', '"Microsoft Yahei"']
  */
 function split(input) {
 
@@ -18,7 +12,6 @@ function split(input) {
     var length = input.length;
     var char, value, quotation;
     var SPLIT = /,/;
-    //var WHITESPACE = /\s/;
     var STRING = /["']/;
 
     while (current < length) {
@@ -31,12 +24,6 @@ function split(input) {
             current++;
             continue;
         }
-
-        // 空白
-        // if (WHITESPACE.test(char)) {
-        //     current++;
-        //     continue;
-        // }
 
         // 字符串
         if (STRING.test(char)) {
@@ -75,10 +62,7 @@ function split(input) {
         array[array.length - 1] += char;
     }
 
-    // TODO 待优化
-    return array.map(function(string) {
-        return string.trim();
-    });
+    return array;
 }
 
 
@@ -87,8 +71,8 @@ function split(input) {
  * 解析伪元素 content 值
  * 仅支持 `content: 'prefix'` 和 `content: attr(value)` 这两种或组合的形式
  * @see https://developer.mozilla.org/zh-CN/docs/Web/CSS/content
- * @param   {String}
- * @return  {Array}
+ * @param   {String}    content value
+ * @return  {Array}     AST
  */
 function cssContentParser(input) {
 

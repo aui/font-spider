@@ -3,8 +3,9 @@
 var crypto = require('crypto');
 var nodeUrl = require('url');
 var nodePath = require('path');
-var parsers = require('./parsers-utils');
+var utils = require('./utils');
 var cssFontParser = require('css-font-parser');
+
 var KEYWORDS = ['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'initial', 'inherit'];
 var RE_QUOTATION = /(?:^"|"$)|(?:^'|'$)/g;
 
@@ -245,7 +246,11 @@ WebFont.getFontFamilys = function(input) {
  * @param   {String}    font-family
  * @return  {Array<String>}
  */
-WebFont.split = parsers.split;
+WebFont.split = function(fontFamily) {
+    return utils.split(fontFamily).map(function(fontFamily) {
+        return fontFamily.trim();
+    });
+};
 
 
 /**
