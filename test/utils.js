@@ -1,29 +1,30 @@
 'use strict';
 
-var parsers = require('../src/spider/parsers-utils.js');
+var utils = require('../src/spider/utils.js');
 var assert = require('assert');
 
-var split = parsers.split;
 
-describe('parsers-utils', function() {
+
+describe('utils', function() {
     describe('#split', function() {
+        var split = utils.split;
         it('.class', function() {
             assert.deepEqual(['.class'], split('.class'));
         });
         it('.class, .class2, .class3 .class4', function() {
-            assert.deepEqual(['.class', '.class2', '.class3 .class4'], split('.class, .class2, .class3 .class4'));
+            assert.deepEqual(['.class', ' .class2', ' .class3 .class4'], split('.class, .class2, .class3 .class4'));
         });
         it('.class, [attr]', function() {
-            assert.deepEqual(['.class', '[attr]'], split('.class, [attr]'));
+            assert.deepEqual(['.class', ' [attr]'], split('.class, [attr]'));
         });
         it('.class, [attr=","]', function() {
-            assert.deepEqual(['.class', '[attr=","]'], split('.class, [attr=","]'));
+            assert.deepEqual(['.class', ' [attr=","]'], split('.class, [attr=","]'));
         });
         it(".class, [attr=',']", function() {
-            assert.deepEqual(['.class', '[attr=\',\']'], split(".class, [attr=',']"));
+            assert.deepEqual(['.class', ' [attr=\',\']'], split(".class, [attr=',']"));
         });
         it('.class, [attr=",\'"], .class2', function() {
-            assert.deepEqual(['.class', '[attr=",\'"]', '.class2'], split('.class, [attr=",\'"], .class2'));
+            assert.deepEqual(['.class', ' [attr=",\'"]', ' .class2'], split('.class, [attr=",\'"], .class2'));
         });
         it('[attr="\\,"]', function() {
             assert.deepEqual(['[attr="\\,"]'], split('[attr="\\,"]'));
@@ -32,34 +33,34 @@ describe('parsers-utils', function() {
             assert.deepEqual(['[attr="\\,\\"\'"]'], split('[attr="\\,\\"\'"]'));
         });
         it('.class, [attr="\\""], .class2', function() {
-            assert.deepEqual(['.class', '[attr="\\""]', '.class2'], split('.class, [attr="\\""], .class2'));
+            assert.deepEqual(['.class', ' [attr="\\""]', ' .class2'], split('.class, [attr="\\""], .class2'));
         });
         it('\\n .class \\n,\\n   .class2', function() {
-            assert.deepEqual(['.class', '.class2'], split('\n .class \n,\n   .class2'));
+            assert.deepEqual(['\n .class \n', '\n   .class2'], split('\n .class \n,\n   .class2'));
         });
         it('\\n .class \\n  ,  [attr^="   "],  \\n   .class2', function() {
-            assert.deepEqual(['.class', '[attr^="   "]', '.class2'], split('\n .class \n  ,  [attr^="   "],  \n   .class2'));
+            assert.deepEqual(['\n .class \n  ', '  [attr^="   "]', '  \n   .class2'], split('\n .class \n  ,  [attr^="   "],  \n   .class2'));
         });
         it('[data-name="a,\\""], .class2', function() {
-            assert.deepEqual(['[data-name="a,\\""]', '.class2'], split('[data-name="a,\\""], .class2'));
+            assert.deepEqual(['[data-name="a,\\""]', ' .class2'], split('[data-name="a,\\""], .class2'));
         });
         it('","', function() {
             assert.deepEqual(['","'], split('","'));
         });
         it('",", ",\\""', function() {
-            assert.deepEqual(['","', '",\\""'], split('",", ",\\""'));
+            assert.deepEqual(['","', ' ",\\""'], split('",", ",\\""'));
         });
         it('Arial,Helvetica,"Microsoft Yahei","\\","', function() {
             assert.deepEqual(['Arial', 'Helvetica', '"Microsoft Yahei"', '"\\","'], split('Arial,Helvetica,"Microsoft Yahei","\\","'));
         });
         it('', function() {
-            assert.deepEqual([''], split('  '));
+            assert.deepEqual(['  '], split('  '));
         });
         it('abc"def\'', function() {
             assert.deepEqual(['abc"def\''], split('abc"def\''));
         });
         it('"abc\\\\", "', function() {
-            assert.deepEqual(['"abc\\\\"', '"'], split('"abc\\\\", "'));
+            assert.deepEqual(['"abc\\\\"', ' "'], split('"abc\\\\", "'));
         });
 
     });
@@ -71,31 +72,31 @@ describe('parsers-utils', function() {
             assert.deepEqual([{
                 type: 'string',
                 value: "hello world"
-            }], parsers.cssContentParser('"hello world"'));
+            }], utils.cssContentParser('"hello world"'));
         });
         it("'hello world'", function() {
             assert.deepEqual([{
                 type: 'string',
                 value: "hello world"
-            }], parsers.cssContentParser("'hello world'"));
+            }], utils.cssContentParser("'hello world'"));
         });
         it("\"hello \\\" world\"", function() {
             assert.deepEqual([{
                 type: 'string',
                 value: "hello \" world"
-            }], parsers.cssContentParser("\"hello \\\" world\""));
+            }], utils.cssContentParser("\"hello \\\" world\""));
         });
         it("\"hello \\\\' world\"", function() {
             assert.deepEqual([{
                 type: 'string',
                 value: "hello \\' world"
-            }], parsers.cssContentParser("\"hello \\\\' world\""));
+            }], utils.cssContentParser("\"hello \\\\' world\""));
         });
         it("\"hello \\\\\\\" world\"", function() {
             assert.deepEqual([{
                 type: 'string',
                 value: "hello \\\" world"
-            }], parsers.cssContentParser("\"hello \\\\\\\" world\""));
+            }], utils.cssContentParser("\"hello \\\\\\\" world\""));
         });
         it('"hello" attr(data-name) "world"', function() {
             assert.deepEqual([{
@@ -107,12 +108,12 @@ describe('parsers-utils', function() {
             }, {
                 type: 'string',
                 value: "world"
-            }], parsers.cssContentParser('"hello" attr(data-name) "world"'));
+            }], utils.cssContentParser('"hello" attr(data-name) "world"'));
         });
         it('"hello" attr($data) "world"', function() {
             var value;
             try{
-                value = parsers.cssContentParser('"hello" attr($data) "world"');
+                value = utils.cssContentParser('"hello" attr($data) "world"');
             } catch(e) {
                 return;
             }

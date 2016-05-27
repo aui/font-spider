@@ -299,6 +299,27 @@ describe('WebFont', function() {
                 format: 'truetype'
             }], WebFont.getFiles("url('../fonts/aui.ttf?v=4.5.0')", "/Users/tangbin/css/style.css"));
         });
+        it("#6", function() {
+            assert.deepEqual([{
+                url: '/Users/tangbin/fonts/aui.ttf',
+                format: 'truetype'
+            }], WebFont.getFiles("local(Gentium-Bold),\nurl('../fonts/aui.ttf?v=4.5.0')", "/Users/tangbin/css/style.css"));
+        });
+        it('all', function() {
+            assert.deepEqual([{
+                url: 'http://font.org/fonts/aui.eot?',
+                format: 'embedded-opentype'
+            }, {
+                url: 'http://font.org/fonts/aui.woff2?v=4.5.0',
+                format: 'woff2'
+            }, {
+                url: 'http://font.org/fonts/aui.ttf',
+                format: 'truetype'
+            }], WebFont.getFiles("local(Gentium-Bold),\n"+
+                " url(../fonts/aui.eot?#iefix),\n" +
+                " url('../fonts/aui.woff2?v=4.5.0') format('woff2'),\n" +
+                ' url(../fonts/aui.ttf)',"http://font.org/css/style.css"));
+        });
     });
 
 

@@ -1,4 +1,4 @@
-require('./parsers-utils');
+require('./utils');
 require('./adapter');
 require('./web-font');
 require('./spider');
