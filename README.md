@@ -69,7 +69,7 @@ font-spider dest/news.html dest/index.html dest/about.html
 
 #### options
 
-``` shell
+```
 Usage: font-spider [options] <htmlFile ...>
 
 Options:

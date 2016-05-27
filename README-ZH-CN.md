@@ -73,7 +73,7 @@ font-spider dest/news.html dest/index.html dest/about.html
 
 #### options
 
-``` shell
+```
 -h, --help                    输出帮助信息
 -V, --version                 输出当前版本号
 --info                        输出 WebFont 的 JSON 描述信息，不压缩与转码
