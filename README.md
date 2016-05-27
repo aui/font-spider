@@ -12,6 +12,8 @@ Font-spider is a compress tool for WebFont which can analyze your web-page intel
 
 Website: <http://font-spider.org>
 
+<img alt="font-spider" width="670" src="https://cloud.githubusercontent.com/assets/1791748/15415184/8bc574ac-1e73-11e6-92b9-515281620e9d.png">
+
 ## feature
 
 1. font subsetter: our tool is based on HTML and CSS analysis and completely running in local so that
