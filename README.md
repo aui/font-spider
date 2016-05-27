@@ -1,6 +1,5 @@
 # font-spider
 
-[简体中文](./README-ZH-CN.md) | [English](./README.md)
 [![NPM Version][npm-image]][npm-url]
 [![NPM Downloads][downloads-image]][downloads-url]
 [![Node.js Version][node-version-image]][node-version-url]
