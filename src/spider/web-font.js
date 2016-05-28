@@ -309,6 +309,9 @@ WebFont.File = function(url, format, baseURI) {
             case '.ttf':
                 format = 'truetype';
                 break;
+            case '.otf':
+                format = 'opentype';
+                break;
             case '.svg':
                 format = 'svg';
                 break;
