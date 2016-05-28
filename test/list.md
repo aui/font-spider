@@ -46,3 +46,8 @@
 
 1. `::AFTER, ::BFTER {FONT-FAMILY: webfont}`
 
+## 路径
+
+1. `http://font.com/fonts/font.ttf`
+2. `//font.com/fonts/font.ttf`
+
