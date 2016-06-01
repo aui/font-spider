@@ -2,20 +2,16 @@
 
 var fs = require('fs');
 var path = require('path');
+var gulp = require('gulp');
 var Fontmin = require('fontmin');
-var utils = require('./utils');
 var Adapter = require('../adapter');
+var rename = require('gulp-rename');
 var ttf2woff2 = require('gulp-ttf2woff2');
-
 
 
 // http://font-spider.org/css/style.css
 // var RE_SERVER = /^(\/|http\:|https\:)/i;
 var RE_SERVER = /^https?\:/i;
-
-var TEMP = '.FONT_SPIDER_TEMP';
-var number = 0;
-
 
 // @see https://github.com/ecomfe/fontmin/issues/30
 if (typeof Fontmin.ttf2woff2 !== 'function') {
@@ -33,47 +29,52 @@ function Compress(webFont, options) {
         }
 
 
-        var source;
-        number++;
+        var sources = {};
+        var sourceFormat = ['truetype', 'opentype'];
 
 
         webFont.files.forEach(function(file) {
             if (RE_SERVER.test(file.url)) {
-                throw new Error('does not support remote path "' + file + '"');
+                throw new Error('does not support remote path "' + file.url + '"');
             }
 
-            if (file.format === 'truetype') {
-                source = file.url;
+            if (sourceFormat.indexOf(file.format) !== -1) {
+                sources[file.format] = file;
             }
         });
 
 
 
-        // 必须有 TTF 字体
-        if (!source) {
-            throw new Error('"' + webFont.family + '"' + ' did not find turetype fonts');
-        }
-
-
-
-        this.source = source;
+        this.source = sources.truetype || sources.opentype;
         this.webFont = webFont;
         this.options = options;
-        this.dirname = path.dirname(source);
-        this.extname = path.extname(source);
-        this.basename = path.basename(source, this.extname);
-        this.temp = path.join(this.dirname, TEMP + number);
+
+
+        if (!this.source) {
+            throw new Error('"' + webFont.family + '"' + ' did not find truetype or opentype fonts');
+        }
+
 
         // 备份字体与恢复备份
-        if (options.backup) {
-            this.backup();
+        this.backup(function(errors) {
+            if (errors) {
+                done(errors);
+            } else {
+                this.min(done);
+            }
+        }.bind(this));
+
+
+
+        function done(errors, webFont) {
+            if (errors) {
+                reject(errors);
+            } else {
+                resolve(webFont);
+            }
         }
 
-        if (!fs.existsSync(this.source)) {
-            throw new Error('"' + source + '" file not found');
-        }
 
-        this.min(resolve, reject);
     }.bind(this));
 }
 
@@ -88,46 +89,51 @@ Compress.prototype = {
 
 
     // 字体恢复与备份
-    backup: function() {
+    backup: function(callback) {
 
-        var backupFile;
 
-        var source = this.source;
-        var dirname = this.dirname;
-        var basename = this.basename;
-
-        // version < 0.2.1
-        if (fs.existsSync(source + '.backup')) {
-            backupFile = source + '.backup';
-        } else {
-            backupFile = path.join(dirname, '.font-spider', basename);
+        if (!this.options.backup) {
+            return callback();
         }
 
-        if (fs.existsSync(backupFile)) {
-            utils.cp(backupFile, source);
+        var source = this.source;
+        var dirname = path.dirname(source.url);
+        var basename = path.basename(source.url);
+        var backupDir = path.join(dirname, '.font-spider');
+        var backupFile = path.join(backupDir, basename);
+
+
+        if (!fs.existsSync(backupFile)) {
+            // version < 1.3.0
+            backupFile = backupFile.replace(/\.[^\.]+$/, '');
+            if (!fs.existsSync(backupFile)) {
+                backupFile = null;
+            }
+        }
+
+        if (backupFile) {
+            // 恢复文件
+            return gulp.src(backupFile).pipe(gulp.dest(dirname)).on('end', callback);
         } else {
-            utils.cp(source, backupFile);
+            // 备份文件
+            return gulp.src(source.url).pipe(gulp.dest(backupDir)).on('end', callback);
         }
     },
 
-    min: function(succeed, error) {
+    min: function(callback) {
 
         var webFont = this.webFont;
         var source = this.source;
-        var temp = this.temp;
-        var that = this;
-
-        var originalSize = fs.statSync(source).size;
+        var dirname = path.dirname(source.url);
 
 
-        var fontmin = new Fontmin().src(source);
+        if (!fs.existsSync(source.url)) {
+            return callback(new Error('"' + source.url + '" file not found'));
+        }
 
-
-        fontmin.use(Fontmin.glyph({
-            text: webFont.chars || '#' // 传入任意字符避免 fontmin@0.9.5 BUG
-        }));
-
-
+        var originalSize = fs.statSync(source.url).size;
+        var fontmin = new Fontmin().src(source.url);
+        var paths = {};
         var types = {
             'embedded-opentype': 'ttf2eot',
             'woff': 'ttf2woff',
@@ -136,12 +142,31 @@ Compress.prototype = {
         };
 
 
+        fontmin.use(Fontmin.glyph({
+            text: webFont.chars || '#' // 传入任意字符避免 fontmin@0.9.5 BUG
+        }));
+
+
+        if (source.format === 'opentype') {
+            fontmin.use(Fontmin.otf2ttf());
+        }
+
 
         webFont.files.forEach(function(file) {
             var format = file.format;
             var fn = types[format];
+            var extname = path.extname(file.url);
+            var basename = path.basename(file.url, extname);
+            var relative = path.relative(dirname, file.url);
 
-            if (format === 'truetype') {
+            paths[extname] = {
+                file: file,
+                dirname: path.dirname(relative),
+                basename: basename,
+                extname: extname
+            };
+
+            if (format === source.format) {
                 return;
             }
 
@@ -156,42 +181,33 @@ Compress.prototype = {
         });
 
 
-        fontmin.dest(temp);
+        fontmin.use(rename(function(path) {
+            var newName = paths[path.extname];
+            path.dirname = newName.dirname;
+            path.basename = newName.basename;
+            path.extname = newName.extname;
+        }));
 
-        fontmin.run(function(errors /*, buffer*/ ) {
+
+        fontmin.dest(dirname);
+        fontmin.run(function(errors, buffer) {
 
             if (errors) {
-                that.clear();
-                error(errors);
+                callback(errors);
             } else {
 
-                // 从临时目录把压缩后的字体剪切出来
-                webFont.files.forEach(function(file) {
-                    var basename = path.basename(file.url);
-                    var tempFile = path.join(temp, basename);
-                    var out = file.url;
-                    utils.rename(tempFile, out);
-
-                    if (fs.existsSync(file.url)) {
-                        file.size = fs.statSync(file.url).size;
-                    } else {
-                        file.size = null;
-                    }
+                buffer.forEach(function(buffer) {
+                    paths[buffer.extname].file.size = buffer.contents.length;
                 });
-
-                that.clear();
 
                 // 添加新字段：记录原始文件大小
                 webFont.originalSize = originalSize;
 
-                succeed(webFont);
+                callback(null, webFont);
             }
         });
-    },
-
-    clear: function() {
-        utils.rmdir(this.temp);
     }
+
 };
 
 
