@@ -7,13 +7,13 @@
 
 字蛛是一个智能 WebFont 压缩工具，它能自动分析出页面使用的 WebFont 并进行按需压缩。
 
-官方网站：<http://font-spider.org>
+网站：<http://font-spider.org>
 
 <img alt="font-spider 命令行界面" width="670" src="https://cloud.githubusercontent.com/assets/1791748/15415184/8bc574ac-1e73-11e6-92b9-515281620e9d.png">
 
 ## 特性
 
-1. 压缩字体：智能的删除没有被使用的字形数据
+1. 压缩字体：智能删除没有被使用的字形数据，大幅度减少字体体积
 2. 生成字体：支持 woff2、woff、eot、svg 字体格式生成
 
 > New: 字蛛 v1.0.0 版本支持图标字体！[更新日志](./CHANGELOG.md)

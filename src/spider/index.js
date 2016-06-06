@@ -167,7 +167,7 @@ FontSpider.prototype = {
 
         pseudoCssStyleRules = null;
 
-        webFonts.map(function(webFont) {
+        webFonts = webFonts.map(function(webFont) {
             return webFont.toData();
         });
 
