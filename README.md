@@ -43,7 +43,7 @@ npm install font-spider -g
 }
 
 .home h1, .demo > .test {
-    font-family: 'pinghei';
+    font-family: 'pingfang';
 }
 ```
 
