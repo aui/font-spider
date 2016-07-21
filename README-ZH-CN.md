@@ -33,21 +33,21 @@ npm install font-spider -g
 ``` css
 /*声明 WebFont*/
 @font-face {
-  font-family: 'pingfang';
-  src: url('../font/pingfang.eot');
+  font-family: 'source';
+  src: url('../font/source.eot');
   src:
-    url('../font/pingfang.eot?#font-spider') format('embedded-opentype'),
-    url('../font/pingfang.woff2') format('woff2'),
-    url('../font/pingfang.woff') format('woff'),
-    url('../font/pingfang.ttf') format('truetype'),
-    url('../font/pingfang.svg') format('svg');
+    url('../font/source.eot?#font-spider') format('embedded-opentype'),
+    url('../font/source.woff2') format('woff2'),
+    url('../font/source.woff') format('woff'),
+    url('../font/source.ttf') format('truetype'),
+    url('../font/source.svg') format('svg');
   font-weight: normal;
   font-style: normal;
 }
 
 /*使用指定字体*/
 .home h1, .demo > .test {
-    font-family: 'pingfang';
+    font-family: 'source';
 }
 ```
 
