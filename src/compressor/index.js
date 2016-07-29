@@ -143,6 +143,7 @@ Compress.prototype = {
 
 
         fontmin.use(Fontmin.glyph({
+            trim: false,
             text: webFont.chars || '#' // 传入任意字符避免 fontmin@0.9.5 BUG
         }));
 
