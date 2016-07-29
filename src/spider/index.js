@@ -79,7 +79,8 @@ FontSpider.prototype = {
 
                                 // @see https://github.com/aui/font-spider/issues/99
                                 if (!content && (element.nodeName === 'INPUT' || element.nodeName === 'TEXTAREA')) {
-                                    content = element.getAttribute('value') || element.getAttribute('placeholder');
+                                    // TODO element.getAttribute('value')
+                                    content = element.getAttribute('placeholder');
                                 }
 
                                 chars += content || '';
