@@ -75,7 +75,14 @@ FontSpider.prototype = {
 
                             // 通过选择器查找元素拥有的文本节点
                             that.getElements(selector).forEach(function(element) {
-                                chars += element.textContent;
+                                var content = element.textContent;
+
+                                // @see https://github.com/aui/font-spider/issues/99
+                                if (!content && (element.nodeName === 'INPUT' || element.nodeName === 'TEXTAREA')) {
+                                    content = element.getAttribute('value') || element.getAttribute('placeholder');
+                                }
+
+                                chars += content || '';
                                 webFont.addElement(element);
                             });
                         }
