@@ -67,6 +67,17 @@ describe('spider', function() {
         });
     });
 
+    it('input placeholder', function() {
+        var htmlFiles = [__dirname + '/files/input-placeholder.html'];
+        return spider(htmlFiles, {
+            silent: false
+        }).then(function(webFonts) {
+            assert.equal('abcde', webFonts[0].chars);
+            return webFonts;
+        });
+    });
+
+
     it('html content + css content', function() {
         var htmlFiles = [__dirname + '/files/01.html', __dirname + '/files/02.html'];
         return spider(htmlFiles, {

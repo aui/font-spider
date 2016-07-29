@@ -1,5 +1,10 @@
 # 字蛛更新日志
 
+## 1.3.1
+
+* 支持 `input[placeholder]` 内容 [#99](https://github.com/aui/font-spider/issues/99)
+* 修复字体压缩后在 IE 下 `<br>` 标签显示乱码的问题 [#91](https://github.com/aui/font-spider/issues/91)
+
 ## 1.3.0
 
 * 支持 otf 格式（不完善）
