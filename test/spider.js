@@ -31,7 +31,7 @@ describe('spider', function() {
 
 
             assert.equal('c', webFonts[2].family);
-            assert.equal(' abcd', webFonts[2].chars);
+            assert.equal('abcd', webFonts[2].chars);
             assert.deepEqual([
                 '#font-c:hover .basic-element',
                 '#font-c:focus .pseudo-element::before',
@@ -45,7 +45,7 @@ describe('spider', function() {
 
 
             assert.equal('e', webFonts[4].family);
-            assert.equal(' abcd', webFonts[4].chars);
+            assert.equal('abcd', webFonts[4].chars);
             assert.deepEqual([
                 '#font-e',
                 '#font-e .pseudo-element::before',
@@ -62,7 +62,7 @@ describe('spider', function() {
         return spider(htmlFiles, {
             silent: false
         }).then(function(webFonts) {
-            assert.equal(' "你大好海糖饼🍎', webFonts[0].chars);
+            assert.equal('"你大好海糖饼🍎', webFonts[0].chars);
             return webFonts;
         });
     });
@@ -101,7 +101,7 @@ describe('spider', function() {
 
         var testChars = {
             'webfont-a': ['字', '代', '码', '如', '诗', '美', '丽', '@'],
-            'webfont-b': ['方', '块', '字', '中', '文', '大', '海', '🍎', ' '],
+            'webfont-b': ['方', '块', '字', '中', '文', '大', '海', '🍎'],
             'webfont-c': ['蛛', '@'],
             'webfont-e': ['❤', '厦', '门'],
             length: 4
