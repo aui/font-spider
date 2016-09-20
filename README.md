@@ -9,6 +9,8 @@ Font-spider is a compress tool for WebFont which can analyze your web-page intel
 
 字蛛是一个智能 WebFont 压缩工具，它能自动分析出页面使用的 WebFont 并进行按需压缩。[[中文文档]](./README-ZH-CN.md)
 
+フォント・スパイダー（font-spider）は、Webフォントを圧縮するためのスマートなツールです，Webページに使用されるWebフォントを分析し、必要に応じて圧縮することができます。[[日本語]](./README-JA.md)
+
 Website: <http://font-spider.org>
 
 <img alt="font-spider" width="670" src="https://cloud.githubusercontent.com/assets/1791748/15415184/8bc574ac-1e73-11e6-92b9-515281620e9d.png">
