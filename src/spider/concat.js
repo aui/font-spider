@@ -47,7 +47,7 @@ function concat(webFonts, adapter) {
         }
 
         // 删除无用字符
-        chars = chars.join('').replace(/[\s\n\r\t]*/g, '');
+        chars = chars.join('').replace(/\s*/g, '');
 
         webFont.chars = chars;
 
