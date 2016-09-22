@@ -5,6 +5,8 @@
 [![Node.js Version][node-version-image]][node-version-url]
 [![Build Status][travis-ci-image]][travis-ci-url]
 
+[[简体中文]](./README-ZH-CN.md) | [[English]](./README.md) | [[日本語]](./README-JA.md)
+
 フォント・スパイダー（font-spider）は、Webフォントを圧縮するためのスマートなツールです，Webページに使用されるWebフォントを分析し、必要に応じて圧縮することができます。
 
 公式サイト：<http://font-spider.org>

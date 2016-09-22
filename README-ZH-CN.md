@@ -1,9 +1,11 @@
-# 字蛛
+# 字蛛（font-spider）
 
 [![NPM Version][npm-image]][npm-url]
 [![NPM Downloads][downloads-image]][downloads-url]
 [![Node.js Version][node-version-image]][node-version-url]
 [![Build Status][travis-ci-image]][travis-ci-url]
+
+[[简体中文]](./README-ZH-CN.md) | [[English]](./README.md) | [[日本語]](./README-JA.md)
 
 字蛛是一个智能 WebFont 压缩工具，它能自动分析出页面使用的 WebFont 并进行按需压缩。
 
