@@ -5,7 +5,7 @@
 [![Node.js Version][node-version-image]][node-version-url]
 [![Build Status][travis-ci-image]][travis-ci-url]
 
-[[简体中文]](./README-ZH-CN.md) | [English](./README.md) | [[日本語]](./README-JA.md)
+[[简体中文]](./README-ZH-CN.md) | [[English]](./README.md) | [[日本語]](./README-JA.md)
 
 Font-spider is a compress tool for WebFont which can analyze your web-page intelligently to find the fonts out which have been used and then compress them.
 
