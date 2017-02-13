@@ -27,7 +27,7 @@
     "test": "mocha test/index.js && npm run demo"
   },
   "dependencies": {
-    "browser-x": "^0.0.1-beta6",
+    "browser-x": "^0.0.1-beta7",
     "colors": "^1.1.2",
     "commander": "^2.9.0",
     "css-font-parser": "^0.2.1",
@@ -38,7 +38,7 @@
     "gulp-ttf2woff2": "^2.0.2"
   },
   "devDependencies": {
-    "cssom": "^0.3.1",
+    "cssom": "0.3.1",
     "mocha": "^2.2.5"
   },
   "license": "MIT",
