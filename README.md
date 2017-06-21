@@ -122,7 +122,7 @@ font-spider --map "http://font-spider.org/font,/Website/font" http://font-spider
 
 See:[API.md](./API.md)
 
-## Restrict
+## Limitations
 
 - Only the constant texts and styles are supported, but not the dynamic elements and styles which is inserted by javascript.
 - The ".otf" format fonts should be transfered to ".ttf" format firstly, so that we can start our compressing work.
