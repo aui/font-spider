@@ -41,7 +41,7 @@ fontSpider.compressor(webFonts, options, callback)
 ``` javascript
 var fontSpider = require('font-spider');
 
-fontSpider.spider([__diranme + '/index.html'], {
+fontSpider.spider([__dirname + '/index.html'], {
     silent: false
 }).then(function(webFonts) {
     return fontSpider.compressor(webFonts, {backup: true});
