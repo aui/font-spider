@@ -136,3 +136,5 @@ See:[API.md](./API.md)
 [downloads-url]: https://npmjs.org/package/font-spider
 [travis-ci-image]: https://travis-ci.org/aui/font-spider.svg?branch=master
 [travis-ci-url]: https://travis-ci.org/aui/font-spider
+
+[\[AD\] 前端招聘：在海边写代码](https://juejin.im/post/5a2651d06fb9a0451c3a40ad)
