@@ -41,7 +41,7 @@ fontSpider.compressor(webFonts, options, callback)
 ``` javascript
 var fontSpider = require('font-spider');
 
-fontSpider.spider([__diranme + '/index.html'], {
+fontSpider.spider([__dirname + '/index.html'], {
     silent: false
 }).then(function(webFonts) {
     return fontSpider.compressor(webFonts, {backup: true});
@@ -65,7 +65,7 @@ fontSpider.spider([__diranme + '/index.html'], {
     /**
      * 映射的文件规则（支持正则） - 与 `resourceMap` 参数互斥 - 可以将远程字体文件映射到本地来
      * @type    {Array<Array<String>>}
-     * @example [['http://font-spider.org/font', __diranme + '/font'], ...]
+     * @example [['http://font-spider.org/font', __dirname + '/font'], ...]
      */
     map: [],
 
