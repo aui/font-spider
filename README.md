@@ -69,8 +69,6 @@ Example:
 font-spider dest/news.html dest/index.html dest/about.html
 ```
 
-> If there were several pages depend on the same fonts, please use `--htmlFiles` to transfer them in.
-
 #### options
 
 ```
