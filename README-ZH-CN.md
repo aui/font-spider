@@ -71,8 +71,6 @@ font-spider [options] <htmlFile1 htmlFile2 ...>
 font-spider dest/news.html dest/index.html dest/about.html
 ```
 
-> 如果有多个页面依赖相同的字体，请都传递进来
-
 #### options
 
 ```
