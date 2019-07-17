@@ -67,8 +67,6 @@ font-spider [options] <htmlFile1 htmlFile2 ...>
 font-spider dest/news.html dest/index.html dest/about.html
 ```
 
-> 複数のページが同じフォントを使用している場合、`--htmlFiles` を使ってください
-
 #### options
 
 ``` shell

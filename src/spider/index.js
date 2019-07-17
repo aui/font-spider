@@ -179,6 +179,12 @@ FontSpider.prototype = {
             return webFont.toData();
         });
 
+        // 忽略内联的base64字体
+        webFonts = webFonts.filter(function (webFont) {
+            return webFont.files.every(function (file) {
+                return !/^data:/.test(file.url);
+            })
+        })
 
         return webFonts;
     },

@@ -69,8 +69,6 @@ Example:
 font-spider dest/news.html dest/index.html dest/about.html
 ```
 
-> If there were several pages depend on the same fonts, please use `--htmlFiles` to transfer them in.
-
 #### options
 
 ```
@@ -136,3 +134,9 @@ See:[API.md](./API.md)
 [downloads-url]: https://npmjs.org/package/font-spider
 [travis-ci-image]: https://travis-ci.org/aui/font-spider.svg?branch=master
 [travis-ci-url]: https://travis-ci.org/aui/font-spider
+
+-----------------
+
+[\[Link\] 让 font-spider 支持 js 动态内容](https://github.com/allanguys/font-spider-plus)
+
+[\[AD\] 前端招聘：在海边写代码](https://juejin.im/post/5a2651d06fb9a0451c3a40ad)
