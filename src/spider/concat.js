@@ -34,7 +34,7 @@ function concat(webFonts, adapter) {
 
     newWebFonts.forEach(function(webFont) {
 
-        var chars = webFont.chars.split('');
+        var chars = Array.from(webFont.chars);
 
         // 对字符进行除重操作
         if (adapter.unique) {
