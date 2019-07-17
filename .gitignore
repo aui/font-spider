@@ -1,6 +1,7 @@
 node_modules
 .idea
 .DS_Store
+.vscode
 *.log
 test/demo-release
 test/demo/home
