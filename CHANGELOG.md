@@ -1,5 +1,9 @@
 # 字蛛更新日志
 
+## 1.3.5
+
+* 修复与 Node v12.6.0 兼容问题
+
 ## 1.3.1
 
 * 支持 `input[placeholder]` 内容 [#99](https://github.com/aui/font-spider/issues/99)

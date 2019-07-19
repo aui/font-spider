@@ -6,17 +6,11 @@ var gulp = require('gulp');
 var Fontmin = require('fontmin');
 var Adapter = require('../adapter');
 var rename = require('gulp-rename');
-var ttf2woff2 = require('gulp-ttf2woff2');
 
 
 // http://font-spider.org/css/style.css
 // var RE_SERVER = /^(\/|http\:|https\:)/i;
 var RE_SERVER = /^https?\:/i;
-
-// @see https://github.com/ecomfe/fontmin/issues/30
-if (typeof Fontmin.ttf2woff2 !== 'function') {
-    Fontmin.ttf2woff2 = ttf2woff2;
-}
 
 
 function Compress(webFont, options) {

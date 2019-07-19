@@ -2,7 +2,7 @@
 
 var gulp = require('gulp');
 
-gulp.task('release', function() {
-    gulp.src('demo/**/*')
+gulp.task('default', function() {
+    return gulp.src('demo/**/*')
         .pipe(gulp.dest('demo-release'));
 });
