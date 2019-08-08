@@ -53,6 +53,7 @@ FontSpider.prototype = {
         var pseudoCssStyleRules = [];
         var pseudoSelector = /\:\:?(?:before|after)$/i;
         var inlineStyleSelectors = 'body[style*="font"], body [style*="font"]';
+        var specialTags = { font: 'face', text: 'font-family' };
 
 
         cssStyleRules.forEach(function(cssStyleRule) {
@@ -169,6 +170,32 @@ FontSpider.prototype = {
                     });
                 });
 
+            });
+        });
+
+
+        // 通过 attribute 指定字体的特殊标签
+        Object.keys(specialTags).forEach(function(tagName) {
+            var attribute = specialTags[tagName];
+            var selector = tagName + '[' + attribute + ']';
+            that.getElements(selector).forEach(function(element) {
+                var fontFamily = element.getAttribute(attribute);
+                webFonts.forEach(function(webFont) {
+                    if (webFont.family === fontFamily) {
+                        var chars = element.textContent;
+
+                        webFont.addChar(chars);
+
+                        if (that.debug) {
+                            that.debugInfo({
+                                family: webFont.family,
+                                selector: selector,
+                                chars: chars,
+                                type: 4
+                            });
+                        }
+                    }
+                });
             });
         });
 

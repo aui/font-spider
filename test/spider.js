@@ -77,6 +77,15 @@ describe('spider', function() {
         });
     });
 
+    it('special tags with attribute', function() {
+        var htmlFiles = [__dirname + '/files/special-tags-with-attribute.html'];
+        return spider(htmlFiles, {
+            silent: false
+        }).then(function(webFonts) {
+            assert.equal('中字文蛛', webFonts[0].chars);
+            return webFonts;
+        });
+    });
 
     it('html content + css content', function() {
         var htmlFiles = [__dirname + '/files/01.html', __dirname + '/files/02.html'];
